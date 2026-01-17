@@ -10,7 +10,7 @@ export interface GitHubRepo {
 	name: string;
 	full_name: string;
 	owner: {
-	login: string;
+		login: string;
 	};
 	private: boolean;
 }
@@ -22,9 +22,10 @@ export interface GitHubCommit {
 		author: {
 			name: string;
 			date: string;
-		};
+		} | null; // ← Can be null!
 	};
 	files?: Array<{
+		// ← Optional (merge commits have no files)
 		filename: string;
 		additions: number;
 		deletions: number;
