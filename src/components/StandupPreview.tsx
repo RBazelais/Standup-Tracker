@@ -35,7 +35,9 @@ export function StandupPreview({ isDark }: StandupPreviewProps) {
 					<PreviewField
 						isDark={isDark}
 						label="Yesterday"
-						content="Implemented GitHub OAuth flow • Fixed TypeScript types for nullable fields • Set up Zustand store"
+						content="Implemented GitHub OAuth flow 
+                        • Fixed TypeScript types for nullable fields 
+                        • Set up Zustand store"
 					/>
 
 					<PreviewField
@@ -51,14 +53,14 @@ export function StandupPreview({ isDark }: StandupPreviewProps) {
 					/>
 				</div>
 
-				<div className="flex gap-2 pt-2">
+				{/* <div className="flex gap-2 pt-2">
 					<span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
 						🎯 Launch MVP
 					</span>
 					<span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">
 						🚀 Portfolio Project
 					</span>
-				</div>
+				</div> */}
 			</div>
 		</Card>
 	);
