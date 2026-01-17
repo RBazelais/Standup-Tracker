@@ -1,7 +1,6 @@
+/* stylelint-disable at-rule-no-unknown */
 @import "tailwindcss";
 @import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
 
 :root {
 	--color-primary: #3b82f6;
