@@ -4,6 +4,7 @@ import { GitCommit, Target, TrendingUp, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { FeatureCard } from "./FeatureCard";
 import { StandupPreview } from "./StandupPreview";
+import { Footer } from "./Footer";
 
 const GitHubIcon = ({ className }: { className?: string }) => (
 	<svg
@@ -154,6 +155,8 @@ export function LandingPage() {
 						</motion.div>
 					</motion.div>
 				</div>
+				{/* Footer */}
+        		<Footer isDark={isDark} />
 			</div>
 		</div>
 	);
