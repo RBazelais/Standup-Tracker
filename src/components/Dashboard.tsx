@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { RepoSelector } from "./RepoSelector";
 import { StandupForm } from "./StandupForm";
+import { StandupHistory } from "./StandupHistory";
 
 export function Dashboard() {
 	const { user, logout, selectedRepo } = useStore();
@@ -59,7 +60,12 @@ export function Dashboard() {
 				<div className="space-y-6">
 					<RepoSelector />
 
-					{selectedRepo && <StandupForm />}
+					{selectedRepo && (
+						<>
+							<StandupForm />
+							<StandupHistory />
+						</>
+					)}
 				</div>
 			</main>
 		</div>
