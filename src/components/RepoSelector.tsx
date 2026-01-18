@@ -1,5 +1,5 @@
 import { useStore } from "../store";
-import { useRepos } from "../hooks/useGitHub";
+import { useRepos } from "../hooks/useRepos";
 import {
 	Select,
 	SelectContent,
