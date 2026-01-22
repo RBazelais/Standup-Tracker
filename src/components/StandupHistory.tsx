@@ -1,13 +1,13 @@
 import { useStore } from "../store";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Trash2 } from "lucide-react";
+import { Calendar, Trash2, GitCommit } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import ReactMarkdown from "react-markdown";
 
 export function StandupHistory() {
 	const { standups, selectedRepo, deleteStandup } = useStore();
 
-	// Filter standups for selected repo and sort by date (newest first)
 	const repoStandups = standups
 		.filter((s) => s.repoFullName === selectedRepo?.full_name)
 		.sort(
@@ -21,10 +21,10 @@ export function StandupHistory() {
 			<Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
 				<Calendar className="h-12 w-12 text-slate-600 mx-auto mb-4" />
 				<p className="text-slate-400">
-					No standup notes yet for this repository.
+					No standups yet for this repository.
 				</p>
 				<p className="text-sm text-slate-500 mt-2">
-					Create your first standup note above to get started.
+					Create your first standup above to get started.
 				</p>
 			</Card>
 		);
@@ -71,43 +71,119 @@ export function StandupHistory() {
 							</Button>
 						</div>
 
-						<div className="space-y-3 text-sm">
+						<div className="space-y-4 text-sm">
+							{/* Yesterday with commits */}
 							<div>
-								<p className="text-slate-400 font-medium mb-1">
+								<p className="text-slate-400 font-medium mb-2">
 									Yesterday
 								</p>
-								<p className="text-slate-300">
-									{standup.yesterday}
-								</p>
+								<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
+									<ReactMarkdown>
+										{standup.yesterday}
+									</ReactMarkdown>
+								</div>
+
+								{standup.commits.length > 0 && (
+									<details className="mt-3">
+										<summary className="text-xs text-blue-400 cursor-pointer hover:text-blue-300 flex items-center gap-1">
+											<GitCommit className="h-3 w-3" />
+											View {standup.commits.length} commit
+											{standup.commits.length !== 1
+												? "s"
+												: ""}
+										</summary>
+										<div className="mt-3 space-y-2 pl-4 border-l-2 border-slate-700">
+											{standup.commits
+												.slice(0, 10)
+												.map((commit) => (
+													<div
+														key={commit.sha}
+														className="text-xs"
+													>
+														<div className="flex items-start gap-2">
+															<code className="text-blue-400 font-mono">
+																{commit.sha.substring(
+																	0,
+																	7,
+																)}
+															</code>
+															<span className="text-slate-300 flex-1">
+																{
+																	commit.commit.message.split(
+																		"\n",
+																	)[0]
+																}
+															</span>
+														</div>
+														{commit.commit
+															.author && (
+															<div className="text-slate-500 mt-1 ml-[4.5rem]">
+																{
+																	commit
+																		.commit
+																		.author
+																		.name
+																}{" "}
+																•{" "}
+																{format(
+																	new Date(
+																		commit
+																			.commit
+																			.author
+																			.date,
+																	),
+																	"MMM d, h:mm a",
+																)}
+															</div>
+														)}
+													</div>
+												))}
+											{standup.commits.length > 10 && (
+												<p className="text-slate-500 text-xs ml-[4.5rem]">
+													+{" "}
+													{standup.commits.length -
+														10}{" "}
+													more commits
+												</p>
+											)}
+										</div>
+									</details>
+								)}
 							</div>
 
+							{/* Today */}
 							<div>
-								<p className="text-slate-400 font-medium mb-1">
+								<p className="text-slate-400 font-medium mb-2">
 									Today
 								</p>
-								<p className="text-slate-300">
-									{standup.today}
-								</p>
+								<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
+									<ReactMarkdown>
+										{standup.today}
+									</ReactMarkdown>
+								</div>
 							</div>
 
+							{/* Blockers */}
 							<div>
-								<p className="text-slate-400 font-medium mb-1">
+								<p className="text-slate-400 font-medium mb-2">
 									Blockers
 								</p>
-								<p className="text-slate-300">
-									{standup.blockers}
-								</p>
+								<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
+									<ReactMarkdown>
+										{standup.blockers}
+									</ReactMarkdown>
+								</div>
 							</div>
 						</div>
 
-						{standup.goalIds.length > 0 && (
+						{standup.taskIds && standup.taskIds.length > 0 && (
 							<div className="flex gap-2 mt-4 pt-4 border-t border-slate-700">
-								{standup.goalIds.map((goalId) => (
+								{standup.taskIds.map((taskId) => (
 									<span
-										key={goalId}
+										key={taskId}
 										className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs"
 									>
-										Goal linked
+										Task linked
 									</span>
 								))}
 							</div>
