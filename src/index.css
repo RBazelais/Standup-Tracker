@@ -1,4 +1,5 @@
 /* stylelint-disable at-rule-no-unknown */
+/* stylelint-disable scss/at-rule-no-unknown */
 @import "tailwindcss";
 @import "tw-animate-css";
 

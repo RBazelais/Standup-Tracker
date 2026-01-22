@@ -24,7 +24,7 @@ export function StandupHistory() {
 					No standups yet for this repository.
 				</p>
 				<p className="text-sm text-slate-500 mt-2">
-					Create your first standup above to get started.
+					Create your first standup note above to get started.
 				</p>
 			</Card>
 		);
@@ -35,7 +35,7 @@ export function StandupHistory() {
 			<div className="flex items-center gap-3 mb-6">
 				<Calendar className="h-5 w-5 text-blue-500" />
 				<h2 className="text-lg font-semibold text-white">
-					Standup History
+					Standup Note History
 				</h2>
 				<span className="text-sm text-slate-500">
 					({repoStandups.length})
