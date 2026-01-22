@@ -40,6 +40,7 @@ export interface Standup {
 	today: string;
 	blockers: string;
 	goalIds: string[];
+	taskIds?: string[];
 	commits: GitHubCommit[];
 	repoFullName?: string;
 	createdAt: string;
