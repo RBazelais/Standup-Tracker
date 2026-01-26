@@ -118,21 +118,15 @@ export function StandupHistory() {
 														{commit.commit
 															.author && (
 															<div className="text-slate-500 mt-1 ml-[4.5rem]">
-																{
-																	commit
-																		.commit
-																		.author
-																		.name
-																}{" "}
-																•{" "}
-																{format(
-																	new Date(
-																		commit
-																			.commit
-																			.author
-																			.date,
-																	),
-																	"MMM d, h:mm a",
+																{commit.commit.author.name || "Unknown"}
+																{commit.commit.author.date && (
+																	<>
+																		{" "}•{" "}
+																		{format(
+																			new Date(commit.commit.author.date),
+																			"MMM d, h:mm a",
+																		)}
+																	</>
 																)}
 															</div>
 														)}

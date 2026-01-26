@@ -3,6 +3,7 @@ import { useStore } from "./store";
 import { LandingPage } from "./components/LandingPage";
 import { AuthCallback } from "./components/AuthCallback";
 import { Dashboard } from "./components/Dashboard";
+import { StandupDetail } from "./components/StandupDetail";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
@@ -27,6 +28,14 @@ function App() {
 					element={
 						<ProtectedRoute>
 							<Dashboard />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/standup/:id"
+					element={
+						<ProtectedRoute>
+							<StandupDetail />
 						</ProtectedRoute>
 					}
 				/>

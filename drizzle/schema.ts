@@ -10,6 +10,7 @@ export const standups = pgTable("standups", {
 	blockers: text("blockers").notNull(),
 	commits: jsonb("commits").notNull(), // Store commit data as JSON
 	goalIds: jsonb("goal_ids").notNull().default([]), // Array of goal IDs
+	taskIds: jsonb("task_ids").notNull().default([]), // Array of task IDs
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
