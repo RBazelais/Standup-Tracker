@@ -11,30 +11,29 @@ import type { Standup } from "../types";
 export function StandupDetail() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const { standups, user, logout } = useStore();
+	const { user, logout } = useStore();
 
 	const [standup, setStandup] = useState<Standup | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const [loading, setLoading] = useState(!!id);
+	const [error, setError] = useState<string | null>(id ? null : "No standup ID provided");
 
 	useEffect(() => {
-		if (!id) {
-			setError("No standup ID provided");
-			setLoading(false);
-			return;
-		}
+		if (!id) return;
 
-		// Find standup in store
-		const found = standups.find((s) => s.id === id);
+		const fetchStandup = async () => {
+			try {
+				const response = await fetch(`/api/standups/${id}`);
+				const data = await response.json();
+				setStandup(data);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Failed to load standup");
+			} finally {
+				setLoading(false);
+			}
+		};
 
-		if (found) {
-			setStandup(found);
-			setLoading(false);
-		} else {
-			setError("Standup not found");
-			setLoading(false);
-		}
-	}, [id, standups]);
+		fetchStandup();
+	}, [id]);
 
 	const handleLogout = () => {
 		logout();
