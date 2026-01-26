@@ -10,35 +10,21 @@ const GitHubIcon = ({ className }: { className?: string }) => (
 	</svg>
 );
 
-interface FooterProps {
-	isDark: boolean;
-}
-
-export function Footer({ isDark }: FooterProps) {
+export function Footer() {
 	return (
 		<footer
-			className={`border-t py-8 ${
-				isDark
-					? "bg-slate-950/50 border-slate-800"
-					: "bg-white/50 border-slate-200"
-			}`}
+			className="border-t py-8 bg-slate-950/50 border-slate-800"
 		>
 			<div className="container mx-auto px-6">
 				<div className="flex items-center justify-center gap-2 text-sm">
-					<span
-						className={isDark ? "text-slate-400" : "text-slate-600"}
-					>
+					<span className="text-slate-400">
 						Built by RBazelais
 					</span>
 					<a
 						href="https://github.com/RBazelais/Standup-Tracker"
 						target="_blank"
 						rel="noopener noreferrer"
-						className={`transition-colors ${
-							isDark
-								? "text-slate-400 hover:text-white"
-								: "text-slate-600 hover:text-slate-900"
-						}`}
+						className="transition-colors text-slate-400 hover:text-white"
 						aria-label="View source on GitHub"
 					>
 						<GitHubIcon className="h-5 w-5" />
