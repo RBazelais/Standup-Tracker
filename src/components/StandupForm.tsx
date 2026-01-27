@@ -116,7 +116,7 @@ export function StandupForm() {
 						value={yesterday}
 						onChange={(e) => setYesterday(e.target.value)}
 						placeholder="What did you work on yesterday?"
-						className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[100px]"
+						className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[100px] focus:bg-slate-700"
 						required
 					/>
 				</div>
@@ -131,7 +131,7 @@ export function StandupForm() {
 						value={today}
 						onChange={(e) => setToday(e.target.value)}
 						placeholder="What will you work on today?"
-						className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[100px]"
+					className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[100px] focus:bg-slate-700"
 						required
 					/>
 				</div>
@@ -146,7 +146,7 @@ export function StandupForm() {
 						value={blockers}
 						onChange={(e) => setBlockers(e.target.value)}
 						placeholder="Any blockers? (Optional)"
-						className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[80px]"
+						className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[80px] focus:bg-slate-700"
 					/>
 				</div>
 

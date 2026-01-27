@@ -4,7 +4,7 @@ import { useStore } from "../store";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, GitCommit } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import type { Standup } from "../types";
 
@@ -14,19 +14,31 @@ export function StandupDetail() {
 	const { user, logout } = useStore();
 
 	const [standup, setStandup] = useState<Standup | null>(null);
-	const [loading, setLoading] = useState(!!id);
-	const [error, setError] = useState<string | null>(id ? null : "No standup ID provided");
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (!id) return;
-
 		const fetchStandup = async () => {
+			if (!id) {
+				setError("No standup ID provided");
+				setLoading(false);
+				return;
+			}
+
 			try {
 				const response = await fetch(`/api/standups/${id}`);
-				const data = await response.json();
-				setStandup(data);
+
+				if (response.ok) {
+					const data = await response.json();
+					setStandup(data);
+				} else if (response.status === 404) {
+					setError("Standup not found");
+				} else {
+					setError("Failed to load standup");
+				}
 			} catch (err) {
-				setError(err instanceof Error ? err.message : "Failed to load standup");
+				console.error("Error fetching standup:", err);
+				setError("Failed to load standup");
 			} finally {
 				setLoading(false);
 			}
@@ -163,7 +175,6 @@ export function StandupDetail() {
 			</header>
 
 			<main className="container mx-auto px-6 py-8 max-w-4xl">
-				{/* Breadcrumb */}
 				<div className="mb-6">
 					<Link to="/dashboard">
 						<Button
@@ -177,13 +188,11 @@ export function StandupDetail() {
 					</Link>
 				</div>
 
-				{/* Standup Card */}
 				<Card className="p-8 bg-slate-800/50 border-slate-700">
-					{/* Header */}
 					<div className="mb-8">
 						<h2 className="text-3xl font-bold text-white mb-2">
 							{format(
-								parseISO(standup.date),
+								new Date(standup.date),
 								"EEEE, MMMM d, yyyy",
 							)}
 						</h2>
@@ -195,9 +204,7 @@ export function StandupDetail() {
 						</div>
 					</div>
 
-					{/* Content */}
 					<div className="space-y-6">
-						{/* Yesterday */}
 						<div>
 							<h3 className="text-lg font-semibold text-slate-300 mb-3">
 								Yesterday
@@ -240,15 +247,18 @@ export function StandupDetail() {
 												</div>
 												{commit.commit.author && (
 													<div className="text-slate-500 mt-1 ml-[4.5rem]">
-														{commit.commit.author.name || "Unknown"}
-														{commit.commit.author.date && (
-															<>
-																{" "}•{" "}
-																{format(
-																	new Date(commit.commit.author.date),
-																	"MMM d, h:mm a",
-																)}
-															</>
+														{commit.commit.author
+															.name ||
+															"Unknown"}{" "}
+														•{" "}
+														{format(
+															new Date(
+																commit.commit
+																	.author
+																	.date ||
+																	new Date(),
+															),
+															"MMM d, h:mm a",
 														)}
 													</div>
 												)}
@@ -259,19 +269,15 @@ export function StandupDetail() {
 							)}
 						</div>
 
-						{/* Today */}
 						<div>
 							<h3 className="text-lg font-semibold text-slate-300 mb-3">
 								Today
 							</h3>
 							<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
-								<ReactMarkdown>
-									{standup.today}
-								</ReactMarkdown>
+								<ReactMarkdown>{standup.today}</ReactMarkdown>
 							</div>
 						</div>
 
-						{/* Blockers */}
 						<div>
 							<h3 className="text-lg font-semibold text-slate-300 mb-3">
 								Blockers

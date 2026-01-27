@@ -33,13 +33,16 @@ export function AuthCallback() {
 
 				const { access_token } = await response.json();
 
-				// Store token
-				setAccessToken(access_token);
-
-				// Fetch user info
+				// Fetch user info first to ensure token is valid
 				const github = new GitHubService(access_token);
 				const user = await github.getUser();
+				
+				// Store token and user together
+				setAccessToken(access_token);
 				setUser(user);
+
+				// Small delay to ensure state persistence completes
+				await new Promise(resolve => setTimeout(resolve, 100));
 
 				// Redirect to dashboard
 				navigate("/dashboard");

@@ -1,13 +1,21 @@
 import { useStore } from "../store";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RepoSelector } from "./RepoSelector";
 import { StandupForm } from "./StandupForm";
 import { StandupHistory } from "./StandupHistory";
 
 export function Dashboard() {
-	const { user, logout, selectedRepo } = useStore();
+	const { user, logout, selectedRepo, loadStandups } = useStore();
 	const navigate = useNavigate();
+
+	// Load standups from database (with automatic migration)
+	useEffect(() => {
+		if (user) {
+			loadStandups();
+		}
+	}, [user]);
 
 	const handleLogout = () => {
 		logout();

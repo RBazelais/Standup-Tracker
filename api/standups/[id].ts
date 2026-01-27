@@ -1,13 +1,36 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { db } from "../../src/lib/db";
-import { standups } from "../../drizzle/schema";
+import { drizzle } from "drizzle-orm/vercel-postgres";
+import { sql } from "@vercel/postgres";
+import { standups } from "../../drizzle/schema.ts";
 import { eq } from "drizzle-orm";
+
+const db = drizzle(sql);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const { id } = req.query;
 
 	if (!id || typeof id !== "string") {
 		return res.status(400).json({ error: "Standup ID is required" });
+	}
+
+	// GET: Fetch single standup
+	if (req.method === "GET") {
+		try {
+			const standup = await db
+				.select()
+				.from(standups)
+				.where(eq(standups.id, id))
+				.limit(1);
+
+			if (standup.length === 0) {
+				return res.status(404).json({ error: "Standup not found" });
+			}
+
+			return res.status(200).json(standup[0]);
+		} catch (error) {
+			console.error("Failed to fetch standup:", error);
+			return res.status(500).json({ error: "Failed to fetch standup" });
+		}
 	}
 
 	// PUT: Update standup
@@ -38,7 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		}
 	}
 
-	// DELETE: Delete standup (existing)
+	// DELETE: Delete standup
 	if (req.method === "DELETE") {
 		try {
 			await db.delete(standups).where(eq(standups.id, id));

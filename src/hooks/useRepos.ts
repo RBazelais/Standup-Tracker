@@ -12,14 +12,17 @@ export function useRepos() {
 		const fetchRepos = async () => {
 			if (!github) {
 				setLoading(false);
+				setError(null);
 				return;
 			}
 
 			try {
 				setLoading(true);
+				setError(null);
 				const fetchedRepos = await github.getRepos();
 				setRepos(fetchedRepos);
 			} catch (err) {
+				console.error("Error fetching repos:", err);
 				setError(
 					err instanceof Error
 						? err.message
