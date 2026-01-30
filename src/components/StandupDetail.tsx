@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useStore } from "../store";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, GitCommit } from "lucide-react";
+import { Loader2, ArrowLeft, GitCommit, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import type { Standup } from "../types";
@@ -11,11 +11,12 @@ import type { Standup } from "../types";
 export function StandupDetail() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const { user, logout } = useStore();
+	const { user, logout, deleteStandup } = useStore();
 
 	const [standup, setStandup] = useState<Standup | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
 		const fetchStandup = async () => {
@@ -50,6 +51,30 @@ export function StandupDetail() {
 	const handleLogout = () => {
 		logout();
 		navigate("/");
+	};
+
+	const handleEdit = () => {
+		navigate(`/standup/${id}/edit`);
+	};
+
+	const handleDelete = async () => {
+		if (!id) return;
+
+		const confirmed = window.confirm(
+			"Are you sure you want to delete this standup? This action cannot be undone.",
+		);
+
+		if (!confirmed) return;
+
+		setDeleting(true);
+		try {
+			await deleteStandup(id);
+			navigate("/dashboard");
+		} catch (err) {
+			console.error("Failed to delete standup:", err);
+			alert("Failed to delete standup. Please try again.");
+			setDeleting(false);
+		}
 	};
 
 	if (loading) {
@@ -175,7 +200,8 @@ export function StandupDetail() {
 			</header>
 
 			<main className="container mx-auto px-6 py-8 max-w-4xl">
-				<div className="mb-6">
+				{/* Breadcrumb and Actions */}
+				<div className="mb-6 flex items-center justify-between">
 					<Link to="/dashboard">
 						<Button
 							variant="ghost"
@@ -186,8 +212,35 @@ export function StandupDetail() {
 							Back to Dashboard
 						</Button>
 					</Link>
+
+					<div className="flex items-center gap-3">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={handleEdit}
+							className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300 hover:text-white"
+						>
+							<Edit className="h-4 w-4 mr-2" />
+							Edit
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={handleDelete}
+							disabled={deleting}
+							className="bg-slate-800 border-slate-700 hover:bg-red-900/50 hover:border-red-700 text-slate-300 hover:text-red-400"
+						>
+							{deleting ? (
+								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+							) : (
+								<Trash2 className="h-4 w-4 mr-2" />
+							)}
+							Delete
+						</Button>
+					</div>
 				</div>
 
+				{/* Standup Card */}
 				<Card className="p-8 bg-slate-800/50 border-slate-700">
 					<div className="mb-8">
 						<h2 className="text-3xl font-bold text-white mb-2">

@@ -64,17 +64,6 @@ export function StandupHistory() {
 									{standup.commits.length !== 1 ? "s" : ""}
 								</p>
 							</div>
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={(e) => {
-									e.stopPropagation();
-									deleteStandup(standup.id);
-								}}
-								className="text-slate-400 hover:text-red-400 hover:bg-slate-800"
-							>
-								<Trash2 className="h-4 w-4" />
-							</Button>
 						</div>
 
 						<div className="space-y-4 text-sm">
