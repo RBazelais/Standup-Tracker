@@ -6,6 +6,7 @@ import { RepoSelector } from "./RepoSelector";
 import { StandupForm } from "./StandupForm";
 import { StandupHistory } from "./StandupHistory";
 
+
 export function Dashboard() {
 	const { user, logout, selectedRepo, loadStandups } = useStore();
 	const navigate = useNavigate();
@@ -15,7 +16,7 @@ export function Dashboard() {
 		if (user) {
 			loadStandups();
 		}
-	}, [user]);
+	}, [user, loadStandups]);
 
 	const handleLogout = () => {
 		logout();
