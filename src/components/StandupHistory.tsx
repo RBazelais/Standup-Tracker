@@ -1,4 +1,5 @@
 import { useStore } from "../store";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Trash2, GitCommit } from "lucide-react";
@@ -7,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 
 export function StandupHistory() {
 	const { standups, selectedRepo, deleteStandup } = useStore();
+	const navigate = useNavigate();
 
 	const repoStandups = standups
 		.filter((s) => s.repoFullName === selectedRepo?.full_name)
@@ -46,7 +48,8 @@ export function StandupHistory() {
 				{repoStandups.map((standup) => (
 					<Card
 						key={standup.id}
-						className="p-5 bg-slate-900/50 border-slate-700 hover:bg-slate-900/70 transition-colors"
+						className="p-5 bg-slate-900/50 border-slate-700 hover:bg-slate-900/70 transition-colors cursor-pointer"
+						onClick={() => navigate(`/standup/${standup.id}`)}
 					>
 						<div className="flex items-start justify-between mb-4">
 							<div>
@@ -64,7 +67,10 @@ export function StandupHistory() {
 							<Button
 								variant="ghost"
 								size="sm"
-								onClick={() => deleteStandup(standup.id)}
+								onClick={(e) => {
+									e.stopPropagation();
+									deleteStandup(standup.id);
+								}}
 								className="text-slate-400 hover:text-red-400 hover:bg-slate-800"
 							>
 								<Trash2 className="h-4 w-4" />
@@ -96,16 +102,10 @@ export function StandupHistory() {
 											{standup.commits
 												.slice(0, 10)
 												.map((commit) => (
-													<div
-														key={commit.sha}
-														className="text-xs"
-													>
+													<div key={commit.sha}className="text-xs">
 														<div className="flex items-start gap-2">
 															<code className="text-blue-400 font-mono">
-																{commit.sha.substring(
-																	0,
-																	7,
-																)}
+																{commit.sha.substring(0,7,)}
 															</code>
 															<span className="text-slate-300 flex-1">
 																{
