@@ -21,11 +21,15 @@ export function StandupForm() {
 	// Auto-populate yesterday field from commits
 	const handleAutoPopulate = () => {
 		if (commits.length === 0) return;
-
+		
 		const commitMessages = commits
-			.map((commit) => commit.commit.message.split("\n")[0]) // First line only
-			.join(" • ");
-
+			.map(commit => {
+				const message = commit.commit.message.split('\n')[0];
+				const sha = commit.sha.substring(0, 7);
+				return `- ${message} (\`${sha}\`)`;
+			})
+			.join('\n');
+		
 		setYesterday(commitMessages);
 	};
 
