@@ -4,6 +4,7 @@ import { LandingPage } from "./components/LandingPage";
 import { AuthCallback } from "./components/AuthCallback";
 import { Dashboard } from "./components/Dashboard";
 import { StandupDetail } from "./components/StandupDetail";
+import { StandupEdit } from "./components/StandupEdit";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
@@ -36,6 +37,14 @@ function App() {
 					element={
 						<ProtectedRoute>
 							<StandupDetail />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/standup/:id/edit"
+					element={
+						<ProtectedRoute>
+							<StandupEdit />
 						</ProtectedRoute>
 					}
 				/>
