@@ -29,3 +29,4 @@ dist-ssr
 
 # TypeScript build info
 *.tsbuildinfo
+fix-standups.mjs
