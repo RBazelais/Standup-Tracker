@@ -4,8 +4,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	console.log("=== Auth Callback Called ===");
 	console.log("Method:", req.method);
 	console.log("Body:", req.body);
-	console.log("GITHUB_CLIENT_ID exists:", !!process.env.GITHUB_CLIENT_ID);
-	console.log("GITHUB_CLIENT_SECRET exists:", !!process.env.GITHUB_CLIENT_SECRET);
+	
+	const clientId = process.env.GITHUB_CLIENT_ID || process.env.VITE_GITHUB_CLIENT_ID;
+	const clientSecret = process.env.GITHUB_CLIENT_SECRET;
 	
 	// Only allow POST requests
 	if (req.method !== "POST") {
@@ -31,8 +32,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 					Accept: "application/json",
 				},
 				body: JSON.stringify({
-					client_id: process.env.GITHUB_CLIENT_ID,
-					client_secret: process.env.GITHUB_CLIENT_SECRET,
+					client_id: clientId,
+					client_secret: clientSecret,
 					code,
 				}),
 			},
