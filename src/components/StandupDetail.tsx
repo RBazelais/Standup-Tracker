@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useStore } from "../store";
+import { Header } from "./Header";
+import { Footer } from "./Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Loader2, ArrowLeft, GitCommit, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
@@ -11,12 +22,13 @@ import type { Standup } from "../types";
 export function StandupDetail() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const { user, logout, deleteStandup } = useStore();
+	const { deleteStandup } = useStore();
 
 	const [standup, setStandup] = useState<Standup | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [deleting, setDeleting] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	useEffect(() => {
 		const fetchStandup = async () => {
@@ -48,11 +60,6 @@ export function StandupDetail() {
 		fetchStandup();
 	}, [id]);
 
-	const handleLogout = () => {
-		logout();
-		navigate("/");
-	};
-
 	const handleEdit = () => {
 		navigate(`/standup/${id}/edit`);
 	};
@@ -60,19 +67,13 @@ export function StandupDetail() {
 	const handleDelete = async () => {
 		if (!id) return;
 
-		const confirmed = window.confirm(
-			"Are you sure you want to delete this standup? This action cannot be undone.",
-		);
-
-		if (!confirmed) return;
-
 		setDeleting(true);
 		try {
 			await deleteStandup(id);
+			setDeleteDialogOpen(false);
 			navigate("/dashboard");
 		} catch (err) {
 			console.error("Failed to delete standup:", err);
-			alert("Failed to delete standup. Please try again.");
 			setDeleting(false);
 		}
 	};
@@ -80,33 +81,7 @@ export function StandupDetail() {
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-				<header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur">
-					<div className="container mx-auto px-6 py-4 flex items-center justify-between">
-						<h1 className="text-xl font-bold text-white">
-							StandUp Tracker
-						</h1>
-						<div className="flex items-center gap-4">
-							<div className="flex items-center gap-3">
-								<img
-									src={user?.avatar_url}
-									alt={user?.name}
-									className="h-8 w-8 rounded-full"
-								/>
-								<span className="text-sm text-slate-300">
-									{user?.name}
-								</span>
-							</div>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={handleLogout}
-								className="bg-slate-800 border-slate-700 hover:bg-slate-700 hover:text-white text-slate-300"
-							>
-								Logout
-							</Button>
-						</div>
-					</div>
-				</header>
+				<Header />
 
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<div className="flex items-center justify-center py-20">
@@ -120,33 +95,7 @@ export function StandupDetail() {
 	if (error || !standup) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-				<header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur">
-					<div className="container mx-auto px-6 py-4 flex items-center justify-between">
-						<h1 className="text-xl font-bold text-white">
-							StandUp Tracker
-						</h1>
-						<div className="flex items-center gap-4">
-							<div className="flex items-center gap-3">
-								<img
-									src={user?.avatar_url}
-									alt={user?.name}
-									className="h-8 w-8 rounded-full"
-								/>
-								<span className="text-sm text-slate-300">
-									{user?.name}
-								</span>
-							</div>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={handleLogout}
-								className="bg-slate-800 border-slate-700 hover:bg-slate-700 hover:text-white text-slate-300"
-							>
-								Logout
-							</Button>
-						</div>
-					</div>
-				</header>
+				<Header />
 
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
@@ -170,34 +119,7 @@ export function StandupDetail() {
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-			<header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur">
-				<div className="container mx-auto px-6 py-4 flex items-center justify-between">
-					<h1 className="text-xl font-bold text-white">
-						StandUp Tracker
-					</h1>
-
-					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-3">
-							<img
-								src={user?.avatar_url}
-								alt={user?.name}
-								className="h-8 w-8 rounded-full"
-							/>
-							<span className="text-sm text-slate-300">
-								{user?.name}
-							</span>
-						</div>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleLogout}
-							className="bg-slate-800 border-slate-700 hover:bg-slate-700 hover:text-white text-slate-300"
-						>
-							Logout
-						</Button>
-					</div>
-				</div>
-			</header>
+			<Header />
 
 			<main className="container mx-auto px-6 py-8 max-w-4xl">
 				{/* Breadcrumb and Actions */}
@@ -223,20 +145,63 @@ export function StandupDetail() {
 							<Edit className="h-4 w-4 mr-2" />
 							Edit
 						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleDelete}
-							disabled={deleting}
-							className="bg-slate-800 border-slate-700 hover:bg-red-900/50 hover:border-red-700 text-slate-300 hover:text-red-400"
+
+						<Dialog
+							open={deleteDialogOpen}
+							onOpenChange={setDeleteDialogOpen}
 						>
-							{deleting ? (
-								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-							) : (
-								<Trash2 className="h-4 w-4 mr-2" />
-							)}
-							Delete
-						</Button>
+							<DialogTrigger asChild>
+								<Button
+									variant="outline"
+									size="sm"
+									className="bg-slate-800 border-slate-700 hover:bg-red-900/50 hover:border-red-700 text-slate-300 hover:text-red-400"
+								>
+									<Trash2 className="h-4 w-4 mr-2" />
+									Delete
+								</Button>
+							</DialogTrigger>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>
+										Delete Standup Note?
+									</DialogTitle>
+									<DialogDescription>
+										This will permanently delete this standup
+										note from{" "}
+										{format(
+											new Date(standup.date),
+											"MMMM d, yyyy",
+										)}
+										. This action cannot be undone.
+									</DialogDescription>
+								</DialogHeader>
+								<DialogFooter>
+									<Button
+										variant="outline"
+										onClick={() =>
+											setDeleteDialogOpen(false)
+										}
+										className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+									>
+										Cancel
+									</Button>
+									<Button
+										onClick={handleDelete}
+										disabled={deleting}
+										className="bg-red-600 hover:bg-red-700 text-white"
+									>
+										{deleting ? (
+											<>
+												<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+												Deleting...
+											</>
+										) : (
+											"Delete"
+										)}
+									</Button>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
 					</div>
 				</div>
 
@@ -344,6 +309,7 @@ export function StandupDetail() {
 					</div>
 				</Card>
 			</main>
+			<Footer />
 		</div>
 	);
 }
