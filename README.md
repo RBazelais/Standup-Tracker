@@ -2,59 +2,54 @@
 
 Never forget what you were working on yesterday.
 
-StandUp Tracker helps developers track daily progress effortlessly by automatically pulling GitHub commits to create standup notes in seconds. Perfect for async teams and individuals who want to stay organized without disrupting workflow.
+StandUp Tracker helps developers track daily progress by pulling GitHub commits and turning them into standup notes. No more "what did I do yesterday?" Your commits already know.
+
+Meetings have their place. Routine status updates don't need to be one of them. Your team stays in sync, you stay focused on the work.
+
+Built for async teams, remote developers, and people who respect each other's time.
 
 ![StandUp Tracker](./src/assets/Standup-Tracker.png)
 
-## Why StandUp Tracker?
-
-Daily standups are essential for team alignment but can disrupt focus and be challenging across timezones. StandUp Tracker provides an asynchronous alternative that:
-
-- **Saves time** - Create updates in seconds instead of attending meetings
-- **Preserves focus** - No context-switching during deep work sessions
-- **Works globally** - Perfect for distributed teams across timezones
-- **Tracks real work** - Based on actual commits, not memory
-
 ## Features
 
-- **Auto-populate from Git** - Your commits become your standup notes with one click
-- **Async by default** - Write updates on your schedule, not meeting schedules
-- **Link to SMART goals** - Connect daily work to bigger objectives and track progress
-- **Team visibility** (Coming soon) - Share progress updates without meetings
-- **Learn your velocity** (Coming soon) - Predict story points based on your actual work patterns
-- **Dark mode by default** - Easy on the eyes with light mode option
-- **Secure OAuth** - GitHub authentication with token encryption
+- [X] **Auto-populate from Git** - Your commits become your standup notes with one click
+- [X] **Async by default** - Write updates on your schedule, not meeting schedules
+- [X] **Full CRUD operations** - Create, view, edit, and delete standup notes
+- [X] **Markdown support** - Format your notes with markdown for better readability
+- [X] **Date range selection** - Fetch commits from any date range (perfect for Monday standups)
+- [X] **Clean history view** - Scannable list of past standups with summaries
+- [X] **Persistent storage** - All standups saved to Neon Postgres database
+- [X] **Secure OAuth** - GitHub authentication with token encryption
 
 ## Demo
 
-[Live Demo](https://your-deployment-url.vercel.app) (Will add after deployment)
+[Live Demo](https://standup-tracker-indol.vercel.app)
 
 ## Tech Stack
 
 ### Frontend
-
 - **React 18** + **TypeScript** - Type-safe component architecture
 - **Vite** - Lightning-fast build tool
-- **Tailwind CSS v4** - Utility-first styling
+- **Tailwind CSS v4** - Utility-first styling with Typography plugin
 - **Framer Motion** - Smooth animations
-- **shadcn/ui** - Beautiful, accessible components
-- **Zustand** - Lightweight state management
+- **shadcn/ui** + **Radix UI** - Accessible components
+- **Zustand** - Lightweight state management with persistence
 - **React Router** - Client-side routing
+- **React Markdown** - Markdown rendering for standup notes
 
 ### Backend
-
-- **Vercel Serverless Functions** - OAuth token exchange
+- **Vercel Serverless Functions** - RESTful API endpoints
+- **Neon Postgres** - Serverless database
+- **Drizzle ORM** - Type-safe database queries
 - **GitHub API (Octokit)** - Repository and commit data
 
 ### DevOps
-
 - **Vercel** - Deployment and hosting
 - **GitHub OAuth Apps** - Secure authentication
 
 ## Installation
 
 ### Prerequisites
-
 - Node.js 18+ and npm
 - GitHub account
 - Vercel account (for deployment)
@@ -62,19 +57,17 @@ Daily standups are essential for team alignment but can disrupt focus and be cha
 ### Local Development
 
 1. **Clone the repository**
-
 ```bash
-   git clone https://github.com/RBazelais/Standup-Tracker.git
-   cd Standup-Tracker
+git clone https://github.com/RBazelais/Standup-Tracker.git
+cd Standup-Tracker
 ```
 
-1. **Install dependencies**
-
+2. **Install dependencies**
 ```bash
-   npm install
+npm install
 ```
 
-1. **Set up GitHub OAuth App**
+3. **Set up GitHub OAuth App**
    - Go to [GitHub Developer Settings](https://github.com/settings/developers)
    - Click "New OAuth App"
    - Fill in:
@@ -83,28 +76,36 @@ Daily standups are essential for team alignment but can disrupt focus and be cha
      - **Authorization callback URL:** `http://localhost:3000/auth/callback`
    - Copy your **Client ID** and **Client Secret**
 
-2. **Configure environment variables**
+4. **Set up Neon Database**
+   - Create a Neon project at [neon.tech](https://neon.tech)
+   - Copy your connection string
 
-```bash
-   cp .env.example .env
-```
-
-   Update `.env` with your credentials:
-
+5. **Configure environment variables**
+   
+   Create `.env.local`:
 ```env
-   VITE_GITHUB_CLIENT_ID=your_client_id_here
-   VITE_APP_URL=http://localhost:3000
-   GITHUB_CLIENT_SECRET=your_client_secret_here
+# GitHub OAuth
+VITE_GITHUB_CLIENT_ID=your_client_id_here
+GITHUB_CLIENT_SECRET=your_client_secret_here
+VITE_APP_URL=http://localhost:3000
+
+# Neon Database
+POSTGRES_URL=your_neon_connection_string
 ```
 
-1. **Run the development server**
-
+6. **Run database migrations**
 ```bash
-   npm install -g vercel  # Install Vercel CLI
-   vercel dev             # Run with serverless functions
+npm run db:push
 ```
 
-1. **Open your browser**
+7. **Run the development server**
+```bash
+npm install -g vercel  # Install Vercel CLI (if not already installed)
+vercel dev             # Run with serverless functions
+```
+
+8. **Open your browser**
+   
    Navigate to `http://localhost:3000`
 
 ## Deployment
@@ -112,107 +113,103 @@ Daily standups are essential for team alignment but can disrupt focus and be cha
 ### Deploy to Vercel
 
 1. **Push to GitHub**
-
 ```bash
-   git push origin main
+git push origin main
 ```
 
-1. **Import to Vercel**
+2. **Import to Vercel**
    - Go to [Vercel Dashboard](https://vercel.com/dashboard)
    - Click "New Project"
    - Import your GitHub repository
-   - Add environment variables:
+   - Vercel will auto-detect Neon and set up database connection
+   - Add remaining environment variables:
      - `VITE_GITHUB_CLIENT_ID`
-     - `VITE_APP_URL` (your Vercel URL)
      - `GITHUB_CLIENT_SECRET`
+     - `VITE_APP_URL` (your Vercel URL)
 
-2. **Update GitHub OAuth App**
+3. **Update GitHub OAuth App**
    - Update callback URL to: `https://your-app.vercel.app/auth/callback`
 
-3. **Deploy**
+4. **Deploy**
+   
    Vercel will automatically deploy on every push to `main`
 
 ## Usage
 
 1. **Sign in with GitHub** - Authorize StandUp Tracker to access your repositories
 2. **Select a repository** - Choose which project you want to track
-3. **Create standups** (Coming soon) - Auto-populate from your commits or write manually
-4. **Link to goals** (Coming soon) - Connect updates to your SMART goals
-5. **Share with team** (Coming soon) - Post updates asynchronously
-6. **Track velocity** (Coming soon) - Learn your estimation patterns over time
+3. **Create a standup note**:
+   - Select date range for commits (defaults to yesterday)
+   - Click "Auto-populate" to fill in your work from commits
+   - Add your plans for today
+   - Note any blockers (optional)
+4. **View history** - Browse past standups with clean, scannable summaries
+5. **Edit or delete** - Click any standup to view details, then edit or delete as needed
+
+## Architecture
+
+### Database Schema
+```typescript
+// Standups table
+{
+  id: uuid,
+  userId: string,           // GitHub user ID
+  repoFullName: string,     // e.g., "username/repo"
+  date: string,             // YYYY-MM-DD
+  yesterday: string,        // Markdown-formatted
+  today: string,            // Markdown-formatted
+  blockers: string,         // Markdown-formatted
+  commits: jsonb,           // Full commit data
+  taskIds: jsonb,           // Array of linked task IDs
+  createdAt: timestamp,
+  updatedAt: timestamp
+}
+```
+
+### API Routes
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/standups?userId={id}` | Fetch all standups for user |
+| POST | `/api/standups?userId={id}` | Create new standup |
+| GET | `/api/standups/{id}` | Fetch single standup |
+| PUT | `/api/standups/{id}` | Update standup |
+| DELETE | `/api/standups/{id}` | Delete standup |
 
 ## Roadmap
 
-### Phase 1: Core Features
+### Phase 1: Core Features (Complete)
+- [X] GitHub OAuth authentication
+- [X] Repository selection
+- [X] Standup form with commit auto-population
+- [X] Date range selector for commits
+- [X] Markdown support
+- [X] Standup history view
+- [X] Full CRUD operations
+- [X] Database persistence with Neon Postgres
 
-- [x] Landing page with dark mode
-- [x] GitHub OAuth authentication
-- [x] Repository selection
-- [ ] Standup form with commit auto-population
-- [ ] Standup history view
-- [ ] SMART goals management
-- [ ] Link standups to goals
+### Phase 2: Task Management (In Progress)
+- [ ] Link standups to tasks/tickets
+- [ ] Story point tracking
+- [ ] Velocity insights
 
-### Phase 2: Team Collaboration
-
-- [ ] Team workspaces
-- [ ] Share standups asynchronously
-- [ ] Team dashboard view
-- [ ] Notifications (Slack/Discord/Email)
-
-### Phase 3: Advanced Features
-
-- [ ] Story point prediction (ML-based)
-- [ ] Velocity tracking and insights
-- [ ] Blocker detection
-- [ ] Sprint retrospective summaries
-
-### Phase 4: Integrations
-
-- [ ] Export standups to Markdown
-- [ ] Jira/Linear integration
-- [ ] Calendar integration
-- [ ] API for custom workflows
-
-## Our Approach
-
-StandUp Tracker is built on the belief that effective communication should enhance productivity, not hinder it. While meetings have their place for collaboration and discussion, routine status updates can often be handled asynchronously.
-
-This tool helps teams:
-
-- Maintain visibility without constant meetings
-- Respect different working styles and timezones
-- Focus on outcomes rather than attendance
-- Create searchable records of progress
+### Future Ideas
+- Team workspaces and shared standups
+- Slack/Discord notifications
+- Jira/Asana/Linear integrations
+- Export to Markdown
 
 ## Contributing
 
-Contributions are welcome! Whether you're fixing bugs, adding features, or improving documentation, we appreciate your help.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Contributions welcome! Fork the repo, create a feature branch, and open a PR.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## Author
 
-**Rachél Bazelais**
-
+Rachél Bazelais
 - Portfolio: [rbazelais.com](https://rbazelais.com)
 - GitHub: [@RBazelais](https://github.com/RBazelais)
 - LinkedIn: [rbazelais](https://linkedin.com/in/rbazelais)
-
-## Acknowledgments
-
-- Built for developers who value focused work time
-- Inspired by distributed teams seeking better async communication
-- Special thanks to the React and Vercel communities
-
----
-
-If you find StandUp Tracker helpful for your workflow, please consider giving it a star!
