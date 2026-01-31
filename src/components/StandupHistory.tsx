@@ -73,19 +73,19 @@ export function StandupHistory() {
 						<div className="space-y-2 text-sm">
 							<div className="flex gap-2">
 								<span className="text-slate-500 font-medium min-w-[70px]">
-									Yesterday:
+									Completed:
 								</span>
 								<p className="text-slate-300 line-clamp-1">
-									{getFirstLine(standup.yesterday)}
+									{getFirstLine(standup.workCompleted)}
 								</p>
 							</div>
 
 							<div className="flex gap-2">
 								<span className="text-slate-500 font-medium min-w-[70px]">
-									Today:
+									Planned:
 								</span>
 								<p className="text-slate-300 line-clamp-1">
-									{getFirstLine(standup.today)}
+									{getFirstLine(standup.workPlanned)}
 								</p>
 							</div>
 

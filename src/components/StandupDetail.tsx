@@ -225,11 +225,11 @@ export function StandupDetail() {
 					<div className="space-y-6">
 						<div>
 							<h3 className="text-lg font-semibold text-slate-300 mb-3">
-								Yesterday
+								Work Completed
 							</h3>
 							<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
 								<ReactMarkdown>
-									{standup.yesterday}
+									{standup.workCompleted}
 								</ReactMarkdown>
 							</div>
 
@@ -289,10 +289,10 @@ export function StandupDetail() {
 
 						<div>
 							<h3 className="text-lg font-semibold text-slate-300 mb-3">
-								Today
+								Work Planned
 							</h3>
 							<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
-								<ReactMarkdown>{standup.today}</ReactMarkdown>
+								<ReactMarkdown>{standup.workPlanned}</ReactMarkdown>
 							</div>
 						</div>
 
