@@ -5,32 +5,79 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, GitCommit, CheckCircle2 } from "lucide-react";
-import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { Loader2, GitCommit, CheckCircle2, Calendar } from "lucide-react";
+import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
 
 export function StandupForm() {
 	const { selectedRepo, addStandup } = useStore();
-	const { commits, loading: commitsLoading } = useCommits();
 
-	const [yesterday, setYesterday] = useState("");
-	const [today, setToday] = useState("");
+	const [workCompleted, setWorkCompleted] = useState("");
+	const [workPlanned, setWorkPlanned] = useState("");
 	const [blockers, setBlockers] = useState("");
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
 
-	// Auto-populate yesterday field from commits
+	// Date range for fetching commits
+	const [commitStartDate, setCommitStartDate] = useState(
+		format(subDays(new Date(), 1), "yyyy-MM-dd"),
+	);
+	const [commitEndDate, setCommitEndDate] = useState(
+		format(new Date(), "yyyy-MM-dd"),
+	);
+
+	const {
+		commits,
+		loading: commitsLoading,
+		refetchCommits,
+	} = useCommits(commitStartDate, commitEndDate);
+
+	// Preset date range functions
+	const setYesterdayRange = () => {
+		const yesterday = subDays(new Date(), 1);
+		setCommitStartDate(format(yesterday, "yyyy-MM-dd"));
+		setCommitEndDate(format(new Date(), "yyyy-MM-dd"));
+	};
+
+	const setLastFridayRange = () => {
+		const today = new Date();
+		const dayOfWeek = today.getDay();
+		// If today is Monday (1), go back 3 days. If Sunday (0), go back 2 days.
+		const daysToLastFriday = dayOfWeek === 0 ? 2 : dayOfWeek === 1 ? 3 : 1;
+		const lastFriday = subDays(today, daysToLastFriday);
+		setCommitStartDate(format(lastFriday, "yyyy-MM-dd"));
+		setCommitEndDate(format(today, "yyyy-MM-dd"));
+	};
+
+	const setLastWeekRange = () => {
+		const lastWeekStart = startOfWeek(subDays(new Date(), 7), {
+			weekStartsOn: 1,
+		}); // Monday
+		const lastWeekEnd = endOfWeek(subDays(new Date(), 7), {
+			weekStartsOn: 1,
+		}); // Sunday
+		setCommitStartDate(format(lastWeekStart, "yyyy-MM-dd"));
+		setCommitEndDate(format(lastWeekEnd, "yyyy-MM-dd"));
+	};
+
+	const setThisWeekRange = () => {
+		const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
+		setCommitStartDate(format(weekStart, "yyyy-MM-dd"));
+		setCommitEndDate(format(new Date(), "yyyy-MM-dd"));
+	};
+
 	const handleAutoPopulate = () => {
 		if (commits.length === 0) return;
-		
+
 		const commitMessages = commits
-			.map(commit => {
-				const message = commit.commit.message.split('\n')[0];
+			.map((commit) => {
+				const message = commit.commit.message.split("\n")[0];
 				const sha = commit.sha.substring(0, 7);
 				return `- ${message} (\`${sha}\`)`;
 			})
-			.join('\n');
-		
-		setYesterday(commitMessages);
+			.join("\n");
+
+		setWorkCompleted(commitMessages);
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -40,29 +87,26 @@ export function StandupForm() {
 
 		setSaving(true);
 
-		// Create standup
 		const standup = {
 			id: crypto.randomUUID(),
 			date: format(new Date(), "yyyy-MM-dd"),
-			yesterday,
-			today,
+			workCompleted,
+			workPlanned,
 			blockers: blockers || "None",
-			goalIds: [],
+			taskIds: [],
 			commits,
 			repoFullName: selectedRepo.full_name,
 			createdAt: new Date().toISOString(),
 		};
 
-		addStandup(standup);
+		await addStandup(standup);
 
-		// Show success state
 		setSaving(false);
 		setSaved(true);
 
-		// Reset form after 2 seconds
 		setTimeout(() => {
-			setYesterday("");
-			setToday("");
+			setWorkCompleted("");
+			setWorkPlanned("");
 			setBlockers("");
 			setSaved(false);
 		}, 2000);
@@ -94,11 +138,122 @@ export function StandupForm() {
 			</div>
 
 			<form onSubmit={handleSubmit} className="space-y-6">
-				{/* Yesterday */}
+				{/* Date Range Selector */}
+				<Card className="p-4 bg-slate-900/50 border-slate-700">
+					<div className="flex items-center gap-2 mb-3">
+						<Calendar className="h-4 w-4 text-slate-400" />
+						<Label className="text-slate-300 text-sm">
+							Fetch commits from:
+						</Label>
+					</div>
+
+					{/* Quick Presets */}
+					<div className="flex flex-wrap gap-2 mb-3">
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={setYesterdayRange}
+							className="text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+						>
+							Yesterday
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={setLastFridayRange}
+							className="text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+						>
+							Last Friday
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={setThisWeekRange}
+							className="text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+						>
+							This Week
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={setLastWeekRange}
+							className="text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+						>
+							Last Week
+						</Button>
+					</div>
+
+					{/* Custom Date Inputs */}
+					<div className="grid grid-cols-2 gap-3">
+						<div className="space-y-1">
+							<Label
+								htmlFor="start-date"
+								className="text-xs text-slate-400"
+							>
+								Start Date
+							</Label>
+							<Input
+								id="start-date"
+								type="date"
+								value={commitStartDate}
+								onChange={(e) =>
+									setCommitStartDate(e.target.value)
+								}
+								className="bg-slate-800 border-slate-700 text-white text-sm"
+							/>
+						</div>
+
+						<div className="space-y-1">
+							<Label
+								htmlFor="end-date"
+								className="text-xs text-slate-400"
+							>
+								End Date
+							</Label>
+							<Input
+								id="end-date"
+								type="date"
+								value={commitEndDate}
+								onChange={(e) =>
+									setCommitEndDate(e.target.value)
+								}
+								max={format(new Date(), "yyyy-MM-dd")}
+								className="bg-slate-800 border-slate-700 text-white text-sm"
+							/>
+						</div>
+					</div>
+
+					<div className="flex items-center justify-between mt-3">
+						<span className="text-xs text-slate-500">
+							{commits.length} commit
+							{commits.length !== 1 ? "s" : ""} found
+						</span>
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							onClick={refetchCommits}
+							disabled={commitsLoading}
+							className="text-blue-400 hover:text-blue-300 hover:bg-slate-800 text-xs"
+						>
+							{commitsLoading ? (
+								<Loader2 className="h-3 w-3 animate-spin" />
+							) : (
+								"Refresh"
+							)}
+						</Button>
+					</div>
+				</Card>
+
+				{/* Work Completed */}
 				<div className="space-y-2">
 					<div className="flex items-center justify-between">
-						<Label htmlFor="yesterday" className="text-slate-300">
-							Yesterday
+						<Label htmlFor="workCompleted" className="text-slate-300">
+							What you worked on
 						</Label>
 						<Button
 							type="button"
@@ -111,31 +266,31 @@ export function StandupForm() {
 							{commitsLoading ? (
 								<Loader2 className="h-4 w-4 animate-spin" />
 							) : (
-								<>Auto-populate ({commits.length} commits)</>
+								<>Auto-populate ({commits.length})</>
 							)}
 						</Button>
 					</div>
 					<Textarea
-						id="yesterday"
-						value={yesterday}
-						onChange={(e) => setYesterday(e.target.value)}
-						placeholder="What did you work on yesterday?"
+						id="workCompleted"
+						value={workCompleted}
+						onChange={(e) => setWorkCompleted(e.target.value)}
+						placeholder="What did you work on during this period?"
 						className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[100px] focus:bg-slate-700"
 						required
 					/>
 				</div>
 
-				{/* Today */}
+				{/* Work Planned */}
 				<div className="space-y-2">
-					<Label htmlFor="today" className="text-slate-300">
-						Today
+					<Label htmlFor="workPlanned" className="text-slate-300">
+						What you'll work on next
 					</Label>
 					<Textarea
-						id="today"
-						value={today}
-						onChange={(e) => setToday(e.target.value)}
-						placeholder="What will you work on today?"
-					className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[100px] focus:bg-slate-700"
+						id="workPlanned"
+						value={workPlanned}
+						onChange={(e) => setWorkPlanned(e.target.value)}
+						placeholder="What will you work on next?"
+						className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[100px] focus:bg-slate-700"
 						required
 					/>
 				</div>

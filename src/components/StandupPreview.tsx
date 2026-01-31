@@ -18,30 +18,19 @@ export function StandupPreview() {
 				<div className="space-y-3">
 					<PreviewField
 						label="Yesterday"
-						content="Implemented GitHub OAuth flow 
-                        • Fixed TypeScript types for nullable fields 
-                        • Set up Zustand store"
+						content="Implemented GitHub OAuth flow, Fixed TypeScript types for nullable fields, Set up Zustand store"
 					/>
 
 					<PreviewField
 						label="Today"
-						content="Build landing page • Create standup form component • Integrate commit fetching"
+						content="Build landing page, Create standup form component, Integrate commit fetching"
 					/>
 
 					<PreviewField
 						label="Blockers"
-						content="None"
+						content="Need create get route to fetch all standup notes"
 					/>
 				</div>
-
-				{/* <div className="flex gap-2 pt-2">
-					<span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
-						🎯 Launch MVP
-					</span>
-					<span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">
-						🚀 Portfolio Project
-					</span>
-				</div> */}
 			</div>
 		</Card>
 	);

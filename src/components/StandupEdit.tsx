@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { Footer } from "./Footer";
 import { useStore } from "../store";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,8 @@ export function StandupEdit() {
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const [yesterday, setYesterday] = useState("");
-	const [today, setToday] = useState("");
+	const [workCompleted, setWorkCompleted] = useState("");
+	const [workPlanned, setWorkPlanned] = useState("");
 	const [blockers, setBlockers] = useState("");
 
 	useEffect(() => {
@@ -36,8 +37,8 @@ export function StandupEdit() {
 				if (response.ok) {
 					const data = await response.json();
 					setStandup(data);
-					setYesterday(data.yesterday);
-					setToday(data.today);
+					setWorkCompleted(data.workCompleted);
+					setWorkPlanned(data.workPlanned);
 					setBlockers(data.blockers);
 				} else if (response.status === 404) {
 					setError("Standup not found");
@@ -73,8 +74,8 @@ export function StandupEdit() {
 
 		try {
 			await updateStandup(id, {
-				yesterday,
-				today,
+				workCompleted,
+				workPlanned,
 				blockers,
 			});
 
@@ -230,34 +231,34 @@ export function StandupEdit() {
 					</h2>
 
 					<form onSubmit={handleSubmit} className="space-y-6">
-						{/* Yesterday */}
+						{/* Work Completed */}
 						<div className="space-y-2">
 							<Label
-								htmlFor="yesterday"
+								htmlFor="workCompleted"
 								className="text-slate-300"
 							>
-								Yesterday
+								Work Completed
 							</Label>
 							<Textarea
-								id="yesterday"
-								value={yesterday}
-								onChange={(e) => setYesterday(e.target.value)}
+								id="workCompleted"
+								value={workCompleted}
+								onChange={(e) => setWorkCompleted(e.target.value)}
 								placeholder="What did you work on?"
 								className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[120px]"
 								required
 							/>
 						</div>
 
-						{/* Today */}
+						{/* Work Planned */}
 						<div className="space-y-2">
-							<Label htmlFor="today" className="text-slate-300">
-								Today
+							<Label htmlFor="workPlanned" className="text-slate-300">
+								Work Planned
 							</Label>
 							<Textarea
-								id="today"
-								value={today}
-								onChange={(e) => setToday(e.target.value)}
-								placeholder="What will you work on today?"
+								id="workPlanned"
+								value={workPlanned}
+								onChange={(e) => setWorkPlanned(e.target.value)}
+								placeholder="What will you work on next?"
 								className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[120px]"
 								required
 							/>
@@ -314,6 +315,7 @@ export function StandupEdit() {
 					</form>
 				</Card>
 			</main>
+            <Footer />
 		</div>
 	);
 }
