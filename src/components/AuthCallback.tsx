@@ -5,22 +5,24 @@ import { GitHubService } from "../services/github";
 
 export function AuthCallback() {
 	const [error, setError] = useState<string | null>(null);
+	const [showError, setShowError] = useState(false);
 	const navigate = useNavigate();
 	const { setAccessToken, setUser } = useStore();
 
 	useEffect(() => {
+		let errorTimeout: NodeJS.Timeout | null = null;
+
 		const handleCallback = async () => {
-			// Get the code from URL params
 			const params = new URLSearchParams(window.location.search);
 			const code = params.get("code");
 
 			if (!code) {
 				setError("No authorization code found");
+				setShowError(true);
 				return;
 			}
 
 			try {
-				// Exchange code for access token via our API
 				const response = await fetch("/api/auth/callback", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -32,34 +34,32 @@ export function AuthCallback() {
 				}
 
 				const { access_token } = await response.json();
-
-				// Fetch user info first to ensure token is valid
 				const github = new GitHubService(access_token);
 				const user = await github.getUser();
-				
-				// Store token and user together
 				setAccessToken(access_token);
 				setUser(user);
-
-				// Small delay to ensure state persistence completes
 				await new Promise(resolve => setTimeout(resolve, 100));
-
-				// Redirect to dashboard
 				navigate("/dashboard");
 			} catch (err) {
 				console.error("Auth error:", err);
 				setError(
 					err instanceof Error
-						? err.message
-						: "Authentication failed",
+					? err.message
+					: "Authentication failed",
 				);
+				// Only show error after 1s to avoid brief flash
+				errorTimeout = setTimeout(() => setShowError(true), 1000);
 			}
 		};
 
 		handleCallback();
+
+		return () => {
+			if (errorTimeout) clearTimeout(errorTimeout);
+		};
 	}, [navigate, setAccessToken, setUser]);
 
-	if (error) {
+	if (error && showError) {
 		return (
 			<div className="min-h-screen bg-slate-950 flex items-center justify-center">
 				<div className="text-center">

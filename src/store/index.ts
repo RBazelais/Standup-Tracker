@@ -111,6 +111,8 @@ export const useStore = create<StoreState>()(
 			},
 
 			addStandup: async (standup) => {
+				const clientId = standup.id;
+				
 				// Add to local state immediately for optimistic UI
 				set((state) => ({
 					standups: [standup, ...state.standups],
@@ -130,7 +132,15 @@ export const useStore = create<StoreState>()(
 						},
 					);
 
-					if (!response.ok) {
+					if (response.ok) {
+						// Update local state with server-generated ID
+						const savedStandup = await response.json();
+						set((state) => ({
+							standups: state.standups.map((s) =>
+								s.id === clientId ? { ...s, id: savedStandup.id } : s,
+							),
+						}));
+					} else {
 						console.error("Failed to save standup to database");
 					}
 				} catch (error) {
