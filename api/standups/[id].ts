@@ -36,13 +36,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	// PUT: Update standup
 	if (req.method === "PUT") {
 		try {
-			const { yesterday, today, blockers, taskIds } = req.body;
+			const { workCompleted, workPlanned, blockers, taskIds } = req.body;
 
 			const updatedStandup = await db
 				.update(standups)
 				.set({
-					yesterday,
-					today,
+					workCompleted,
+					workPlanned,
 					blockers,
 					taskIds: taskIds || [],
 					updatedAt: new Date(),
