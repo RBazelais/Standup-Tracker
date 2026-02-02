@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { GitCommit, Target, TrendingUp } from "lucide-react";
 import { FeatureCard } from "./FeatureCard";
 import { StandupPreview } from "./StandupPreview";
-import { Header } from "./Header";
-import { Footer } from "./Footer";
 
 const GitHubIcon = ({ className }: { className?: string }) => (
 	<svg
@@ -29,7 +27,6 @@ export function LandingPage() {
 
 	return (
 		<div className="dark">
-			<Header />
 			<div className="min-h-screen transition-colors bg-surface">
 				{/* Hero Section */}
 				<div className="px-6 min-h-screen flex flex-col items-center justify-center py-20">
@@ -103,8 +100,6 @@ export function LandingPage() {
 						</motion.div>
 					</motion.div>
 				</div>
-				{/* Footer */}
-        		<Footer />
 			</div>
 		</div>
 	);

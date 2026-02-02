@@ -1,11 +1,8 @@
 import { useStore } from "../store";
 import { useEffect } from "react";
-import { Header } from "./Header";
 import { RepoSelector } from "./RepoSelector";
 import { StandupForm } from "./StandupForm";
 import { StandupHistory } from "./StandupHistory";
-import { Footer } from "./Footer";
-
 
 export function Dashboard() {
 	const { user, selectedRepo, loadStandups } = useStore();

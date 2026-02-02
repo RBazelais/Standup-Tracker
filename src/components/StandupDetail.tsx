@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useStore } from "../store";
-import { Header } from "./Header";
-import { Footer } from "./Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -83,8 +81,6 @@ export function StandupDetail() {
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-surface">
-				<Header />
-
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<div className="flex items-center justify-center py-20">
 						<Loader2 className="h-8 w-8 animate-spin text-accent" />
@@ -97,8 +93,6 @@ export function StandupDetail() {
 		if (error || !standup) {
 			return (
 				<div className="min-h-screen bg-surface">
-				<Header />
-
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<Card className="p-8 bg-surface-raised/50 border-border text-center">
 						<h2 className="text-2xl font-bold text-text mb-4">Standup Not Found</h2>
