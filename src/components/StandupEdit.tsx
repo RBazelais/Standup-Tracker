@@ -14,22 +14,20 @@ export function StandupEdit() {
 	const { updateStandup } = useStore();
 
 	const [standup, setStandup] = useState<Standup | null>(null);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(Boolean(id));
 	const [saving, setSaving] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(
+		id ? null : "No standup ID provided"
+	);
 
 	const [workCompleted, setWorkCompleted] = useState("");
 	const [workPlanned, setWorkPlanned] = useState("");
 	const [blockers, setBlockers] = useState("");
 
 	useEffect(() => {
-		const fetchStandup = async () => {
-			if (!id) {
-				setError("No standup ID provided");
-				setLoading(false);
-				return;
-			}
+		if (!id) return;
 
+		const fetchStandup = async () => {
 			try {
 				const response = await fetch(`/api/standups/${id}`);
 

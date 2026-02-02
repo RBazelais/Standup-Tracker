@@ -25,19 +25,17 @@ export function StandupDetail() {
 	const { deleteStandup } = useStore();
 
 	const [standup, setStandup] = useState<Standup | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const [loading, setLoading] = useState(Boolean(id));
+	const [error, setError] = useState<string | null>(
+		id ? null : "No standup ID provided"
+	);
 	const [deleting, setDeleting] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	useEffect(() => {
-		const fetchStandup = async () => {
-			if (!id) {
-				setError("No standup ID provided");
-				setLoading(false);
-				return;
-			}
+		if (!id) return;
 
+		const fetchStandup = async () => {
 			try {
 				const response = await fetch(`/api/standups/${id}`);
 
