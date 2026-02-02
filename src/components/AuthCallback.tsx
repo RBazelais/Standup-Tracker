@@ -61,28 +61,21 @@ export function AuthCallback() {
 
 	if (error && showError) {
 		return (
-			<div className="min-h-screen bg-slate-950 flex items-center justify-center">
+			<div className="min-h-screen bg-surface flex items-center justify-center">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-white mb-4">
-						Authentication Error
-					</h1>
-					<p className="text-slate-400 mb-6">{error}</p>
-					<a
-						href="/"
-						className="text-blue-500 hover:text-blue-400 transition-colors"
-					>
-						Return to home
-					</a>
+					<h1 className="text-2xl font-bold text-text mb-4">Authentication Error</h1>
+					<p className="text-text-subtle mb-6">{error}</p>
+					<a href="/" className="text-accent hover:text-accent-strong transition-colors">Return to home</a>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-slate-950 flex items-center justify-center">
+		<div className="min-h-screen bg-surface flex items-center justify-center">
 			<div className="text-center">
-				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-				<p className="text-slate-400">Completing sign in...</p>
+				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+				<p className="text-text-subtle">Completing sign in...</p>
 			</div>
 		</div>
 	);

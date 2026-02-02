@@ -12,19 +12,16 @@ const GitHubIcon = ({ className }: { className?: string }) => (
 
 export function Footer() {
 	return (
-		<footer
-			className="border-t py-8 bg-slate-950/50 border-slate-800"
-		>
+		<footer className="border-t py-8 bg-surface-elevated/50 border-border-subtle">
 			<div className="container mx-auto px-6">
 				<div className="flex items-center justify-center gap-2 text-sm">
-					<span className="text-slate-400">
-						Built by RBazelais
-					</span>
+				<span className="text-text-subtle">2026</span>
+					<span className="text-text-subtle">Built by RBazelais</span>
 					<a
 						href="https://github.com/RBazelais/Standup-Tracker"
 						target="_blank"
 						rel="noopener noreferrer"
-						className="transition-colors text-slate-400 hover:text-white"
+						className="transition-colors text-text-subtle hover:text-text"
 						aria-label="View source on GitHub"
 					>
 						<GitHubIcon className="h-5 w-5" />

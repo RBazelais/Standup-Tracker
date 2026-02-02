@@ -16,9 +16,9 @@ export function RepoSelector() {
 
 	if (loading) {
 		return (
-			<Card className="p-6 bg-slate-800/50 border-slate-700">
-				<div className="flex items-center justify-center gap-2 text-slate-400">
-					<Loader2 className="h-5 w-5 animate-spin" />
+			<Card className="p-6 bg-surface-raised border-border">
+				<div className="flex items-center justify-center gap-2 text-text-subtle">
+					<Loader2 className="h-5 w-5 animate-spin text-accent" />
 					<span>Loading repositories...</span>
 				</div>
 			</Card>
@@ -27,22 +27,20 @@ export function RepoSelector() {
 
 	if (error) {
 		return (
-			<Card className="p-6 bg-slate-800/50 border-slate-700">
-				<div className="text-center text-red-400">
+			<Card className="p-6 bg-surface-raised border-border">
+				<div className="text-center text-danger-text">
 					<p>Failed to load repositories</p>
-					<p className="text-sm text-slate-500 mt-2">{error}</p>
+					<p className="text-sm text-text-muted mt-2">{error}</p>
 				</div>
 			</Card>
 		);
 	}
 
 	return (
-		<Card className="p-6 bg-slate-800/50 border-slate-700">
+		<Card className="p-6 bg-surface-raised border-border">
 			<div className="flex items-center gap-3 mb-4">
-				<GitBranch className="h-5 w-5 text-blue-500" />
-				<h2 className="text-lg font-semibold text-white">
-					Select Repository
-				</h2>
+				<GitBranch className="h-5 w-5 text-accent" />
+				<h2 className="text-lg font-semibold text-text">Select Repository</h2>
 			</div>
 
 			<Select
@@ -52,20 +50,20 @@ export function RepoSelector() {
 					if (repo) setSelectedRepo(repo);
 				}}
 			>
-				<SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+				<SelectTrigger className="bg-surface-raised border-border text-text">
 					<SelectValue placeholder="Choose a repository to track" />
 				</SelectTrigger>
-				<SelectContent className="bg-slate-900 border-slate-700">
+				<SelectContent className="bg-surface-raised border-border">
 					{repos.map((repo) => (
 						<SelectItem
 							key={repo.id}
 							value={repo.full_name}
-							className="text-white hover:bg-slate-800 focus:bg-slate-800"
+							className="text-text hover:bg-surface-overlay focus:bg-surface-overlay"
 						>
 							<div className="flex items-center gap-2">
 								<span>{repo.name}</span>
 								{repo.private && (
-									<span className="text-xs text-slate-500">
+									<span className="text-xs text-text-muted">
 										(private)
 									</span>
 								)}
@@ -76,12 +74,10 @@ export function RepoSelector() {
 			</Select>
 
 			{selectedRepo && (
-				<div className="mt-4 p-4 bg-slate-900/50 rounded-lg">
-					<p className="text-sm text-slate-400">
-						Tracking:{" "}
-						<span className="text-white font-medium">
-							{selectedRepo.full_name}
-						</span>
+				<div className="mt-4 p-4 bg-surface-raised rounded-lg">
+					<p className="text-sm text-text-subtle">
+						Tracking: {" "}
+						<span className="text-text font-medium">{selectedRepo.full_name}</span>
 					</p>
 				</div>
 			)}

@@ -18,15 +18,13 @@ export function Dashboard() {
 	}, [user, loadStandups]);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-			<Header />
-
+		<div className="min-h-screen bg-surface">
 			<main className="container mx-auto px-6 py-8 max-w-4xl">
 				<div className="mb-8">
-					<h2 className="text-3xl font-bold text-white mb-2">
+					<h2 className="text-3xl font-bold text-text mb-2">
 						Welcome back, {user?.name?.split(" ")[0]}!
 					</h2>
-					<p className="text-slate-400">
+					<p className="text-text-subtle">
 						{selectedRepo
 							? "Create your daily standup below."
 							: "Select a repository to get started."}
@@ -44,7 +42,6 @@ export function Dashboard() {
 					)}
 				</div>
 			</main>
-			<Footer />
 		</div>
 	);
 }

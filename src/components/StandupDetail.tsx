@@ -6,13 +6,15 @@ import { Footer } from "./Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+	AlertDialogAction,
+	AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Loader2, ArrowLeft, GitCommit, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
@@ -80,33 +82,29 @@ export function StandupDetail() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+			<div className="min-h-screen bg-surface">
 				<Header />
 
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<div className="flex items-center justify-center py-20">
-						<Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+						<Loader2 className="h-8 w-8 animate-spin text-accent" />
 					</div>
 				</main>
 			</div>
 		);
 	}
 
-	if (error || !standup) {
-		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+		if (error || !standup) {
+			return (
+				<div className="min-h-screen bg-surface">
 				<Header />
 
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
-					<Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
-						<h2 className="text-2xl font-bold text-white mb-4">
-							Standup Not Found
-						</h2>
-						<p className="text-slate-400 mb-6">
-							{error || "This standup doesn't exist."}
-						</p>
+					<Card className="p-8 bg-surface-raised/50 border-border text-center">
+						<h2 className="text-2xl font-bold text-text mb-4">Standup Not Found</h2>
+						<p className="text-text-subtle mb-6">{error || "This standup doesn't exist."}</p>
 						<Link to="/dashboard">
-							<Button className="bg-blue-600 hover:bg-blue-700 text-white">
+							<Button className="bg-accent hover:bg-accent-strong text-text">
 								<ArrowLeft className="h-4 w-4 mr-2" />
 								Back to Dashboard
 							</Button>
@@ -118,78 +116,43 @@ export function StandupDetail() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-			<Header />
-
+		<div className="min-h-screen bg-surface">
 			<main className="container mx-auto px-6 py-8 max-w-4xl">
 				{/* Breadcrumb and Actions */}
 				<div className="mb-6 flex items-center justify-between">
 					<Link to="/dashboard">
-						<Button
-							variant="ghost"
-							size="sm"
-							className="text-slate-400 hover:text-white hover:bg-slate-800"
-						>
+						<Button variant="ghost" size="sm" className="text-text-muted hover:text-text hover:bg-surface-raised">
 							<ArrowLeft className="h-4 w-4 mr-2" />
 							Back to Dashboard
 						</Button>
 					</Link>
 
 					<div className="flex items-center gap-3">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleEdit}
-							className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300 hover:text-white"
-						>
+						<Button variant="outline" size="sm" onClick={handleEdit} className="bg-surface-raised border-border hover:bg-surface-strong text-text-soft hover:text-text">
 							<Edit className="h-4 w-4 mr-2" />
 							Edit
 						</Button>
 
-						<Dialog
-							open={deleteDialogOpen}
-							onOpenChange={setDeleteDialogOpen}
-						>
-							<DialogTrigger asChild>
-								<Button
-									variant="outline"
-									size="sm"
-									className="bg-slate-800 border-slate-700 hover:bg-red-900/50 hover:border-red-700 text-slate-300 hover:text-red-400"
-								>
+						<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+							<AlertDialogTrigger asChild>
+								<Button variant="outline" size="sm" className="bg-surface-raised border-border hover:bg-destructive-strong hover:border-destructive text-text-soft hover:text-text">
 									<Trash2 className="h-4 w-4 mr-2" />
 									Delete
 								</Button>
-							</DialogTrigger>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>
-										Delete Standup Note?
-									</DialogTitle>
-									<DialogDescription>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Delete Standup Note?</AlertDialogTitle>
+									<AlertDialogDescription>
 										This will permanently delete this standup
-										note from{" "}
-										{format(
-											new Date(standup.date),
-											"MMMM d, yyyy",
-										)}
-										. This action cannot be undone.
-									</DialogDescription>
-								</DialogHeader>
-								<DialogFooter>
-									<Button
-										variant="outline"
-										onClick={() =>
-											setDeleteDialogOpen(false)
-										}
-										className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
-									>
+										note from {format(new Date(standup.date), "MMMM d, yyyy")}. This action cannot be undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
 										Cancel
-									</Button>
-									<Button
-										onClick={handleDelete}
-										disabled={deleting}
-										className="bg-red-600 hover:bg-red-700 text-white"
-									>
+									</AlertDialogCancel>
+									<AlertDialogAction onClick={handleDelete} disabled={deleting}>
 										{deleting ? (
 											<>
 												<Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -198,23 +161,23 @@ export function StandupDetail() {
 										) : (
 											"Delete"
 										)}
-									</Button>
-								</DialogFooter>
-							</DialogContent>
-						</Dialog>
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
 					</div>
 				</div>
 
 				{/* Standup Card */}
-				<Card className="p-8 bg-slate-800/50 border-slate-700">
+					<Card className="p-8 bg-surface-raised/50 border-border">
 					<div className="mb-8">
-						<h2 className="text-3xl font-bold text-white mb-2">
+							<h2 className="text-3xl font-bold text-text mb-2">
 							{format(
 								new Date(standup.date),
 								"EEEE, MMMM d, yyyy",
 							)}
 						</h2>
-						<div className="flex items-center gap-4 text-sm text-slate-400">
+							<div className="flex items-center gap-4 text-sm text-text-muted">
 							<span>{standup.commits.length} commits</span>
 							{standup.repoFullName && (
 								<span>• {standup.repoFullName}</span>
@@ -224,10 +187,10 @@ export function StandupDetail() {
 
 					<div className="space-y-6">
 						<div>
-							<h3 className="text-lg font-semibold text-slate-300 mb-3">
+							<h3 className="text-lg font-semibold text-text mb-3">
 								Work Completed
 							</h3>
-							<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
+							<div className="text-text prose prose-invert prose-sm max-w-none">
 								<ReactMarkdown>
 									{standup.workCompleted}
 								</ReactMarkdown>
@@ -235,27 +198,27 @@ export function StandupDetail() {
 
 							{standup.commits.length > 0 && (
 								<details className="mt-4">
-									<summary className="text-sm text-blue-400 cursor-pointer hover:text-blue-300 flex items-center gap-2">
+									<summary className="text-sm text-accent cursor-pointer hover:text-accent-strong flex items-center gap-2">
 										<GitCommit className="h-4 w-4" />
 										View {standup.commits.length} commit
 										{standup.commits.length !== 1
 											? "s"
 											: ""}
 									</summary>
-									<div className="mt-4 space-y-3 pl-4 border-l-2 border-slate-700">
+									<div className="mt-4 space-y-3 pl-4 border-l-2 border-border">
 										{standup.commits.map((commit) => (
 											<div
 												key={commit.sha}
 												className="text-sm"
 											>
 												<div className="flex items-start gap-2">
-													<code className="text-blue-400 font-mono">
+													<code className="text-accent font-mono">
 														{commit.sha.substring(
 															0,
 															7,
 														)}
 													</code>
-													<span className="text-slate-300 flex-1">
+													<span className="text-text flex-1">
 														{
 															commit.commit.message.split(
 																"\n",
@@ -264,7 +227,7 @@ export function StandupDetail() {
 													</span>
 												</div>
 												{commit.commit.author && (
-													<div className="text-slate-500 mt-1 ml-[4.5rem]">
+													<div className="text-text-muted mt-1 ml-[4.5rem]">
 														{commit.commit.author
 															.name ||
 															"Unknown"}{" "}
@@ -288,19 +251,15 @@ export function StandupDetail() {
 						</div>
 
 						<div>
-							<h3 className="text-lg font-semibold text-slate-300 mb-3">
-								Work Planned
-							</h3>
-							<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
+							<h3 className="text-lg font-semibold text-text mb-3">Work Planned</h3>
+							<div className="text-text prose prose-invert prose-sm max-w-none">
 								<ReactMarkdown>{standup.workPlanned}</ReactMarkdown>
 							</div>
 						</div>
 
 						<div>
-							<h3 className="text-lg font-semibold text-slate-300 mb-3">
-								Blockers
-							</h3>
-							<div className="text-slate-300 prose prose-invert prose-sm max-w-none">
+							<h3 className="text-lg font-semibold text-text mb-3">Blockers</h3>
+							<div className="text-text prose prose-invert prose-sm max-w-none">
 								<ReactMarkdown>
 									{standup.blockers}
 								</ReactMarkdown>
@@ -309,7 +268,6 @@ export function StandupDetail() {
 					</div>
 				</Card>
 			</main>
-			<Footer />
 		</div>
 	);
 }

@@ -6,6 +6,7 @@ import { Dashboard } from "./components/Dashboard";
 import { StandupDetail } from "./components/StandupDetail";
 import { StandupEdit } from "./components/StandupEdit";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { Layout } from "./components/Layout";
 
 function App() {
 	const { accessToken } = useStore();
@@ -28,7 +29,9 @@ function App() {
 					path="/dashboard"
 					element={
 						<ProtectedRoute>
-							<Dashboard />
+							<Layout>
+								<Dashboard />
+							</Layout>
 						</ProtectedRoute>
 					}
 				/>
@@ -36,7 +39,9 @@ function App() {
 					path="/standup/:id"
 					element={
 						<ProtectedRoute>
-							<StandupDetail />
+							<Layout>
+								<StandupDetail />
+							</Layout>
 						</ProtectedRoute>
 					}
 				/>
@@ -44,7 +49,9 @@ function App() {
 					path="/standup/:id/edit"
 					element={
 						<ProtectedRoute>
-							<StandupEdit />
+							<Layout>
+								<StandupEdit />
+							</Layout>
 						</ProtectedRoute>
 					}
 				/>

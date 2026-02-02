@@ -114,8 +114,8 @@ export function StandupForm() {
 
 	if (!selectedRepo) {
 		return (
-			<Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
-				<p className="text-slate-400">
+			<Card className="p-8 bg-surface-raised border-border text-center">
+				<p className="text-text-subtle">
 					Select a repository to create a standup note
 				</p>
 			</Card>
@@ -123,26 +123,26 @@ export function StandupForm() {
 	}
 
 	return (
-		<Card className="p-6 bg-slate-800/50 border-slate-700">
+		<Card className="p-6 bg-surface-raised border-border">
 			<div className="flex items-center justify-between mb-6">
 				<div className="flex items-center gap-3">
-					<GitCommit className="h-5 w-5 text-blue-500" />
-					<h2 className="text-lg font-semibold text-white">
+					<GitCommit className="h-5 w-5 text-accent" />
+					<h2 className="text-lg font-semibold text-text">
 						Create Standup note
 					</h2>
 				</div>
 
-				<span className="text-sm text-slate-400">
+				<span className="text-sm text-text-muted">
 					{format(new Date(), "EEEE, MMM d, yyyy")}
 				</span>
 			</div>
 
 			<form onSubmit={handleSubmit} className="space-y-6">
 				{/* Date Range Selector */}
-				<Card className="p-4 bg-slate-900/50 border-slate-700">
+				<Card className="p-4 bg-surface-raised border-border">
 					<div className="flex items-center gap-2 mb-3">
-						<Calendar className="h-4 w-4 text-slate-400" />
-						<Label className="text-slate-300 text-sm">
+						<Calendar className="h-4 w-4 text-text-muted" />
+						<Label className="text-text-soft text-sm">
 							Fetch commits from:
 						</Label>
 					</div>
@@ -154,7 +154,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setYesterdayRange}
-							className="text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+							className="text-xs bg-surface-raised border-border hover:bg-surface-strong text-text-soft"
 						>
 							Yesterday
 						</Button>
@@ -163,7 +163,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setLastFridayRange}
-							className="text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+							className="text-xs bg-surface-raised border-border hover:bg-surface-strong text-text-soft"
 						>
 							Last Friday
 						</Button>
@@ -172,7 +172,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setThisWeekRange}
-							className="text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+							className="text-xs bg-surface-raised border-border hover:bg-surface-strong text-text-soft"
 						>
 							This Week
 						</Button>
@@ -181,7 +181,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setLastWeekRange}
-							className="text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
+							className="text-xs bg-surface-raised border-border hover:bg-surface-strong text-text-soft"
 						>
 							Last Week
 						</Button>
@@ -192,7 +192,7 @@ export function StandupForm() {
 						<div className="space-y-1">
 							<Label
 								htmlFor="start-date"
-								className="text-xs text-slate-400"
+								className="text-xs text-text-muted"
 							>
 								Start Date
 							</Label>
@@ -203,14 +203,14 @@ export function StandupForm() {
 								onChange={(e) =>
 									setCommitStartDate(e.target.value)
 								}
-								className="bg-slate-800 border-slate-700 text-white text-sm"
+								className="bg-surface-raised border-border text-text text-sm"
 							/>
 						</div>
 
 						<div className="space-y-1">
 							<Label
 								htmlFor="end-date"
-								className="text-xs text-slate-400"
+								className="text-xs text-text-muted"
 							>
 								End Date
 							</Label>
@@ -222,13 +222,13 @@ export function StandupForm() {
 									setCommitEndDate(e.target.value)
 								}
 								max={format(new Date(), "yyyy-MM-dd")}
-								className="bg-slate-800 border-slate-700 text-white text-sm"
+								className="bg-surface-raised border-border text-text text-sm"
 							/>
 						</div>
 					</div>
 
 					<div className="flex items-center justify-between mt-3">
-						<span className="text-xs text-slate-500">
+						<span className="text-xs text-text-muted">
 							{commits.length} commit
 							{commits.length !== 1 ? "s" : ""} found
 						</span>
@@ -238,7 +238,7 @@ export function StandupForm() {
 							size="sm"
 							onClick={refetchCommits}
 							disabled={commitsLoading}
-							className="text-blue-400 hover:text-blue-300 hover:bg-slate-800 text-xs"
+							className="text-accent hover:text-accent-weak hover:bg-surface-raised text-xs"
 						>
 							{commitsLoading ? (
 								<Loader2 className="h-3 w-3 animate-spin" />
@@ -252,7 +252,7 @@ export function StandupForm() {
 				{/* Work Completed */}
 				<div className="space-y-2">
 					<div className="flex items-center justify-between">
-						<Label htmlFor="workCompleted" className="text-slate-300">
+						<Label htmlFor="workCompleted" className="text-text-soft">
 							What you worked on
 						</Label>
 						<Button
@@ -261,7 +261,7 @@ export function StandupForm() {
 							size="sm"
 							onClick={handleAutoPopulate}
 							disabled={commitsLoading || commits.length === 0}
-							className="text-blue-400 hover:text-blue-300 hover:bg-slate-700"
+							className="text-accent hover:text-accent-strong hover:bg-surface-raised"
 						>
 							{commitsLoading ? (
 								<Loader2 className="h-4 w-4 animate-spin" />
@@ -275,14 +275,14 @@ export function StandupForm() {
 						value={workCompleted}
 						onChange={(e) => setWorkCompleted(e.target.value)}
 						placeholder="What did you work on during this period?"
-						className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[100px] focus:bg-slate-700"
+						className="bg-surface-muted border-border-subtle text-text placeholder:text-text-soft min-h-[100px] focus:bg-surface-strong"
 						required
 					/>
 				</div>
 
 				{/* Work Planned */}
 				<div className="space-y-2">
-					<Label htmlFor="workPlanned" className="text-slate-300">
+					<Label htmlFor="workPlanned" className="text-text-soft">
 						What you'll work on next
 					</Label>
 					<Textarea
@@ -290,14 +290,14 @@ export function StandupForm() {
 						value={workPlanned}
 						onChange={(e) => setWorkPlanned(e.target.value)}
 						placeholder="What will you work on next?"
-						className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[100px] focus:bg-slate-700"
+						className="bg-surface-muted border-border-subtle text-text placeholder:text-text-soft min-h-[100px] focus:bg-surface-strong"
 						required
 					/>
 				</div>
 
 				{/* Blockers */}
 				<div className="space-y-2">
-					<Label htmlFor="blockers" className="text-slate-300">
+					<Label htmlFor="blockers" className="text-text-soft">
 						Blockers
 					</Label>
 					<Textarea
@@ -305,7 +305,7 @@ export function StandupForm() {
 						value={blockers}
 						onChange={(e) => setBlockers(e.target.value)}
 						placeholder="Any blockers? (Optional)"
-						className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-300 min-h-[80px] focus:bg-slate-700"
+						className="bg-surface-muted border-border-subtle text-text placeholder:text-text-soft min-h-[80px] focus:bg-surface-strong"
 					/>
 				</div>
 
@@ -313,7 +313,7 @@ export function StandupForm() {
 				<Button
 					type="submit"
 					disabled={saving || saved}
-					className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+					className="w-full bg-accent hover:bg-accent-strong text-text"
 				>
 					{saved ? (
 						<>

@@ -2,17 +2,11 @@ import { Card } from "@/components/ui/card";
 
 export function StandupPreview() {
 	return (
-		<Card
-			className="p-8 backdrop-blur bg-slate-800/50 border-slate-700"
-		>
+		<Card className="p-8 backdrop-blur bg-surface-raised/50 border-border">
 			<div className="space-y-4">
 				<div className="flex items-center justify-between">
-					<h3 className="text-lg font-semibold text-white">
-						Today's Standup
-					</h3>
-					<span className="text-sm text-slate-400">
-						Jan 16, 2026
-					</span>
+					<h3 className="text-lg font-semibold text-text">Today's Standup</h3>
+					<span className="text-sm text-text-subtle">Jan 16, 2026</span>
 				</div>
 
 				<div className="space-y-3">
@@ -44,10 +38,10 @@ interface PreviewFieldProps {
 function PreviewField({ label, content }: PreviewFieldProps) {
 	return (
 		<div className="text-left">
-			<label className="text-sm font-medium mb-1 block text-slate-300">
+			<label className="text-sm font-medium mb-1 block text-text-soft">
 				{label}
 			</label>
-			<p className="text-sm text-slate-400">
+			<p className="text-sm text-text-subtle">
 				{content}
 			</p>
 		</div>

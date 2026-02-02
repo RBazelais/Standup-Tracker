@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { useStore } from "../store";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import type { Standup } from "../types";
 export function StandupEdit() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const { user, logout, updateStandup } = useStore();
+	const { updateStandup } = useStore();
 
 	const [standup, setStandup] = useState<Standup | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -56,10 +57,6 @@ export function StandupEdit() {
 		fetchStandup();
 	}, [id]);
 
-	const handleLogout = () => {
-		logout();
-		navigate("/");
-	};
 
 	const handleCancel = () => {
 		navigate(`/standup/${id}`);
@@ -89,38 +86,10 @@ export function StandupEdit() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-				<header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur">
-					<div className="container mx-auto px-6 py-4 flex items-center justify-between">
-						<h1 className="text-xl font-bold text-white">
-							StandUp Tracker
-						</h1>
-						<div className="flex items-center gap-4">
-							<div className="flex items-center gap-3">
-								<img
-									src={user?.avatar_url}
-									alt={user?.name}
-									className="h-8 w-8 rounded-full"
-								/>
-								<span className="text-sm text-slate-300">
-									{user?.name}
-								</span>
-							</div>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={handleLogout}
-								className="bg-slate-800 border-slate-700 hover:bg-slate-700 hover:text-white text-slate-300"
-							>
-								Logout
-							</Button>
-						</div>
-					</div>
-				</header>
-
+			<div className="min-h-screen bg-surface">
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<div className="flex items-center justify-center py-20">
-						<Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+						<Loader2 className="h-8 w-8 animate-spin text-accent" />
 					</div>
 				</main>
 			</div>
@@ -129,45 +98,17 @@ export function StandupEdit() {
 
 	if (error || !standup) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-				<header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur">
-					<div className="container mx-auto px-6 py-4 flex items-center justify-between">
-						<h1 className="text-xl font-bold text-white">
-							StandUp Tracker
-						</h1>
-						<div className="flex items-center gap-4">
-							<div className="flex items-center gap-3">
-								<img
-									src={user?.avatar_url}
-									alt={user?.name}
-									className="h-8 w-8 rounded-full"
-								/>
-								<span className="text-sm text-slate-300">
-									{user?.name}
-								</span>
-							</div>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={handleLogout}
-								className="bg-slate-800 border-slate-700 hover:bg-slate-700 hover:text-white text-slate-300"
-							>
-								Logout
-							</Button>
-						</div>
-					</div>
-				</header>
-
+			<div className="min-h-screen bg-surface">
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
-					<Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
-						<h2 className="text-2xl font-bold text-white mb-4">
+					<Card className="p-8 bg-surface-raised border-border text-center">
+						<h2 className="text-2xl font-bold text-text mb-4">
 							Standup Not Found
 						</h2>
-						<p className="text-slate-400 mb-6">
+						<p className="text-text-subtle mb-6">
 							{error || "This standup doesn't exist."}
 						</p>
 						<Link to="/dashboard">
-							<Button className="bg-blue-600 hover:bg-blue-700 text-white">
+							<Button className="bg-accent hover:bg-accent-strong text-text">
 								<ArrowLeft className="h-4 w-4 mr-2" />
 								Back to Dashboard
 							</Button>
@@ -179,36 +120,7 @@ export function StandupEdit() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-			<header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur">
-				<div className="container mx-auto px-6 py-4 flex items-center justify-between">
-					<h1 className="text-xl font-bold text-white">
-						StandUp Tracker
-					</h1>
-
-					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-3">
-							<img
-								src={user?.avatar_url}
-								alt={user?.name}
-								className="h-8 w-8 rounded-full"
-							/>
-							<span className="text-sm text-slate-300">
-								{user?.name}
-							</span>
-						</div>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleLogout}
-							className="bg-slate-800 border-slate-700 hover:bg-slate-700 hover:text-white text-slate-300"
-						>
-							Logout
-						</Button>
-					</div>
-				</div>
-			</header>
-
+		<div className="min-h-screen bg-surface">
 			<main className="container mx-auto px-6 py-8 max-w-4xl">
 				{/* Breadcrumb */}
 				<div className="mb-6">
@@ -216,7 +128,7 @@ export function StandupEdit() {
 						<Button
 							variant="ghost"
 							size="sm"
-							className="text-slate-400 hover:text-white hover:bg-slate-800"
+							className="text-text-muted hover:text-text hover:bg-surface-raised"
 						>
 							<ArrowLeft className="h-4 w-4 mr-2" />
 							Back to Standup
@@ -225,8 +137,8 @@ export function StandupEdit() {
 				</div>
 
 				{/* Edit Form */}
-				<Card className="p-8 bg-slate-800/50 border-slate-700">
-					<h2 className="text-2xl font-bold text-white mb-6">
+				<Card className="p-8 bg-surface-raised border-border">
+					<h2 className="text-2xl font-bold text-text mb-6">
 						Edit Standup
 					</h2>
 
@@ -235,7 +147,7 @@ export function StandupEdit() {
 						<div className="space-y-2">
 							<Label
 								htmlFor="workCompleted"
-								className="text-slate-300"
+								className="text-text-soft"
 							>
 								Work Completed
 							</Label>
@@ -244,14 +156,14 @@ export function StandupEdit() {
 								value={workCompleted}
 								onChange={(e) => setWorkCompleted(e.target.value)}
 								placeholder="What did you work on?"
-								className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[120px]"
+								className="bg-surface-strong border-border text-text placeholder:text-text-muted min-h-[120px]"
 								required
 							/>
 						</div>
 
 						{/* Work Planned */}
 						<div className="space-y-2">
-							<Label htmlFor="workPlanned" className="text-slate-300">
+							<Label htmlFor="workPlanned" className="text-text-soft">
 								Work Planned
 							</Label>
 							<Textarea
@@ -259,7 +171,7 @@ export function StandupEdit() {
 								value={workPlanned}
 								onChange={(e) => setWorkPlanned(e.target.value)}
 								placeholder="What will you work on next?"
-								className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[120px]"
+								className="bg-surface-strong border-border text-text placeholder:text-text-muted min-h-[120px]"
 								required
 							/>
 						</div>
@@ -268,7 +180,7 @@ export function StandupEdit() {
 						<div className="space-y-2">
 							<Label
 								htmlFor="blockers"
-								className="text-slate-300"
+								className="text-text-soft"
 							>
 								Blockers
 							</Label>
@@ -277,7 +189,7 @@ export function StandupEdit() {
 								value={blockers}
 								onChange={(e) => setBlockers(e.target.value)}
 								placeholder="Any blockers?"
-								className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[100px]"
+								className="bg-surface-strong border-border text-text placeholder:text-text-muted min-h-[100px]"
 								required
 							/>
 						</div>
@@ -287,7 +199,7 @@ export function StandupEdit() {
 							<Button
 								type="submit"
 								disabled={saving}
-								className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+								className="flex-1 bg-accent hover:bg-accent-strong text-text"
 							>
 								{saving ? (
 									<>
@@ -306,7 +218,7 @@ export function StandupEdit() {
 								variant="outline"
 								onClick={handleCancel}
 								disabled={saving}
-								className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300 hover:text-white"
+								className="bg-surface-raised border-border hover:bg-surface-strong text-text-soft hover:text-text"
 							>
 								<X className="mr-2 h-4 w-4" />
 								Cancel
@@ -315,7 +227,6 @@ export function StandupEdit() {
 					</form>
 				</Card>
 			</main>
-            <Footer />
 		</div>
 	);
 }

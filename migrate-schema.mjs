@@ -293,7 +293,6 @@ async function runMigrations(migrations) {
 		process.exit(1);
 	} finally {
 		client.release();
-		await pool.end();
 	}
 }
 
@@ -446,6 +445,7 @@ async function main() {
 	}
 
 	await showCurrentState();
+	await pool.end();
 }
 
 main().catch((error) => {
