@@ -15,7 +15,7 @@ export function Header() {
 	const homePath = isAuthenticated ? "/dashboard" : "/";
 
 	return (
-		<header className="border-b bg-surface-raised backdrop-blur">
+		<header className="border-ball bg-surface-raised backdrop-blur">
 			<div className="container mx-auto px-6 py-4 flex items-center justify-between">
 				<h1 className="text-xl font-bold text-text">
 					<Link to={homePath}>StandUp Tracker</Link>
