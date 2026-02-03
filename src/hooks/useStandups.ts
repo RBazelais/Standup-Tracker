@@ -46,7 +46,7 @@ export function useStandups() {
 			return { previousStandups };
 		},
 
-		onError: (err, newStandup, context) => {
+		onError: (_err, _newStandup, context) => {
 			if (context?.previousStandups) {
 				queryClient.setQueryData(
 					["standups", user?.id],
@@ -89,7 +89,7 @@ export function useStandups() {
 			return { previousStandups };
 		},
 
-		onError: (err, variables, context) => {
+		onError: (_err, _variables, context) => {
 			if (context?.previousStandups) {
 				queryClient.setQueryData(
 					["standups", user?.id],
@@ -125,7 +125,7 @@ export function useStandups() {
 			return { previousStandups };
 		},
 
-		onError: (err, id, context) => {
+		onError: (_err, _id, context) => {
 			if (context?.previousStandups) {
 				queryClient.setQueryData(
 					["standups", user?.id],
