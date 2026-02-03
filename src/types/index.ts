@@ -37,8 +37,8 @@ export interface GitHubCommit {
 export interface Standup {
     id: string;
     date: string;
-    workCompleted: string;  // Renamed from 'yesterday'
-    workPlanned: string;    // Renamed from 'today'
+    workCompleted: string;  
+    workPlanned: string;    
     blockers: string;
     taskIds: string[];
     commits: GitHubCommit[];
