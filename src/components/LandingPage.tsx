@@ -28,7 +28,6 @@ export function LandingPage() {
 	return (
 		<div className="dark">
 			<div className="min-h-screen transition-colors bg-surface">
-				{/* Hero Section */}
 				<div className="px-6 min-h-screen flex flex-col items-center justify-center py-20">
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
@@ -62,8 +61,6 @@ export function LandingPage() {
 								Free • No credit card required • 2 minute setup
 							</p>
 						</motion.div>
-
-						{/* Feature Cards */}
 						<motion.div
 							initial={{ opacity: 0, y: 30 }}
 							animate={{ opacity: 1, y: 0 }}
@@ -89,8 +86,6 @@ export function LandingPage() {
 								Predict story points based on your actual work patterns."
 							/>
 						</motion.div>
-
-						{/* Demo Preview */}
 						<motion.div
 							initial={{ opacity: 0, y: 30 }}
 							animate={{ opacity: 1, y: 0 }}
