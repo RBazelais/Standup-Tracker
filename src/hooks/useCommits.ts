@@ -1,47 +1,63 @@
 import { useState, useEffect, useCallback } from "react";
-import { useGitHub } from "./useGitHub";
 import { useStore } from "../store";
 import type { GitHubCommit } from "../types";
-import { subDays, startOfDay } from "date-fns";
 
-// Accept optional date range strings (yyyy-MM-dd) so callers can control
-// which commits to fetch. Returns a refetch function for manual refresh.
-export function useCommits(startDate?: string, endDate?: string) {
-	const github = useGitHub();
-	const { selectedRepo } = useStore();
+export function useCommits(since?: string, until?: string) {
+	const { selectedRepo, selectedBranch, accessToken } = useStore();
 	const [commits, setCommits] = useState<GitHubCommit[]>([]);
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 
 	const fetchCommits = useCallback(async () => {
-		if (!github || !selectedRepo) {
+		if (!selectedRepo || !accessToken) {
 			setCommits([]);
 			return;
 		}
 
+		setLoading(true);
+
 		try {
-			setLoading(true);
-			setError(null);
+			const params = new URLSearchParams();
+			if (selectedBranch) {
+				params.append("sha", selectedBranch);
+			}
+			if (since) {
+				params.append("since", `${since}T00:00:00Z`);
+			}
+			if (until) {
+				params.append("until", `${until}T23:59:59Z`);
+			}
 
-			// Determine since / until from provided strings or sensible defaults
-			const since = startDate ? new Date(startDate) : startOfDay(subDays(new Date(), 1));
-			const until = endDate ? new Date(endDate) : undefined;
+			const response = await fetch(
+				`https://api.github.com/repos/${selectedRepo.full_name}/commits?${params.toString()}`,
+				{
+					headers: {
+						Authorization: `token ${accessToken}`,
+						Accept: "application/vnd.github.v3+json",
+					},
+				},
+			);
 
-			const [owner, repo] = selectedRepo.full_name.split("/");
-			const fetchedCommits = await github.getCommits(owner, repo, since, until);
+			if (!response.ok) {
+				throw new Error("Failed to fetch commits");
+			}
 
-			setCommits(fetchedCommits);
-		} catch (err) {
-			console.error("Failed to fetch commits:", err);
-			setError(err instanceof Error ? err.message : "Failed to fetch commits");
+			const data = await response.json();
+			setCommits(data);
+		} catch (error) {
+			console.error("Error fetching commits:", error);
+			setCommits([]);
 		} finally {
 			setLoading(false);
 		}
-	}, [github, selectedRepo, startDate, endDate]);
+	}, [selectedRepo, selectedBranch, accessToken, since, until]);
 
 	useEffect(() => {
 		fetchCommits();
 	}, [fetchCommits]);
 
-	return { commits, loading, error, refetchCommits: fetchCommits };
+	const refetchCommits = () => {
+		fetchCommits();
+	};
+
+	return { commits, loading, refetchCommits };
 }

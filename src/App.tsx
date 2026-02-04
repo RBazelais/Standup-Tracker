@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useStore } from "./store";
 import { LandingPage } from "./components/LandingPage";
 import { AuthCallback } from "./components/AuthCallback";
@@ -12,8 +12,7 @@ function App() {
 	const { accessToken } = useStore();
 
 	return (
-		<BrowserRouter>
-			<Routes>
+		<Routes>
 				<Route
 					path="/"
 					element={
@@ -55,8 +54,7 @@ function App() {
 						</ProtectedRoute>
 					}
 				/>
-			</Routes>
-		</BrowserRouter>
+		</Routes>
 	);
 }
 
