@@ -23,7 +23,7 @@ import {
 	AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Loader2, ArrowLeft, GitCommit, Edit, Trash2, ExternalLink } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import ReactMarkdown from "react-markdown";
 
 export function StandupDetail() {
@@ -137,7 +137,7 @@ export function StandupDetail() {
 									<AlertDialogTitle>Delete Standup Note?</AlertDialogTitle>
 									<AlertDialogDescription>
 										This will permanently delete this standup note from{" "}
-										{format(new Date(standup.date), "MMMM d, yyyy")}. This action
+										{format(parseISO(standup.date), "MMMM d, yyyy")}. This action
 										cannot be undone.
 									</AlertDialogDescription>
 								</AlertDialogHeader>
@@ -169,7 +169,7 @@ export function StandupDetail() {
 				<Card className="p-8 bg-surface-raised border-border">
 					<div className="mb-8">
 						<h2 className="text-3xl font-bold text-text mb-2">
-							{format(new Date(standup.date), "EEEE, MMMM d, yyyy")}
+							{format(parseISO(standup.date), "EEEE, MMMM d, yyyy")}
 						</h2>
 						<div className="flex items-center gap-4 text-sm text-text-muted">
 							<div className="flex items-center gap-2">
@@ -193,8 +193,8 @@ export function StandupDetail() {
 							<h3 className="text-lg font-semibold text-text mb-3">
 								What you worked on
 							</h3>
-							<div className="prose prose-invert prose-sm max-w-none">
-								<ReactMarkdown>{standup.workCompleted}</ReactMarkdown>
+							<div className="prose prose-invert prose-sm max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-li:my-0.5">
+								<ReactMarkdown>{standup.workCompleted.replace(/\n/g, '  \n')}</ReactMarkdown>
 							</div>
 						</div>
 
@@ -203,80 +203,95 @@ export function StandupDetail() {
 							<h3 className="text-lg font-semibold text-text mb-3">
 								What you'll work on next
 							</h3>
-							<div className="prose prose-invert prose-sm max-w-none">
-								<ReactMarkdown>{standup.workPlanned}</ReactMarkdown>
+							<div className="prose prose-invert prose-sm max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-li:my-0.5">
+								<ReactMarkdown>{standup.workPlanned.replace(/\n/g, '  \n')}</ReactMarkdown>
 							</div>
 						</div>
 
 						{/* Blockers */}
 						<div>
 							<h3 className="text-lg font-semibold text-text mb-3">Blockers</h3>
-							<div className="prose prose-invert prose-sm max-w-none">
-								<ReactMarkdown>{standup.blockers}</ReactMarkdown>
+							<div className="prose prose-invert prose-sm max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-li:my-0.5">
+								<ReactMarkdown>{standup.blockers.replace(/\n/g, '  \n')}</ReactMarkdown>
 							</div>
 						</div>
 
 						{/* Commits Accordion */}
 						{standup.commits.length > 0 && (
 							<div className="pt-6 border-t border-border">
-								<h3 className="text-lg font-semibold text-text mb-3">
-									Commits ({standup.commits.length})
-								</h3>
-								<Accordion type="single" collapsible className="w-full">
-									<AccordionItem value="commits">
-										<AccordionTrigger className="hover:no-underline">
-											<span className="text-sm text-text-soft">
-												View all commits
-											</span>
-										</AccordionTrigger>
-										<AccordionContent>
-											<div className="space-y-2">
-												{standup.commits.map((commit) => (
-													<div
-														key={commit.sha}
-														className="p-3 bg-surface-overlay rounded-md border border-border"
-													>
-														<div className="flex items-start justify-between gap-3">
-															<div className="flex-1 min-w-0">
-																<p className="text-sm text-text-soft">
-																	{commit.commit.message.split("\n")[0]}
-																</p>
-																<div className="flex items-center gap-3 mt-1">
-																	<code className="text-xs text-accent-text font-mono">
-																		{commit.sha.substring(0, 7)}
-																	</code>
-																	{commit.commit.author?.name && (
-																		<span className="text-xs text-text-muted">
-																			by {commit.commit.author.name}
-																		</span>
-																	)}
-																	{commit.commit.author?.date && (
-																		<span className="text-xs text-text-muted">
-																			{format(
-																				new Date(commit.commit.author.date),
-																				"MMM d, h:mm a"
-																			)}
-																		</span>
-																	)}
-																</div>
-															</div>
-															{standup.repoFullName && (
-																<a
-																	href={`https://github.com/${standup.repoFullName}/commit/${commit.sha}`}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																	className="text-accent-text hover:text-accent-active"
+								{(() => {
+									// Check if commits come from multiple branches
+									const branches = new Set(standup.commits.map(c => c.branch).filter(Boolean));
+									const showBranches = branches.size > 1;
+									
+									return (
+										<>
+											<h3 className="text-lg font-semibold text-text mb-3">
+												Commits ({standup.commits.length})
+											</h3>
+											<Accordion type="single" collapsible className="w-full">
+												<AccordionItem value="commits">
+													<AccordionTrigger className="hover:no-underline">
+														<span className="text-sm text-text-soft">
+															View all commits
+														</span>
+													</AccordionTrigger>
+													<AccordionContent>
+														<div className="space-y-2">
+															{standup.commits.map((commit) => (
+																<div
+																	key={commit.sha}
+																	className="p-3 bg-surface-overlay rounded-md border border-border"
 																>
-																	<ExternalLink className="h-4 w-4" />
-																</a>
-															)}
+																	<div className="flex items-start justify-between gap-3">
+																		<div className="flex-1 min-w-0">
+																			<p className="text-sm text-text-soft">
+																				{commit.commit.message.split("\n")[0]}
+																			</p>
+																			<div className="flex items-center gap-3 mt-1 flex-wrap">
+																				<code className="text-xs text-accent-text font-mono">
+																					{commit.sha.substring(0, 7)}
+																				</code>
+																				{showBranches && commit.branch && (
+																					<span className="text-xs text-text-muted bg-surface-raised px-1.5 py-0.5 rounded">
+																						{commit.branch}
+																					</span>
+																				)}
+																				{commit.commit.author?.name && (
+																					<span className="text-xs text-text-muted">
+																						by {commit.commit.author.name}
+																					</span>
+																				)}
+																				{commit.commit.author?.date && (
+																					<span className="text-xs text-text-muted">
+																						{format(
+																							new Date(commit.commit.author.date),
+																							"MMM d, h:mm a"
+																						)}
+																					</span>
+																				)}
+																			</div>
+																		</div>
+																		{standup.repoFullName && (
+																			<a
+																				href={`https://github.com/${standup.repoFullName}/commit/${commit.sha}`}
+																				target="_blank"
+																				rel="noopener noreferrer"
+																				className="text-accent-text hover:text-accent-active"
+																			>
+																				<ExternalLink className="h-4 w-4" />
+																			</a>
+																		)}
+																	</div>
+																</div>
+															))}
 														</div>
-													</div>
-												))}
-											</div>
-										</AccordionContent>
-									</AccordionItem>
-								</Accordion>
+													</AccordionContent>
+												</AccordionItem>
+											</Accordion>
+										</>
+									);
+								})()}
 							</div>
 						)}
 					</div>

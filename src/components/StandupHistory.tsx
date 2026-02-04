@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useStandups } from "../hooks/useStandups";
 import { Card } from "@/components/ui/card";
 import { Loader2, Calendar, GitCommit, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 
 export function StandupHistory() {
@@ -76,7 +76,7 @@ export function StandupHistory() {
 							<div>
 								<h3 className="font-semibold text-text">
 									{format(
-										new Date(standup.date),
+										parseISO(standup.date),
 										"EEEE, MMMM d, yyyy",
 									)}
 								</h3>
