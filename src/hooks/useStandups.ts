@@ -99,8 +99,9 @@ export function useStandups() {
 			toast.error("Failed to update standup");
 		},
 
-		onSuccess: () => {
+		onSuccess: (_data, { id }) => {
 			queryClient.invalidateQueries({ queryKey: ["standups", user?.id] });
+			queryClient.invalidateQueries({ queryKey: ["standup", id] });
 			toast.success("Standup updated!");
 		},
 	});

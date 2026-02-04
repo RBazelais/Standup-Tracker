@@ -25,46 +25,7 @@ export function StandupEdit() {
 		enabled: !!id,
 	});
 
-	// Initialize form state from query data
-	const [workCompleted, setWorkCompleted] = useState(
-		standup?.workCompleted || "",
-	);
-	const [workPlanned, setWorkPlanned] = useState(standup?.workPlanned || "");
-	const [blockers, setBlockers] = useState(standup?.blockers || "");
-
-	// Hydrate form only once when data arrives
-	if (standup && !workCompleted && !workPlanned && !blockers) {
-		setWorkCompleted(standup.workCompleted);
-		setWorkPlanned(standup.workPlanned);
-		setBlockers(standup.blockers);
-	}
-
-	const handleCancel = () => {
-		navigate(`/standup/${id}`);
-	};
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (!id) return;
-
-		updateStandup(
-			{
-				id,
-				updates: {
-					workCompleted,
-					workPlanned,
-					blockers,
-				},
-			},
-			{
-				onSuccess: () => {
-					navigate(`/standup/${id}`);
-				},
-			},
-		);
-	};
-
+	// Show loading while fetching - form will initialize with actual data
 	if (isLoading) {
 		return (
 			<div className="min-h-screen bg-surface-base">
@@ -101,6 +62,60 @@ export function StandupEdit() {
 			</div>
 		);
 	}
+
+	// Render form only after data is loaded
+	return (
+		<StandupEditForm
+			id={id!}
+			initialData={standup}
+			updateStandup={updateStandup}
+			isUpdating={isUpdating}
+			navigate={navigate}
+		/>
+	);
+}
+
+// Separate component so useState initializes with actual data
+function StandupEditForm({
+	id,
+	initialData,
+	updateStandup,
+	isUpdating,
+	navigate,
+}: {
+	id: string;
+	initialData: { workCompleted: string; workPlanned: string; blockers: string };
+	updateStandup: (params: { id: string; updates: object }, options?: object) => void;
+	isUpdating: boolean;
+	navigate: (path: string) => void;
+}) {
+	const [workCompleted, setWorkCompleted] = useState(initialData.workCompleted || "");
+	const [workPlanned, setWorkPlanned] = useState(initialData.workPlanned || "");
+	const [blockers, setBlockers] = useState(initialData.blockers || "");
+
+	const handleCancel = () => {
+		navigate(`/standup/${id}`);
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		updateStandup(
+			{
+				id,
+				updates: {
+					workCompleted,
+					workPlanned,
+					blockers,
+				},
+			},
+			{
+				onSuccess: () => {
+					navigate(`/standup/${id}`);
+				},
+			},
+		);
+	};
 
 	return (
 		<div className="min-h-screen bg-surface-base">
