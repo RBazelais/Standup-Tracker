@@ -18,7 +18,7 @@ export function RepoSelector() {
 	const handleRepoChange = (repoFullName: string) => {
 		const repo = repos.find((r) => r.full_name === repoFullName);
 		setSelectedRepo(repo || null);
-		setSelectedBranch(null); // Reset branch when repo changes
+		setSelectedBranch(repo?.default_branch || null); // Auto-select default branch
 	};
 
 	const handleBranchChange = (branch: string) => {

@@ -13,6 +13,7 @@ export interface GitHubRepo {
         login: string;
     };
     private: boolean;
+    default_branch: string;
 }
 
 export interface GitHubCommit {
@@ -31,6 +32,7 @@ export interface GitHubCommit {
         deletions: number;
         changes: number;
     }>;
+    branch?: string; // Branch this commit was selected from
 }
 
 // Standup - daily standup notes with GitHub commits
