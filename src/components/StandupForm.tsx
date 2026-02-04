@@ -16,11 +16,11 @@ import {
 	AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Loader2, GitCommit, CheckCircle2, Calendar } from "lucide-react";
-import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
+import { format, subDays, startOfWeek, endOfWeek, parseISO } from "date-fns";
 import type { GitHubCommit } from "../types";
 
 export function StandupForm() {
-	const { selectedRepo } = useStore();
+	const { selectedRepo, selectedBranch } = useStore();
 	const { createStandup, isCreating } = useStandups();
 
 	const [workCompleted, setWorkCompleted] = useState("");
@@ -41,10 +41,21 @@ export function StandupForm() {
 		new Set(),
 	);
 
-	const { commits, loading: commitsLoading } = useCommits(
+	const { commits: rawCommits, loading: commitsLoading } = useCommits(
 		commitStartDate,
 		commitEndDate,
 	);
+
+	// Filter commits client-side to match exact date range (handles timezone issues)
+	const commits = useMemo(() => {
+		return rawCommits.filter((commit) => {
+			const commitDate = format(
+				new Date(commit.commit.author?.date || new Date()),
+				"yyyy-MM-dd",
+			);
+			return commitDate >= commitStartDate && commitDate <= commitEndDate;
+		});
+	}, [rawCommits, commitStartDate, commitEndDate]);
 
 	// Auto-select all commits when they load
 	useEffect(() => {
@@ -75,16 +86,30 @@ export function StandupForm() {
 	const setYesterdayRange = () => {
 		const yesterday = subDays(new Date(), 1);
 		setCommitStartDate(format(yesterday, "yyyy-MM-dd"));
-		setCommitEndDate(format(new Date(), "yyyy-MM-dd"));
+		setCommitEndDate(format(yesterday, "yyyy-MM-dd"));
+	};
+
+	const setTodayRange = () => {
+		const today = format(new Date(), "yyyy-MM-dd");
+		setCommitStartDate(today);
+		setCommitEndDate(today);
 	};
 
 	const setLastFridayRange = () => {
 		const today = new Date();
-		const dayOfWeek = today.getDay();
-		const daysToLastFriday = dayOfWeek === 0 ? 2 : dayOfWeek === 1 ? 3 : 1;
+		const dayOfWeek = today.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
+		// Calculate days since last Friday
+		let daysToLastFriday: number;
+		if (dayOfWeek === 0) {
+			daysToLastFriday = 2; // Sunday -> Friday was 2 days ago
+		} else if (dayOfWeek === 6) {
+			daysToLastFriday = 1; // Saturday -> Friday was 1 day ago
+		} else {
+			daysToLastFriday = dayOfWeek + 2; // Mon(1)->3, Tue(2)->4, Wed(3)->5, Thu(4)->6, Fri(5)->7
+		}
 		const lastFriday = subDays(today, daysToLastFriday);
 		setCommitStartDate(format(lastFriday, "yyyy-MM-dd"));
-		setCommitEndDate(format(new Date(), "yyyy-MM-dd"));
+		setCommitEndDate(format(today, "yyyy-MM-dd"));
 	};
 
 	const setLastWeekRange = () => {
@@ -162,10 +187,10 @@ export function StandupForm() {
 
 		if (!selectedRepo) return;
 
-		// Only save selected commits
-		const selectedCommitObjects = commits.filter((c) =>
-			selectedCommits.has(c.sha),
-		);
+		// Only save selected commits (with branch info)
+		const selectedCommitObjects = commits
+			.filter((c) => selectedCommits.has(c.sha))
+			.map((c) => ({ ...c, branch: selectedBranch || selectedRepo.default_branch }));
 
 		createStandup(
 			{
@@ -233,6 +258,15 @@ export function StandupForm() {
 							type="button"
 							variant="outline"
 							size="sm"
+							onClick={setTodayRange}
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
+						>
+							Today
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
 							onClick={setYesterdayRange}
 							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
 						>
@@ -242,19 +276,19 @@ export function StandupForm() {
 							type="button"
 							variant="outline"
 							size="sm"
-							onClick={setLastFridayRange}
+							onClick={setThisWeekRange}
 							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
 						>
-							Last Friday
+							This Week
 						</Button>
 						<Button
 							type="button"
 							variant="outline"
 							size="sm"
-							onClick={setThisWeekRange}
+							onClick={setLastFridayRange}
 							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
 						>
-							This Week
+							Last Friday
 						</Button>
 						<Button
 							type="button"
@@ -347,7 +381,7 @@ export function StandupForm() {
 								>
 									{Object.entries(commitsByDay)
 										.sort(([dateA], [dateB]) =>
-											dateB.localeCompare(dateA),
+											dateA.localeCompare(dateB),
 										)
 										.map(([date, dayCommits]) => {
 											const allSelected =
@@ -360,12 +394,12 @@ export function StandupForm() {
 													key={date}
 													value={date}
 												>
-													<AccordionTrigger className="hover:no-underline">
-														<div className="flex items-center justify-between w-full pr-4">
+													<div className="flex items-center justify-between">
+														<AccordionTrigger className="hover:no-underline flex-1">
 															<div className="flex items-center gap-2">
 																<span className="text-sm font-medium text-text">
 																	{format(
-																		new Date(
+																		parseISO(
 																			date,
 																		),
 																		"EEEE, MMM d",
@@ -379,34 +413,26 @@ export function StandupForm() {
 																	)
 																</span>
 															</div>
-															<Button
-																type="button"
-																variant="ghost"
-																size="sm"
-																onClick={(
-																	e,
-																) => {
-																	e.stopPropagation();
-																	if (
-																		allSelected
-																	) {
-																		deselectDay(
-																			dayCommits,
-																		);
-																	} else {
-																		selectDay(
-																			dayCommits,
-																		);
-																	}
-																}}
-																className="text-xs text-accent-text hover:text-accent-active hover:bg-surface-overlay"
-															>
-																{allSelected
-																	? "Deselect all"
-																	: "Select all"}
-															</Button>
-														</div>
-													</AccordionTrigger>
+														</AccordionTrigger>
+														<Button
+															type="button"
+															variant="ghost"
+															size="sm"
+															onClick={(e) => {
+																e.stopPropagation();
+																if (allSelected) {
+																	deselectDay(dayCommits);
+																} else {
+																	selectDay(dayCommits);
+																}
+															}}
+															className="text-xs text-accent-text hover:text-accent-active hover:bg-surface-overlay mr-2"
+														>
+															{allSelected
+																? "Deselect all"
+																: "Select all"}
+														</Button>
+													</div>
 
 													<AccordionContent>
 														<div className="space-y-1 ml-4">

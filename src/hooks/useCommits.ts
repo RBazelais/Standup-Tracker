@@ -21,10 +21,14 @@ export function useCommits(since?: string, until?: string) {
 				params.append("sha", selectedBranch);
 			}
 			if (since) {
-				params.append("since", `${since}T00:00:00Z`);
+				// Convert local date to UTC - start of day in local timezone
+				const sinceDate = new Date(`${since}T00:00:00`);
+				params.append("since", sinceDate.toISOString());
 			}
 			if (until) {
-				params.append("until", `${until}T23:59:59Z`);
+				// Convert local date to UTC - end of day in local timezone
+				const untilDate = new Date(`${until}T23:59:59`);
+				params.append("until", untilDate.toISOString());
 			}
 
 			const response = await fetch(
@@ -38,6 +42,11 @@ export function useCommits(since?: string, until?: string) {
 			);
 
 			if (!response.ok) {
+				// 409 = empty repo (no commits), treat as empty array
+				if (response.status === 409) {
+					setCommits([]);
+					return;
+				}
 				throw new Error("Failed to fetch commits");
 			}
 
