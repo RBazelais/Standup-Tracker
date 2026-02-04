@@ -65,24 +65,33 @@ export function StandupHistory() {
 				const firstLinePlanned = standup.workPlanned.split("\n")[0];
 				const hasBlockers =
 					standup.blockers && standup.blockers !== "None";
+				const formattedDate = format(parseISO(standup.date), "EEEE, MMMM d, yyyy");
+				const commitCount = standup.commits.length;
+				const ariaLabel = `Standup note from ${formattedDate}, ${commitCount} commit${commitCount !== 1 ? "s" : ""}${hasBlockers ? ", has blockers" : ""}. Press Enter to view details.`;
 
 				return (
 					<Card
 						key={standup.id}
 						onClick={() => navigate(`/standup/${standup.id}`)}
-						className="p-4 bg-surface-raised border-border hover:bg-surface-overlay cursor-pointer transition-colors"
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								navigate(`/standup/${standup.id}`);
+							}
+						}}
+						tabIndex={0}
+						role="button"
+						aria-label={ariaLabel}
+						className="p-4 bg-surface-raised border-border hover:bg-surface-overlay cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
 					>
 						<div className="flex items-start justify-between mb-3">
 							<div>
-								<h3 className="font-semibold text-text">
-									{format(
-										parseISO(standup.date),
-										"EEEE, MMMM d, yyyy",
-									)}
+								<h3 className="font-semibold text-text" aria-hidden="true">
+									{formattedDate}
 								</h3>
-								<p className="text-xs text-text-muted mt-1">
-									{standup.commits.length} commit
-									{standup.commits.length !== 1 ? "s" : ""}
+								<p className="text-xs text-text-muted mt-1" aria-hidden="true">
+									{commitCount} commit
+									{commitCount !== 1 ? "s" : ""}
 								</p>
 							</div>
 							{hasBlockers && (
