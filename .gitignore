@@ -30,3 +30,6 @@ dist-ssr
 # TypeScript build info
 *.tsbuildinfo
 fix-standups.mjs
+migrate-database.mjs
+migrate-schema.mjs
+
