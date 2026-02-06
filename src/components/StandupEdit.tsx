@@ -1,88 +1,34 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useStore } from "../store";
+import { useQuery } from "@tanstack/react-query";
+import { useStandups } from "../hooks/useStandups";
+import { standupsApi } from "../services/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft, Save, X } from "lucide-react";
-import type { Standup } from "../types";
 
 export function StandupEdit() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const { updateStandup } = useStore();
+	const { updateStandup, isUpdating } = useStandups();
 
-	const [standup, setStandup] = useState<Standup | null>(null);
-	const [loading, setLoading] = useState(Boolean(id));
-	const [saving, setSaving] = useState(false);
-	const [error, setError] = useState<string | null>(
-		id ? null : "No standup ID provided"
-	);
+	// Fetch standup data
+	const {
+		data: standup,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: ["standup", id],
+		queryFn: () => standupsApi.getById(id!),
+		enabled: !!id,
+	});
 
-	const [workCompleted, setWorkCompleted] = useState("");
-	const [workPlanned, setWorkPlanned] = useState("");
-	const [blockers, setBlockers] = useState("");
-
-	useEffect(() => {
-		if (!id) return;
-
-		const fetchStandup = async () => {
-			try {
-				const response = await fetch(`/api/standups/${id}`);
-
-				if (response.ok) {
-					const data = await response.json();
-					setStandup(data);
-					setWorkCompleted(data.workCompleted);
-					setWorkPlanned(data.workPlanned);
-					setBlockers(data.blockers);
-				} else if (response.status === 404) {
-					setError("Standup not found");
-				} else {
-					setError("Failed to load standup");
-				}
-			} catch (err) {
-				console.error("Error fetching standup:", err);
-				setError("Failed to load standup");
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchStandup();
-	}, [id]);
-
-
-	const handleCancel = () => {
-		navigate(`/standup/${id}`);
-	};
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (!id) return;
-
-		setSaving(true);
-
-		try {
-			await updateStandup(id, {
-				workCompleted,
-				workPlanned,
-				blockers,
-			});
-
-			navigate(`/standup/${id}`);
-		} catch (err) {
-			console.error("Failed to update standup:", err);
-			alert("Failed to save changes. Please try again.");
-			setSaving(false);
-		}
-	};
-
-	if (loading) {
+	// Show loading while fetching - form will initialize with actual data
+	if (isLoading) {
 		return (
-			<div className="min-h-screen bg-surface">
+			<div className="min-h-screen bg-surface-base">
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<div className="flex items-center justify-center py-20">
 						<Loader2 className="h-8 w-8 animate-spin text-accent" />
@@ -94,17 +40,19 @@ export function StandupEdit() {
 
 	if (error || !standup) {
 		return (
-			<div className="min-h-screen bg-surface">
+			<div className="min-h-screen bg-surface-base">
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<Card className="p-8 bg-surface-raised border-border text-center">
 						<h2 className="text-2xl font-bold text-text mb-4">
 							Standup Not Found
 						</h2>
 						<p className="text-text-subtle mb-6">
-							{error || "This standup doesn't exist."}
+							{error
+								? "Failed to load standup"
+								: "This standup doesn't exist."}
 						</p>
 						<Link to="/dashboard">
-							<Button className="bg-accent hover:bg-accent-strong text-text">
+							<Button className="bg-accent hover:bg-accent-hover text-white">
 								<ArrowLeft className="h-4 w-4 mr-2" />
 								Back to Dashboard
 							</Button>
@@ -115,8 +63,62 @@ export function StandupEdit() {
 		);
 	}
 
+	// Render form only after data is loaded
 	return (
-		<div className="min-h-screen bg-surface">
+		<StandupEditForm
+			id={id!}
+			initialData={standup}
+			updateStandup={updateStandup}
+			isUpdating={isUpdating}
+			navigate={navigate}
+		/>
+	);
+}
+
+// Separate component so useState initializes with actual data
+function StandupEditForm({
+	id,
+	initialData,
+	updateStandup,
+	isUpdating,
+	navigate,
+}: {
+	id: string;
+	initialData: { workCompleted: string; workPlanned: string; blockers: string };
+	updateStandup: (params: { id: string; updates: object }, options?: object) => void;
+	isUpdating: boolean;
+	navigate: (path: string) => void;
+}) {
+	const [workCompleted, setWorkCompleted] = useState(initialData.workCompleted || "");
+	const [workPlanned, setWorkPlanned] = useState(initialData.workPlanned || "");
+	const [blockers, setBlockers] = useState(initialData.blockers || "");
+
+	const handleCancel = () => {
+		navigate(`/standup/${id}`);
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		updateStandup(
+			{
+				id,
+				updates: {
+					workCompleted,
+					workPlanned,
+					blockers,
+				},
+			},
+			{
+				onSuccess: () => {
+					navigate(`/standup/${id}`);
+				},
+			},
+		);
+	};
+
+	return (
+		<div className="min-h-screen bg-surface-base">
 			<main className="container mx-auto px-6 py-8 max-w-4xl">
 				{/* Breadcrumb */}
 				<div className="mb-6">
@@ -145,29 +147,34 @@ export function StandupEdit() {
 								htmlFor="workCompleted"
 								className="text-text-soft"
 							>
-								Work Completed
+								What you worked on
 							</Label>
 							<Textarea
 								id="workCompleted"
 								value={workCompleted}
-								onChange={(e) => setWorkCompleted(e.target.value)}
+								onChange={(e) =>
+									setWorkCompleted(e.target.value)
+								}
 								placeholder="What did you work on?"
-								className="bg-surface-strong border-border text-text placeholder:text-text-muted min-h-[120px]"
+								className="bg-surface-overlay border-border text-text placeholder:text-text-muted min-h-[120px]"
 								required
 							/>
 						</div>
 
 						{/* Work Planned */}
 						<div className="space-y-2">
-							<Label htmlFor="workPlanned" className="text-text-soft">
-								Work Planned
+							<Label
+								htmlFor="workPlanned"
+								className="text-text-soft"
+							>
+								What you'll work on next
 							</Label>
 							<Textarea
 								id="workPlanned"
 								value={workPlanned}
 								onChange={(e) => setWorkPlanned(e.target.value)}
 								placeholder="What will you work on next?"
-								className="bg-surface-strong border-border text-text placeholder:text-text-muted min-h-[120px]"
+								className="bg-surface-overlay border-border text-text placeholder:text-text-muted min-h-[120px]"
 								required
 							/>
 						</div>
@@ -185,8 +192,7 @@ export function StandupEdit() {
 								value={blockers}
 								onChange={(e) => setBlockers(e.target.value)}
 								placeholder="Any blockers?"
-								className="bg-surface-strong border-border text-text placeholder:text-text-muted min-h-[100px]"
-								required
+								className="bg-surface-overlay border-border text-text placeholder:text-text-muted min-h-[100px]"
 							/>
 						</div>
 
@@ -194,10 +200,10 @@ export function StandupEdit() {
 						<div className="flex gap-3 pt-4">
 							<Button
 								type="submit"
-								disabled={saving}
-								className="flex-1 bg-accent hover:bg-accent-strong text-text"
+								disabled={isUpdating}
+								className="flex-1 bg-accent hover:bg-accent-hover text-white"
 							>
-								{saving ? (
+								{isUpdating ? (
 									<>
 										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 										Saving...
@@ -213,8 +219,8 @@ export function StandupEdit() {
 								type="button"
 								variant="outline"
 								onClick={handleCancel}
-								disabled={saving}
-								className="bg-surface-raised border-border hover:bg-surface-strong text-text-soft hover:text-text"
+								disabled={isUpdating}
+								className="bg-surface-raised border-border hover:bg-surface-overlay text-text-soft hover:text-text"
 							>
 								<X className="mr-2 h-4 w-4" />
 								Cancel

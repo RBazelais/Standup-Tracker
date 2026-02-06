@@ -13,6 +13,7 @@ export interface GitHubRepo {
         login: string;
     };
     private: boolean;
+    default_branch: string;
 }
 
 export interface GitHubCommit {
@@ -31,14 +32,15 @@ export interface GitHubCommit {
         deletions: number;
         changes: number;
     }>;
+    branch?: string; // Branch this commit was selected from
 }
 
 // Standup - daily standup notes with GitHub commits
 export interface Standup {
     id: string;
     date: string;
-    workCompleted: string;  // Renamed from 'yesterday'
-    workPlanned: string;    // Renamed from 'today'
+    workCompleted: string;  
+    workPlanned: string;    
     blockers: string;
     taskIds: string[];
     commits: GitHubCommit[];

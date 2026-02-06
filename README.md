@@ -1,169 +1,100 @@
 # StandUp Tracker
 
-Never forget what you were working on yesterday.
+> Auto-generate standup notes from GitHub commits with smart selection and instant feedback
 
-StandUp Tracker helps developers track daily progress by pulling GitHub commits and turning them into standup notes. No more "what did I do yesterday?" Your commits already know.
-
-Meetings have their place. Routine status updates don't need to be one of them. Your team stays in sync, you stay focused on the work.
+Never forget what you were working on yesterday. Your commits already know.
 
 Built for async teams, remote developers, and people who respect each other's time.
 
+**[Live Demo](https://standup-tracker-indol.vercel.app)** • **[Portfolio](https://rbazelais.com)**
+
 ![StandUp Tracker](./src/assets/Standup-Tracker.png)
+
+---
 
 ## Features
 
-- [X] **Auto-populate from Git** - Your commits become your standup notes with one click
+- [X] **Smart commit selection** - Day grouping, branch filtering, bulk operations
+- [X] **Optimistic UI** - Instant feedback with automatic rollback on errors
 - [X] **Async by default** - Write updates on your schedule, not meeting schedules
-- [X] **Full CRUD operations** - Create, view, edit, and delete standup notes
-- [X] **Markdown support** - Format your notes with markdown for better readability
-- [X] **Date range selection** - Fetch commits from any date range (perfect for Monday standups)
-- [X] **Clean history view** - Scannable list of past standups with summaries
-- [X] **Persistent storage** - All standups saved to Neon Postgres database
-- [X] **Secure OAuth** - GitHub authentication with token encryption
+- [X] **Hierarchical planning** - Milestones → Sprints → Tasks → Standups
+- [X] **Full CRUD** - Create, view, edit, delete with toast notifications
+- [X] **Markdown support** - Format notes with markdown for readability
+- [X] **Secure OAuth** - GitHub authentication with encrypted tokens
+- [X] **Database persistence** - Neon Postgres with type-safe queries
 
-## Demo
-
-[Live Demo](https://standup-tracker-indol.vercel.app)
+---
 
 ## Tech Stack
 
 ### Frontend
-- **React 18** + **TypeScript** - Type-safe component architecture
+
+- **React 18 + TypeScript** - Type-safe component architecture
 - **Vite** - Lightning-fast build tool
-- **Tailwind CSS v4** - Utility-first styling with Typography plugin
+- **React Query (TanStack Query)** - Server state management with optimistic updates
+- **Zustand** - Client state management (auth, UI selections)
+- **Tailwind CSS** - Utility-first styling with semantic color tokens
+- **Radix UI** - Accessible component primitives
 - **Framer Motion** - Smooth animations
-- **shadcn/ui** + **Radix UI** - Accessible components
-- **Zustand** - Lightweight state management with persistence
 - **React Router** - Client-side routing
-- **React Markdown** - Markdown rendering for standup notes
 
 ### Backend
+
 - **Vercel Serverless Functions** - RESTful API endpoints
-- **Neon Postgres** - Serverless database
-- **Drizzle ORM** - Type-safe database queries
+- **Neon Postgres** - Serverless PostgreSQL database
+- **Drizzle ORM** - Type-safe SQL queries
 - **GitHub API (Octokit)** - Repository and commit data
 
 ### DevOps
+
 - **Vercel** - Deployment and hosting
-- **GitHub OAuth Apps** - Secure authentication
+- **GitHub OAuth** - Secure authentication flow
 
-## Installation
-
-### Prerequisites
-- Node.js 18+ and npm
-- GitHub account
-- Vercel account (for deployment)
-
-### Local Development
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/RBazelais/Standup-Tracker.git
-cd Standup-Tracker
-```
-
-2. **Install dependencies**
-```bash
-npm install
-```
-
-3. **Set up GitHub OAuth App**
-   - Go to [GitHub Developer Settings](https://github.com/settings/developers)
-   - Click "New OAuth App"
-   - Fill in:
-     - **Application name:** StandUp Tracker Local Dev
-     - **Homepage URL:** `http://localhost:3000`
-     - **Authorization callback URL:** `http://localhost:3000/auth/callback`
-   - Copy your **Client ID** and **Client Secret**
-
-4. **Set up Neon Database**
-   - Create a Neon project at [neon.tech](https://neon.tech)
-   - Copy your connection string
-
-5. **Configure environment variables**
-   
-   Create `.env.local`:
-```env
-# GitHub OAuth
-VITE_GITHUB_CLIENT_ID=your_client_id_here
-GITHUB_CLIENT_SECRET=your_client_secret_here
-VITE_APP_URL=http://localhost:3000
-
-# Neon Database
-POSTGRES_URL=your_neon_connection_string
-```
-
-6. **Run database migrations**
-```bash
-npm run db:push
-```
-
-7. **Run the development server**
-```bash
-npm install -g vercel  # Install Vercel CLI (if not already installed)
-vercel dev             # Run with serverless functions
-```
-
-8. **Open your browser**
-   
-   Navigate to `http://localhost:3000`
-
-## Deployment
-
-### Deploy to Vercel
-
-1. **Push to GitHub**
-```bash
-git push origin main
-```
-
-2. **Import to Vercel**
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Click "New Project"
-   - Import your GitHub repository
-   - Vercel will auto-detect Neon and set up database connection
-   - Add remaining environment variables:
-     - `VITE_GITHUB_CLIENT_ID`
-     - `GITHUB_CLIENT_SECRET`
-     - `VITE_APP_URL` (your Vercel URL)
-
-3. **Update GitHub OAuth App**
-   - Update callback URL to: `https://your-app.vercel.app/auth/callback`
-
-4. **Deploy**
-   
-   Vercel will automatically deploy on every push to `main`
-
-## Usage
-
-1. **Sign in with GitHub** - Authorize StandUp Tracker to access your repositories
-2. **Select a repository** - Choose which project you want to track
-3. **Create a standup note**:
-   - Select date range for commits (defaults to yesterday)
-   - Click "Auto-populate" to fill in your work from commits
-   - Add your plans for today
-   - Note any blockers (optional)
-4. **View history** - Browse past standups with clean, scannable summaries
-5. **Edit or delete** - Click any standup to view details, then edit or delete as needed
+---
 
 ## Architecture
 
+### State Management Strategy
+
+Separated client state from server state for optimal performance and developer experience:
+
+**Zustand (Client State - 1KB):**
+
+- Auth tokens and user session (persisted to localStorage)
+- UI selections (selected repo, branch)
+- Synchronous, always available
+
+**React Query (Server State - 13KB):**
+
+- Standups, commits, branches (fetched from API)
+- Automatic caching and background sync
+- Optimistic updates with automatic rollback
+- Built-in error handling and retries
+
+**Trade-off:** Added 14KB bundle size but eliminated ~200 lines of manual cache invalidation, optimistic update logic, and error handling per resource.
+
 ### Database Schema
+
 ```typescript
-// Standups table
-{
-  id: uuid,
-  userId: string,           // GitHub user ID
-  repoFullName: string,     // e.g., "username/repo"
-  date: string,             // YYYY-MM-DD
-  yesterday: string,        // Markdown-formatted
-  today: string,            // Markdown-formatted
-  blockers: string,         // Markdown-formatted
-  commits: jsonb,           // Full commit data
-  taskIds: jsonb,           // Array of linked task IDs
-  createdAt: timestamp,
-  updatedAt: timestamp
-}
+// Core schema
+standups
+├── id (uuid)
+├── user_id (text)
+├── work_completed (text)  ← Renamed from 'yesterday'
+├── work_planned (text)    ← Renamed from 'today'
+├── blockers (text)
+├── commits (jsonb)
+├── task_ids (jsonb)
+└── timestamps
+
+// Phase 2: Hierarchical planning
+milestones (long-term goals)
+  ↓
+sprints (time-boxed iterations)
+  ↓
+tasks (individual work items)
+  ↓
+standups (daily updates)
 ```
 
 ### API Routes
@@ -176,40 +107,240 @@ git push origin main
 | PUT | `/api/standups/{id}` | Update standup |
 | DELETE | `/api/standups/{id}` | Delete standup |
 
+---
+
+## Technical Challenges
+
+### 1. State Management Architecture
+
+**Problem:** Initial Zustand implementation required ~200 lines of manual cache invalidation, optimistic update logic, and error handling per resource. Manual rollback on failed mutations was error-prone and could cause race conditions.
+
+**Solution:**
+
+1. Created centralized API service layer (`src/services/api.ts`)
+2. Built `useStandups` hook with React Query mutations
+3. Implemented optimistic updates with automatic rollback
+4. Separated concerns: Zustand for auth/UI, React Query for server data
+
+**Code Example:**
+
+```typescript
+
+// Before: Manual optimistic updates in Zustand (error-prone)
+const addStandup = async (standup) => {
+  set({ standups: [standup, ...state.standups] }); // Optimistic
+  try {
+    const response = await fetch('/api/standups', { ... });
+    if (!response.ok) {
+      // Manual rollback
+      set({ standups: state.standups.filter(s => s.id !== standup.id) });
+    }
+  } catch (error) {
+    // Manual error handling
+  }
+};
+
+// After: Automatic with React Query
+const createMutation = useMutation({
+  mutationFn: standupsApi.create,
+  onMutate: async (newStandup) => {
+    queryClient.setQueryData(['standups'], old => [newStandup, ...old]);
+    return { previousStandups };
+  },
+  onError: (err, variables, context) => {
+    queryClient.setQueryData(['standups'], context.previousStandups); // Auto rollback
+    toast.error('Failed to create standup');
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries(['standups']); // Auto cache refresh
+    toast.success('Standup created!');
+  }
+});
+```
+
+**Result:** Eliminated boilerplate, prevented race conditions, improved UX with instant feedback.
+
+---
+
+### 2. Commit Selection UX
+
+**Problem:** Raw commit lists (50+ commits for a week) overwhelmed users with noise. Needed intuitive filtering across multiple days and branches without complex UI.
+
+**Solution:**
+
+1. Grouped commits by day using Accordion component
+2. Added individual + bulk selection controls per day
+3. Implemented branch-specific filtering
+4. Auto-select all commits on load (user deselects noise)
+5. Visual feedback with selection counter
+
+**Result:** Users can quickly review and curate commits in ~10 seconds vs. manual typing for 5+ minutes.
+
+---
+
+### 3. Database Schema Evolution
+
+**Problem:** Initial schema used confusing field names (`yesterday`, `today`). Needed to rename fields and add Phase 2 tables (milestones, sprints, tasks) without breaking production.
+
+**Solution:**
+
+1. Wrote migration script to safely rename columns
+2. Migrated existing data from old → new columns
+3. Added NOT NULL constraints after data migration
+4. Dropped old columns
+5. Created Phase 2 tables with proper foreign keys
+
+**Migration Script:**
+
+```javascript
+// Add new columns
+ALTER TABLE standups 
+  ADD COLUMN work_completed TEXT,
+  ADD COLUMN work_planned TEXT;
+
+// Copy data
+UPDATE standups 
+SET work_completed = yesterday, work_planned = today;
+
+// Drop old columns
+ALTER TABLE standups 
+  DROP COLUMN yesterday, DROP COLUMN today;
+```
+
+**Result:** Zero downtime migration with referential integrity maintained.
+
+---
+
+## Installation
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- GitHub account for OAuth
+- Vercel account (for deployment)
+
+### Local Development
+
+1. **Clone and install**
+
+```bash
+git clone https://github.com/RBazelais/Standup-Tracker.git
+cd Standup-Tracker
+npm install
+```
+
+2. **Set up GitHub OAuth App**
+   - Go to [GitHub Developer Settings](https://github.com/settings/developers)
+   - Create new OAuth App:
+     - **Homepage URL:** `http://localhost:3000`
+     - **Callback URL:** `http://localhost:3000/auth/callback`
+   - Copy Client ID and Secret
+
+3. **Set up Neon Database**
+   - Create project at [neon.tech](https://neon.tech)
+   - Copy connection string
+
+4. **Configure environment variables**
+
+Create `.env.local`:
+```env
+# GitHub OAuth
+VITE_GITHUB_CLIENT_ID=your_client_id
+GITHUB_CLIENT_SECRET=your_client_secret
+VITE_APP_URL=http://localhost:3000
+
+# Database
+POSTGRES_URL=your_neon_connection_string
+```
+
+5. **Run database migrations**
+```bash
+npm run db:push
+```
+
+6. **Start development server**
+```bash
+npm install -g vercel  # Install Vercel CLI
+vercel dev             # Run with serverless functions
+```
+
+7. **Open browser** → `http://localhost:3000`
+
+---
+
+## Deployment
+
+### Deploy to Vercel
+
+1. Push to GitHub
+2. Import repository to Vercel
+3. Add environment variables (Vercel auto-detects Neon)
+4. Update GitHub OAuth callback URL to production URL
+5. Deploy (automatic on every push)
+
+---
+
+## Usage
+
+1. **Sign in with GitHub** - Authorize repository access
+2. **Select repository** - Choose project to track
+3. **Select branch** (optional) - Filter commits by branch
+4. **Create standup**:
+   - Select date range (presets: Yesterday, Last Friday, This Week)
+   - Review commits grouped by day
+   - Deselect noise commits
+   - Click "Auto-populate" to fill work completed
+   - Add plans and blockers
+5. **View history** - Browse past standups
+6. **Edit/delete** - Click any standup for details
+
+---
+
 ## Roadmap
 
-### Phase 1: Core Features (Complete)
-- [X] GitHub OAuth authentication
-- [X] Repository selection
-- [X] Standup form with commit auto-population
-- [X] Date range selector for commits
-- [X] Markdown support
-- [X] Standup history view
-- [X] Full CRUD operations
-- [X] Database persistence with Neon Postgres
+### Phase 1: Core Features
+
+- [x] GitHub OAuth authentication
+- [x] Smart commit selection with day grouping
+- [x] Branch filtering
+- [x] Optimistic UI with React Query
+- [x] Database persistence
+- [x] Full CRUD operations
 
 ### Phase 2: Task Management (In Progress)
-- [ ] Link standups to tasks/tickets
+
+- [x] Database schema with milestones/sprints/tasks
+- [ ] Link standups to tasks
 - [ ] Story point tracking
-- [ ] Velocity insights
+- [ ] Sprint velocity insights
 
 ### Future Ideas
-- Team workspaces and shared standups
-- Slack/Discord notifications
-- Jira/Asana/Linear integrations
-- Export to Markdown
+
+- [ ] AI commit summarization (Claude API)
+- [ ] Slack/Discord integration
+- [ ] Jira/Linear sync
+- [ ] Export as Markdown
+- [ ] Weekly summary reports
+
+---
 
 ## Contributing
 
-Contributions welcome! Fork the repo, create a feature branch, and open a PR.
+Contributions welcome! Fork, create a feature branch, and open a PR.
+
+---
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
+---
+
 ## Author
 
-Rachél Bazelais
-- Portfolio: [rbazelais.com](https://rbazelais.com)
-- GitHub: [@RBazelais](https://github.com/RBazelais)
-- LinkedIn: [rbazelais](https://linkedin.com/in/rbazelais)
+**Rachél Bazelais**  
+Frontend Engineer specializing in React, TypeScript, and UI engineering
+
+- 🌐 [rbazelais.com](https://rbazelais.com)
+- 💼 [LinkedIn](https://linkedin.com/in/rbazelais)
+- 🐙 [GitHub](https://github.com/RBazelais)

@@ -1,21 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStore } from "../store";
 import { useCommits } from "../hooks/useCommits";
+import { useStandups } from "../hooks/useStandups";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Loader2, GitCommit, CheckCircle2, Calendar } from "lucide-react";
-import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
+import { format, subDays, startOfWeek, endOfWeek, parseISO } from "date-fns";
+import type { GitHubCommit } from "../types";
 
 export function StandupForm() {
-	const { selectedRepo, addStandup } = useStore();
+	const { selectedRepo, selectedBranch } = useStore();
+	const { createStandup, isCreating } = useStandups();
 
 	const [workCompleted, setWorkCompleted] = useState("");
 	const [workPlanned, setWorkPlanned] = useState("");
 	const [blockers, setBlockers] = useState("");
-	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
 
 	// Date range for fetching commits
@@ -26,24 +36,91 @@ export function StandupForm() {
 		format(new Date(), "yyyy-MM-dd"),
 	);
 
-	const {
-		commits,
-		loading: commitsLoading,
-		refetchCommits,
-	} = useCommits(commitStartDate, commitEndDate);
+	// Commit selection state
+	const [selectedCommits, setSelectedCommits] = useState<Set<string>>(
+		new Set(),
+	);
+
+	// Sort order preference: true = oldest first, false = newest first
+	const [oldestFirst, setOldestFirst] = useState(true);
+
+	const { commits: rawCommits, loading: commitsLoading } = useCommits(
+		commitStartDate,
+		commitEndDate,
+	);
+
+	// Filter commits client-side to match exact date range (handles timezone issues)
+	const commits = useMemo(() => {
+		return rawCommits.filter((commit) => {
+			const commitDate = format(
+				new Date(commit.commit.author?.date || new Date()),
+				"yyyy-MM-dd",
+			);
+			return commitDate >= commitStartDate && commitDate <= commitEndDate;
+		});
+	}, [rawCommits, commitStartDate, commitEndDate]);
+
+	// Auto-select all commits when they load
+	useEffect(() => {
+		if (commits.length > 0) {
+			const ids = new Set(commits.map((c) => c.sha));
+			const t = setTimeout(() => setSelectedCommits(ids), 0);
+			return () => clearTimeout(t);
+		}
+	}, [commits]);
+
+	// Group commits by day and sort based on user preference
+	const commitsByDay = useMemo(() => {
+		const grouped = commits.reduce(
+			(acc, commit) => {
+				const date = format(
+					new Date(commit.commit.author?.date || new Date()),
+					"yyyy-MM-dd",
+				);
+				if (!acc[date]) acc[date] = [];
+				acc[date].push(commit);
+				return acc;
+			},
+			{} as Record<string, GitHubCommit[]>,
+		);
+
+		// Sort commits within each day based on preference
+		for (const date in grouped) {
+			grouped[date].sort((a, b) => {
+				const timeA = new Date(a.commit.author?.date || 0).getTime();
+				const timeB = new Date(b.commit.author?.date || 0).getTime();
+				return oldestFirst ? timeA - timeB : timeB - timeA;
+			});
+		}
+
+		return grouped;
+	}, [commits, oldestFirst]);
 
 	// Preset date range functions
 	const setYesterdayRange = () => {
 		const yesterday = subDays(new Date(), 1);
 		setCommitStartDate(format(yesterday, "yyyy-MM-dd"));
-		setCommitEndDate(format(new Date(), "yyyy-MM-dd"));
+		setCommitEndDate(format(yesterday, "yyyy-MM-dd"));
+	};
+
+	const setTodayRange = () => {
+		const today = format(new Date(), "yyyy-MM-dd");
+		setCommitStartDate(today);
+		setCommitEndDate(today);
 	};
 
 	const setLastFridayRange = () => {
 		const today = new Date();
-		const dayOfWeek = today.getDay();
-		// If today is Monday (1), go back 3 days. If Sunday (0), go back 2 days.
-		const daysToLastFriday = dayOfWeek === 0 ? 2 : dayOfWeek === 1 ? 3 : 1;
+		const dayOfWeek = today.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
+		// Calculate days since last Friday
+		let daysToLastFriday: number;
+		if (dayOfWeek === 0) {
+			daysToLastFriday = 2; // Sunday -> Friday was 2 days ago
+		} else if (dayOfWeek === 6) {
+			daysToLastFriday = 1; // Saturday -> Friday was 1 day ago
+		} else {
+			daysToLastFriday = dayOfWeek + 2; // Mon(1)->3, Tue(2)->4, Wed(3)->5, Thu(4)->6, Fri(5)->7
+		}
 		const lastFriday = subDays(today, daysToLastFriday);
 		setCommitStartDate(format(lastFriday, "yyyy-MM-dd"));
 		setCommitEndDate(format(today, "yyyy-MM-dd"));
@@ -52,28 +129,67 @@ export function StandupForm() {
 	const setLastWeekRange = () => {
 		const lastWeekStart = startOfWeek(subDays(new Date(), 7), {
 			weekStartsOn: 1,
-		}); // Monday
+		});
 		const lastWeekEnd = endOfWeek(subDays(new Date(), 7), {
 			weekStartsOn: 1,
-		}); // Sunday
+		});
 		setCommitStartDate(format(lastWeekStart, "yyyy-MM-dd"));
 		setCommitEndDate(format(lastWeekEnd, "yyyy-MM-dd"));
 	};
 
 	const setThisWeekRange = () => {
-		const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
+		const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
 		setCommitStartDate(format(weekStart, "yyyy-MM-dd"));
 		setCommitEndDate(format(new Date(), "yyyy-MM-dd"));
 	};
 
-	const handleAutoPopulate = () => {
-		if (commits.length === 0) return;
+	// Commit selection functions
+	const toggleCommit = (sha: string) => {
+		setSelectedCommits((prev) => {
+			const newSet = new Set(prev);
+			if (newSet.has(sha)) {
+				newSet.delete(sha);
+			} else {
+				newSet.add(sha);
+			}
+			return newSet;
+		});
+	};
 
-		const commitMessages = commits
+	const selectDay = (dayCommits: GitHubCommit[]) => {
+		setSelectedCommits((prev) => {
+			const newSet = new Set(prev);
+			dayCommits.forEach((c) => newSet.add(c.sha));
+			return newSet;
+		});
+	};
+
+	const deselectDay = (dayCommits: GitHubCommit[]) => {
+		setSelectedCommits((prev) => {
+			const newSet = new Set(prev);
+			dayCommits.forEach((c) => newSet.delete(c.sha));
+			return newSet;
+		});
+	};
+
+	const selectAll = () => {
+		setSelectedCommits(new Set(commits.map((c) => c.sha)));
+	};
+
+	const deselectAll = () => {
+		setSelectedCommits(new Set());
+	};
+
+	const handleAutoPopulate = () => {
+		const selected = commits.filter((c) => selectedCommits.has(c.sha));
+
+		if (selected.length === 0) return;
+
+		const commitMessages = selected
 			.map((commit) => {
 				const message = commit.commit.message.split("\n")[0];
 				const sha = commit.sha.substring(0, 7);
-				return `- ${message} (\`${sha}\`)`;
+				return `${message} (\`${sha}\`)`;
 			})
 			.join("\n");
 
@@ -85,31 +201,34 @@ export function StandupForm() {
 
 		if (!selectedRepo) return;
 
-		setSaving(true);
+		// Only save selected commits (with branch info)
+		const selectedCommitObjects = commits
+			.filter((c) => selectedCommits.has(c.sha))
+			.map((c) => ({ ...c, branch: selectedBranch || selectedRepo.default_branch }));
 
-		const standup = {
-			id: crypto.randomUUID(),
-			date: format(new Date(), "yyyy-MM-dd"),
-			workCompleted,
-			workPlanned,
-			blockers: blockers || "None",
-			taskIds: [],
-			commits,
-			repoFullName: selectedRepo.full_name,
-			createdAt: new Date().toISOString(),
-		};
-
-		await addStandup(standup);
-
-		setSaving(false);
-		setSaved(true);
-
-		setTimeout(() => {
-			setWorkCompleted("");
-			setWorkPlanned("");
-			setBlockers("");
-			setSaved(false);
-		}, 2000);
+		createStandup(
+			{
+				date: format(new Date(), "yyyy-MM-dd"),
+				workCompleted,
+				workPlanned,
+				blockers: blockers || "None",
+				taskIds: [],
+				commits: selectedCommitObjects,
+				repoFullName: selectedRepo.full_name,
+			},
+			{
+				onSuccess: () => {
+					setSaved(true);
+					setTimeout(() => {
+						setWorkCompleted("");
+						setWorkPlanned("");
+						setBlockers("");
+						setSelectedCommits(new Set());
+						setSaved(false);
+					}, 2000);
+				},
+			},
+		);
 	};
 
 	if (!selectedRepo) {
@@ -139,7 +258,7 @@ export function StandupForm() {
 
 			<form onSubmit={handleSubmit} className="space-y-6">
 				{/* Date Range Selector */}
-				<Card className="p-4 bg-surface-raised border-border">
+				<Card className="p-4 bg-surface-overlay border-border">
 					<div className="flex items-center gap-2 mb-3">
 						<Calendar className="h-4 w-4 text-text-muted" />
 						<Label className="text-text-soft text-sm">
@@ -153,8 +272,17 @@ export function StandupForm() {
 							type="button"
 							variant="outline"
 							size="sm"
+							onClick={setTodayRange}
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
+						>
+							Today
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
 							onClick={setYesterdayRange}
-							className="text-xs bg-surface-raised border-border hover:bg-surface-strong text-text-soft"
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
 						>
 							Yesterday
 						</Button>
@@ -162,17 +290,8 @@ export function StandupForm() {
 							type="button"
 							variant="outline"
 							size="sm"
-							onClick={setLastFridayRange}
-							className="text-xs bg-surface-raised border-border hover:bg-surface-strong text-text-soft"
-						>
-							Last Friday
-						</Button>
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
 							onClick={setThisWeekRange}
-							className="text-xs bg-surface-raised border-border hover:bg-surface-strong text-text-soft"
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
 						>
 							This Week
 						</Button>
@@ -180,15 +299,24 @@ export function StandupForm() {
 							type="button"
 							variant="outline"
 							size="sm"
+							onClick={setLastFridayRange}
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
+						>
+							Last Friday
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
 							onClick={setLastWeekRange}
-							className="text-xs bg-surface-raised border-border hover:bg-surface-strong text-text-soft"
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
 						>
 							Last Week
 						</Button>
 					</div>
 
 					{/* Custom Date Inputs */}
-					<div className="grid grid-cols-2 gap-3">
+					<div className="grid grid-cols-2 gap-3 mb-3">
 						<div className="space-y-1">
 							<Label
 								htmlFor="start-date"
@@ -203,7 +331,7 @@ export function StandupForm() {
 								onChange={(e) =>
 									setCommitStartDate(e.target.value)
 								}
-								className="bg-surface-raised border-border text-text text-sm"
+								className="bg-surface-overlay border-border text-text text-sm"
 							/>
 						</div>
 
@@ -222,60 +350,223 @@ export function StandupForm() {
 									setCommitEndDate(e.target.value)
 								}
 								max={format(new Date(), "yyyy-MM-dd")}
-								className="bg-surface-raised border-border text-text text-sm"
+								className="bg-surface-overlay border-border text-text text-sm"
 							/>
 						</div>
 					</div>
 
-					<div className="flex items-center justify-between mt-3">
-						<span className="text-xs text-text-muted">
-							{commits.length} commit
-							{commits.length !== 1 ? "s" : ""} found
-						</span>
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							onClick={refetchCommits}
-							disabled={commitsLoading}
-							className="text-accent hover:text-accent-weak hover:bg-surface-raised text-xs"
-						>
-							{commitsLoading ? (
-								<Loader2 className="h-3 w-3 animate-spin" />
-							) : (
-								"Refresh"
-							)}
-						</Button>
-					</div>
+					{/* Commit Previewer - Grouped by Day */}
+					{commits.length > 0 && (
+						<div className="border-t border-border pt-3">
+							<div className="flex items-center justify-between mb-3">
+								<div className="flex items-center gap-3">
+									<span className="text-sm text-text-muted">
+										{commits.length} commit
+										{commits.length !== 1 ? "s" : ""} found •{" "}
+										{selectedCommits.size} selected
+									</span>
+									<div className="flex rounded-md border border-border overflow-hidden">
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											onClick={() => setOldestFirst(true)}
+											className={`text-xs rounded-none px-2 ${
+												oldestFirst
+													? "bg-accent text-white hover:bg-accent"
+													: "text-text-muted hover:bg-surface-overlay"
+											}`}
+										>
+											Oldest First
+										</Button>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											onClick={() => setOldestFirst(false)}
+											className={`text-xs rounded-none px-2 ${
+												!oldestFirst
+													? "bg-accent text-white hover:bg-accent"
+													: "text-text-muted hover:bg-surface-overlay"
+											}`}
+										>
+											Newest First
+										</Button>
+									</div>
+								</div>
+								<div className="flex gap-2">
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onClick={selectAll}
+										className="text-xs text-accent-text hover:text-accent-active hover:bg-surface-overlay"
+									>
+										Select All
+									</Button>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onClick={deselectAll}
+										className="text-xs text-text-subtle hover:text-text-soft hover:bg-surface-overlay"
+									>
+										Clear
+									</Button>
+								</div>
+							</div>
+
+							{/* Grouped Commits with Accordion */}
+							<ScrollArea className="h-80">
+								<Accordion
+									type="multiple"
+									defaultValue={Object.keys(commitsByDay)}
+									className="w-full"
+								>
+									{Object.entries(commitsByDay)
+										.sort(([dateA], [dateB]) =>
+											dateA.localeCompare(dateB),
+										)
+										.map(([date, dayCommits]) => {
+											const allSelected =
+												dayCommits.every((c) =>
+													selectedCommits.has(c.sha),
+												);
+
+											return (
+												<AccordionItem
+													key={date}
+													value={date}
+												>
+													<div className="flex items-center justify-between">
+														<AccordionTrigger className="hover:no-underline flex-1">
+															<div className="flex items-center gap-2">
+																<span className="text-sm font-medium text-text">
+																	{format(
+																		parseISO(
+																			date,
+																		),
+																		"EEEE, MMM d",
+																	)}
+																</span>
+																<span className="text-xs text-text-muted">
+																	(
+																	{
+																		dayCommits.length
+																	}
+																	)
+																</span>
+															</div>
+														</AccordionTrigger>
+														<Button
+															type="button"
+															variant="ghost"
+															size="sm"
+															onClick={(e) => {
+																e.stopPropagation();
+																if (allSelected) {
+																	deselectDay(dayCommits);
+																} else {
+																	selectDay(dayCommits);
+																}
+															}}
+															className="text-xs text-accent-text hover:text-accent-active hover:bg-surface-overlay mr-2"
+														>
+															{allSelected
+																? "Deselect all"
+																: "Select all"}
+														</Button>
+													</div>
+
+													<AccordionContent>
+														<div className="space-y-1 ml-4">
+															{dayCommits.map(
+																(commit) => (
+																	<label
+																		key={
+																			commit.sha
+																		}
+																		className="flex items-start gap-3 p-2 rounded hover:bg-surface-overlay cursor-pointer"
+																	>
+																		<Checkbox
+																			checked={selectedCommits.has(
+																				commit.sha,
+																			)}
+																			onCheckedChange={() =>
+																				toggleCommit(
+																					commit.sha,
+																				)
+																			}
+																			className="mt-0.5"
+																		/>
+																		<div className="flex-1 min-w-0">
+																			<p className="text-sm text-text-soft truncate">
+																				{
+																					commit.commit.message.split(
+																						"\n",
+																					)[0]
+																				}
+																			</p>
+																			<code className="text-xs text-accent-text font-mono">
+																				{commit.sha.substring(
+																					0,
+																					7,
+																				)}
+																			</code>
+																		</div>
+																	</label>
+																),
+															)}
+														</div>
+													</AccordionContent>
+												</AccordionItem>
+											);
+										})}
+								</Accordion>
+							</ScrollArea>
+
+							{/* Auto-populate Button */}
+							<div className="mt-3 pt-3 border-t border-border">
+								<Button
+									type="button"
+									onClick={handleAutoPopulate}
+									disabled={selectedCommits.size === 0}
+									className="w-full bg-accent hover:bg-accent-hover text-white disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									{commitsLoading ? (
+										<>
+											<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+											Loading...
+										</>
+									) : (
+										<>
+											Auto-populate (
+											{selectedCommits.size} selected)
+										</>
+									)}
+								</Button>
+							</div>
+						</div>
+					)}
+
+					{commits.length === 0 && !commitsLoading && (
+						<div className="text-center py-4 text-sm text-text-muted">
+							No commits found for selected date range
+						</div>
+					)}
 				</Card>
 
 				{/* Work Completed */}
 				<div className="space-y-2">
-					<div className="flex items-center justify-between">
-						<Label htmlFor="workCompleted" className="text-text-soft">
-							What you worked on
-						</Label>
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							onClick={handleAutoPopulate}
-							disabled={commitsLoading || commits.length === 0}
-							className="text-accent hover:text-accent-strong hover:bg-surface-raised"
-						>
-							{commitsLoading ? (
-								<Loader2 className="h-4 w-4 animate-spin" />
-							) : (
-								<>Auto-populate ({commits.length})</>
-							)}
-						</Button>
-					</div>
+					<Label htmlFor="workCompleted" className="text-text-soft">
+						What you worked on
+					</Label>
 					<Textarea
 						id="workCompleted"
 						value={workCompleted}
 						onChange={(e) => setWorkCompleted(e.target.value)}
 						placeholder="What did you work on during this period?"
-						className="bg-surface-muted border-border-subtle text-text placeholder:text-text-soft min-h-[100px] focus:bg-surface-strong"
+						className="bg-surface-overlay border-border text-text placeholder:text-text-subtle min-h-[100px] focus:bg-surface-raised"
 						required
 					/>
 				</div>
@@ -290,7 +581,7 @@ export function StandupForm() {
 						value={workPlanned}
 						onChange={(e) => setWorkPlanned(e.target.value)}
 						placeholder="What will you work on next?"
-						className="bg-surface-muted border-border-subtle text-text placeholder:text-text-soft min-h-[100px] focus:bg-surface-strong"
+						className="bg-surface-overlay border-border text-text placeholder:text-text-subtle min-h-[100px] focus:bg-surface-raised"
 						required
 					/>
 				</div>
@@ -305,22 +596,22 @@ export function StandupForm() {
 						value={blockers}
 						onChange={(e) => setBlockers(e.target.value)}
 						placeholder="Any blockers? (Optional)"
-						className="bg-surface-muted border-border-subtle text-text placeholder:text-text-soft min-h-[80px] focus:bg-surface-strong"
+						className="bg-surface-overlay border-border text-text placeholder:text-text-subtle min-h-[80px] focus:bg-surface-raised"
 					/>
 				</div>
 
 				{/* Submit */}
 				<Button
 					type="submit"
-					disabled={saving || saved}
-					className="w-full bg-accent hover:bg-accent-strong text-text"
+					disabled={isCreating || saved}
+					className="w-full bg-accent hover:bg-accent-hover text-white"
 				>
 					{saved ? (
 						<>
 							<CheckCircle2 className="mr-2 h-4 w-4" />
 							Saved!
 						</>
-					) : saving ? (
+					) : isCreating ? (
 						<>
 							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 							Saving...

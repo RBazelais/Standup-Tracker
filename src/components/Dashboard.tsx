@@ -1,11 +1,20 @@
 import { useStore } from "../store";
 import { useEffect } from "react";
+import { useRepos } from "../hooks/useRepos";
 import { RepoSelector } from "./RepoSelector";
 import { StandupForm } from "./StandupForm";
 import { StandupHistory } from "./StandupHistory";
 
 export function Dashboard() {
-	const { user, selectedRepo, loadStandups } = useStore();
+	const { user, selectedRepo, loadStandups, setRepos } = useStore();
+	const { repos } = useRepos();
+
+	// Sync repos from hook to store
+	useEffect(() => {
+		if (repos.length > 0) {
+			setRepos(repos);
+		}
+	}, [repos, setRepos]);
 
 	// Load standups from database (with automatic migration)
 	useEffect(() => {
