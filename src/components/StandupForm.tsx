@@ -41,6 +41,9 @@ export function StandupForm() {
 		new Set(),
 	);
 
+	// Sort order preference: true = oldest first, false = newest first
+	const [oldestFirst, setOldestFirst] = useState(true);
+
 	const { commits: rawCommits, loading: commitsLoading } = useCommits(
 		commitStartDate,
 		commitEndDate,
@@ -66,9 +69,9 @@ export function StandupForm() {
 		}
 	}, [commits]);
 
-	// Group commits by day
+	// Group commits by day and sort based on user preference
 	const commitsByDay = useMemo(() => {
-		return commits.reduce(
+		const grouped = commits.reduce(
 			(acc, commit) => {
 				const date = format(
 					new Date(commit.commit.author?.date || new Date()),
@@ -80,7 +83,18 @@ export function StandupForm() {
 			},
 			{} as Record<string, GitHubCommit[]>,
 		);
-	}, [commits]);
+
+		// Sort commits within each day based on preference
+		for (const date in grouped) {
+			grouped[date].sort((a, b) => {
+				const timeA = new Date(a.commit.author?.date || 0).getTime();
+				const timeB = new Date(b.commit.author?.date || 0).getTime();
+				return oldestFirst ? timeA - timeB : timeB - timeA;
+			});
+		}
+
+		return grouped;
+	}, [commits, oldestFirst]);
 
 	// Preset date range functions
 	const setYesterdayRange = () => {
@@ -345,11 +359,41 @@ export function StandupForm() {
 					{commits.length > 0 && (
 						<div className="border-t border-border pt-3">
 							<div className="flex items-center justify-between mb-3">
-								<span className="text-sm text-text-muted">
-									{commits.length} commit
-									{commits.length !== 1 ? "s" : ""} found •{" "}
-									{selectedCommits.size} selected
-								</span>
+								<div className="flex items-center gap-3">
+									<span className="text-sm text-text-muted">
+										{commits.length} commit
+										{commits.length !== 1 ? "s" : ""} found •{" "}
+										{selectedCommits.size} selected
+									</span>
+									<div className="flex rounded-md border border-border overflow-hidden">
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											onClick={() => setOldestFirst(true)}
+											className={`text-xs rounded-none px-2 ${
+												oldestFirst
+													? "bg-accent text-white hover:bg-accent"
+													: "text-text-muted hover:bg-surface-overlay"
+											}`}
+										>
+											Oldest First
+										</Button>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											onClick={() => setOldestFirst(false)}
+											className={`text-xs rounded-none px-2 ${
+												!oldestFirst
+													? "bg-accent text-white hover:bg-accent"
+													: "text-text-muted hover:bg-surface-overlay"
+											}`}
+										>
+											Newest First
+										</Button>
+									</div>
+								</div>
 								<div className="flex gap-2">
 									<Button
 										type="button"
