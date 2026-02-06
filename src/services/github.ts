@@ -32,15 +32,13 @@ export class GitHubService {
 		since: Date,
 		until?: Date,
 	): Promise<GitHubCommit[]> {
-		const params: any = {
+		const { data } = await this.octokit.repos.listCommits({
 			owner,
 			repo,
 			since: since.toISOString(),
+			until: until?.toISOString(),
 			per_page: 50,
-		};
-		if (until) params.until = until.toISOString();
-
-		const { data } = await this.octokit.repos.listCommits(params);
+		});
 		return data;
 	}
 
