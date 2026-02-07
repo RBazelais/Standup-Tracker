@@ -1,17 +1,16 @@
 import type { Standup, Milestone, Sprint, Task } from "../types";
+import { handleApiResponse } from "../lib/errors";
 
 // ==================== STANDUPS ====================
 export const standupsApi = {
 	getAll: async (userId: string): Promise<Standup[]> => {
 		const response = await fetch(`/api/standups?userId=${userId}`);
-		if (!response.ok) throw new Error("Failed to fetch standups");
-		return response.json();
+		return handleApiResponse<Standup[]>(response);
 	},
 
 	getById: async (id: string): Promise<Standup> => {
 		const response = await fetch(`/api/standups/${id}`);
-		if (!response.ok) throw new Error("Failed to fetch standup");
-		return response.json();
+		return handleApiResponse<Standup>(response);
 	},
 
 	create: async (
@@ -23,8 +22,7 @@ export const standupsApi = {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(standup),
 		});
-		if (!response.ok) throw new Error("Failed to create standup");
-		return response.json();
+		return handleApiResponse<Standup>(response);
 	},
 
 	update: async (id: string, updates: Partial<Standup>): Promise<Standup> => {
@@ -33,15 +31,14 @@ export const standupsApi = {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(updates),
 		});
-		if (!response.ok) throw new Error("Failed to update standup");
-		return response.json();
+		return handleApiResponse<Standup>(response);
 	},
 
 	delete: async (id: string): Promise<void> => {
 		const response = await fetch(`/api/standups/${id}`, {
 			method: "DELETE",
 		});
-		if (!response.ok) throw new Error("Failed to delete standup");
+		return handleApiResponse<void>(response);
 	},
 };
 
@@ -49,8 +46,7 @@ export const standupsApi = {
 export const milestonesApi = {
 	getAll: async (userId: string): Promise<Milestone[]> => {
 		const response = await fetch(`/api/milestones?userId=${userId}`);
-		if (!response.ok) throw new Error("Failed to fetch milestones");
-		return response.json();
+		return handleApiResponse<Milestone[]>(response);
 	},
 
 	create: async (
@@ -62,8 +58,7 @@ export const milestonesApi = {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(milestone),
 		});
-		if (!response.ok) throw new Error("Failed to create milestone");
-		return response.json();
+		return handleApiResponse<Milestone>(response);
 	},
 
 	update: async (
@@ -75,15 +70,14 @@ export const milestonesApi = {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(updates),
 		});
-		if (!response.ok) throw new Error("Failed to update milestone");
-		return response.json();
+		return handleApiResponse<Milestone>(response);
 	},
 
 	delete: async (id: string): Promise<void> => {
 		const response = await fetch(`/api/milestones/${id}`, {
 			method: "DELETE",
 		});
-		if (!response.ok) throw new Error("Failed to delete milestone");
+		return handleApiResponse<void>(response);
 	},
 };
 
@@ -91,8 +85,7 @@ export const milestonesApi = {
 export const sprintsApi = {
 	getAll: async (userId: string): Promise<Sprint[]> => {
 		const response = await fetch(`/api/sprints?userId=${userId}`);
-		if (!response.ok) throw new Error("Failed to fetch sprints");
-		return response.json();
+		return handleApiResponse<Sprint[]>(response);
 	},
 
 	create: async (
@@ -104,8 +97,7 @@ export const sprintsApi = {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(sprint),
 		});
-		if (!response.ok) throw new Error("Failed to create sprint");
-		return response.json();
+		return handleApiResponse<Sprint>(response);
 	},
 
 	update: async (id: string, updates: Partial<Sprint>): Promise<Sprint> => {
@@ -114,15 +106,14 @@ export const sprintsApi = {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(updates),
 		});
-		if (!response.ok) throw new Error("Failed to update sprint");
-		return response.json();
+		return handleApiResponse<Sprint>(response);
 	},
 
 	delete: async (id: string): Promise<void> => {
 		const response = await fetch(`/api/sprints/${id}`, {
 			method: "DELETE",
 		});
-		if (!response.ok) throw new Error("Failed to delete sprint");
+		return handleApiResponse<void>(response);
 	},
 };
 
@@ -130,8 +121,7 @@ export const sprintsApi = {
 export const tasksApi = {
 	getAll: async (userId: string): Promise<Task[]> => {
 		const response = await fetch(`/api/tasks?userId=${userId}`);
-		if (!response.ok) throw new Error("Failed to fetch tasks");
-		return response.json();
+		return handleApiResponse<Task[]>(response);
 	},
 
 	create: async (
@@ -143,8 +133,7 @@ export const tasksApi = {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(task),
 		});
-		if (!response.ok) throw new Error("Failed to create task");
-		return response.json();
+		return handleApiResponse<Task>(response);
 	},
 
 	update: async (id: string, updates: Partial<Task>): Promise<Task> => {
@@ -153,14 +142,13 @@ export const tasksApi = {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(updates),
 		});
-		if (!response.ok) throw new Error("Failed to update task");
-		return response.json();
+		return handleApiResponse<Task>(response);
 	},
 
 	delete: async (id: string): Promise<void> => {
 		const response = await fetch(`/api/tasks/${id}`, {
 			method: "DELETE",
 		});
-		if (!response.ok) throw new Error("Failed to delete task");
+		return handleApiResponse<void>(response);
 	},
 };

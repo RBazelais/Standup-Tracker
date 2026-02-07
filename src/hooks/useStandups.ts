@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { standupsApi } from "../services/api";
 import { useStore } from "../store";
 import { toast } from "sonner";
+import { getErrorMessage } from "../lib/errors";
 import type { Standup } from "../types";
 
 export function useStandups() {
@@ -46,14 +47,14 @@ export function useStandups() {
 			return { previousStandups };
 		},
 
-		onError: (_err, _newStandup, context) => {
+		onError: (err, _newStandup, context) => {
 			if (context?.previousStandups) {
 				queryClient.setQueryData(
 					["standups", user?.id],
 					context.previousStandups,
 				);
 			}
-			toast.error("Failed to create standup");
+			toast.error(getErrorMessage(err));
 		},
 
 		onSuccess: () => {
@@ -89,14 +90,14 @@ export function useStandups() {
 			return { previousStandups };
 		},
 
-		onError: (_err, _variables, context) => {
+		onError: (err, _variables, context) => {
 			if (context?.previousStandups) {
 				queryClient.setQueryData(
 					["standups", user?.id],
 					context.previousStandups,
 				);
 			}
-			toast.error("Failed to update standup");
+			toast.error(getErrorMessage(err));
 		},
 
 		onSuccess: (_data, { id }) => {
@@ -126,14 +127,14 @@ export function useStandups() {
 			return { previousStandups };
 		},
 
-		onError: (_err, _id, context) => {
+		onError: (err, _id, context) => {
 			if (context?.previousStandups) {
 				queryClient.setQueryData(
 					["standups", user?.id],
 					context.previousStandups,
 				);
 			}
-			toast.error("Failed to delete standup");
+			toast.error(getErrorMessage(err));
 		},
 
 		onSuccess: () => {
