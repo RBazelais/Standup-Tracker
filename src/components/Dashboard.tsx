@@ -6,7 +6,7 @@ import { StandupForm } from "./StandupForm";
 import { StandupHistory } from "./StandupHistory";
 
 export function Dashboard() {
-	const { user, selectedRepo, loadStandups, setRepos } = useStore();
+	const { user, selectedRepo, setRepos } = useStore();
 	const { repos } = useRepos();
 
 	// Sync repos from hook to store
@@ -15,13 +15,6 @@ export function Dashboard() {
 			setRepos(repos);
 		}
 	}, [repos, setRepos]);
-
-	// Load standups from database (with automatic migration)
-	useEffect(() => {
-		if (user) {
-			loadStandups();
-		}
-	}, [user, loadStandups]);
 
 	return (
 		<div className="min-h-screen bg-surface">
