@@ -34,6 +34,7 @@ export function Header() {
 							<Button
 								variant="outline"
 								size="sm"
+								title="Logout Button"
 								onClick={handleLogout}
 								className="bg-surface-raised border-border hover:bg-surface-strong hover:text-text text-text-soft"
 							>

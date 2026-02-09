@@ -39,15 +39,18 @@ export function RepoSelector() {
 							<SelectValue placeholder="Select a repository" />
 						</SelectTrigger>
 						<SelectContent className="bg-surface-raised border-border">
-							{repos.map((repo) => (
-								<SelectItem
-									key={repo.id}
-									value={repo.full_name}
-									className="text-text hover:bg-surface-overlay"
-								>
-									{repo.full_name}
-								</SelectItem>
-							))}
+							{repos.map((repo) => {
+								const repoName = repo.full_name.split("/").pop();
+								return (
+									<SelectItem
+										key={repo.id}
+										value={repo.full_name}
+										className="text-text hover:bg-surface-overlay"
+									>
+										{repoName}
+									</SelectItem>
+								);
+							})}
 						</SelectContent>
 					</Select>
 				</div>
