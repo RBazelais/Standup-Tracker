@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { milestones } from "../../drizzle/schema.ts";
+import { createMilestoneSchema, validateBody } from "../../drizzle/validation.ts";
 import { eq, desc } from "drizzle-orm";
 
 const db = drizzle(sql);
@@ -34,21 +35,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 	// POST: Create new milestone
 	if (req.method === "POST") {
+		// Validate request body
+		const validation = validateBody(createMilestoneSchema, req.body);
+		if (!validation.success) {
+			return res.status(400).json({ error: validation.error });
+		}
+
 		try {
-			const { title, description, targetDate, status } = req.body;
-
-			if (!title || !description) {
-				return res.status(400).json({ error: "Title and description are required" });
-			}
-
 			const newMilestone = await db
 				.insert(milestones)
 				.values({
 					userId,
-					title,
-					description,
-					targetDate: targetDate || null,
-					status: status || "active",
+					...validation.data,
+					status: validation.data.status || "active",
 				})
 				.returning();
 
