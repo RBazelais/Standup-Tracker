@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { standups } from "../../drizzle/schema.ts";
+import { createStandupSchema, validateBody } from "../../drizzle/validation.ts";
 import { eq, desc } from "drizzle-orm";
 
 // Initialize db directly in API route
@@ -35,16 +36,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 	// POST: Create new standup
 	if (req.method === "POST") {
+		// Validate request body
+		const validation = validateBody(createStandupSchema, req.body);
+		if (!validation.success) {
+			return res.status(400).json({ error: validation.error });
+		}
+
 		try {
-			const {
-				repoFullName,
-				date,
-				workCompleted,
-				workPlanned,
-				blockers,
-				commits,
-				taskIds,
-			} = req.body;
+			const { repoFullName, date, workCompleted, workPlanned, blockers, commits, taskIds } = validation.data;
 
 			const newStandup = await db
 				.insert(standups)
@@ -56,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 					workPlanned,
 					blockers,
 					commits,
-					taskIds: taskIds || [],
+					taskIds,
 				})
 				.returning();
 

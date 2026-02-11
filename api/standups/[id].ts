@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { standups } from "../../drizzle/schema.ts";
+import { updateStandupSchema, validateBody } from "../../drizzle/validation.ts";
 import { eq } from "drizzle-orm";
 
 const db = drizzle(sql);
@@ -35,18 +36,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 	// PUT: Update standup
 	if (req.method === "PUT") {
+		// Validate request body
+		const validation = validateBody(updateStandupSchema, req.body);
+		if (!validation.success) {
+			return res.status(400).json({ error: validation.error });
+		}
+
 		try {
-			const { workCompleted, workPlanned, blockers, taskIds } = req.body;
+			const updates = {
+				...validation.data,
+				updatedAt: new Date(),
+			};
 
 			const updatedStandup = await db
 				.update(standups)
-				.set({
-					workCompleted,
-					workPlanned,
-					blockers,
-					taskIds: taskIds || [],
-					updatedAt: new Date(),
-				})
+				.set(updates)
 				.where(eq(standups.id, id))
 				.returning();
 
