@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { tasks } from "../../drizzle/schema.ts";
+import { updateTaskSchema, validateBody } from "../../drizzle/validation.ts";
 import { eq } from "drizzle-orm";
 
 const db = drizzle(sql);
@@ -35,47 +36,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 	// PUT: Update task
 	if (req.method === "PUT") {
-		try {
-			const {
-				sprintId,
-				title,
-				description,
-				status,
-				storyPoints,
-				storyPointSystem,
-				externalId,
-				externalSource,
-				externalUrl,
-				externalData,
-				targetDate,
-				completedAt,
-			} = req.body;
+		// Validate request body
+		const validation = validateBody(updateTaskSchema, req.body);
+		if (!validation.success) {
+			return res.status(400).json({ error: validation.error });
+		}
 
-			const updateData: Record<string, unknown> = {
+		try {
+			// Build updates, converting completedAt string to Date if present
+			const { completedAt, ...rest } = validation.data;
+			const updates: Record<string, unknown> = {
+				...rest,
 				updatedAt: new Date(),
 			};
 
-			if (sprintId !== undefined) updateData.sprintId = sprintId;
-			if (title !== undefined) updateData.title = title;
-			if (description !== undefined) updateData.description = description;
-			if (status !== undefined) updateData.status = status;
-			if (storyPoints !== undefined) updateData.storyPoints = storyPoints;
-			if (storyPointSystem !== undefined) updateData.storyPointSystem = storyPointSystem;
-			if (externalId !== undefined) updateData.externalId = externalId;
-			if (externalSource !== undefined) updateData.externalSource = externalSource;
-			if (externalUrl !== undefined) updateData.externalUrl = externalUrl;
-			if (externalData !== undefined) updateData.externalData = externalData;
-			if (targetDate !== undefined) updateData.targetDate = targetDate;
-			if (completedAt !== undefined) updateData.completedAt = completedAt ? new Date(completedAt) : null;
+			if (completedAt !== undefined) {
+				updates.completedAt = completedAt ? new Date(completedAt) : null;
+			}
 
 			// Auto-set completedAt when status changes to 'done'
-			if (status === "done" && !completedAt) {
-				updateData.completedAt = new Date();
+			if (rest.status === "done" && !completedAt) {
+				updates.completedAt = new Date();
 			}
 
 			const updatedTask = await db
 				.update(tasks)
-				.set(updateData)
+				.set(updates)
 				.where(eq(tasks.id, id))
 				.returning();
 

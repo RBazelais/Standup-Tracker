@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { tasks } from "../../drizzle/schema.ts";
+import { createTaskSchema, validateBody } from "../../drizzle/validation.ts";
 import { eq, desc } from "drizzle-orm";
 
 const db = drizzle(sql);
@@ -45,42 +46,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 	// POST: Create new task
 	if (req.method === "POST") {
+		// Validate request body
+		const validation = validateBody(createTaskSchema, req.body);
+		if (!validation.success) {
+			return res.status(400).json({ error: validation.error });
+		}
+
 		try {
-			const {
-				sprintId: bodySprintId,
-				title,
-				description,
-				status: taskStatus,
-				storyPoints,
-				storyPointSystem,
-				externalId,
-				externalSource,
-				externalUrl,
-				externalData,
-				targetDate,
-			} = req.body;
-
-			if (!title || !description) {
-				return res.status(400).json({
-					error: "Title and description are required",
-				});
-			}
-
 			const newTask = await db
 				.insert(tasks)
 				.values({
 					userId,
-					sprintId: bodySprintId || null,
-					title,
-					description,
-					status: taskStatus || "todo",
-					storyPoints: storyPoints || null,
-					storyPointSystem: storyPointSystem || null,
-					externalId: externalId || null,
-					externalSource: externalSource || null,
-					externalUrl: externalUrl || null,
-					externalData: externalData || null,
-					targetDate: targetDate || null,
+					...validation.data,
+					status: validation.data.status || "todo",
 				})
 				.returning();
 
