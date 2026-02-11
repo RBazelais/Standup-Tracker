@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { sprints } from "../../drizzle/schema.ts";
+import { updateSprintSchema, validateBody } from "../../drizzle/validation.ts";
 import { eq } from "drizzle-orm";
 
 const db = drizzle(sql);
@@ -35,36 +36,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 	// PUT: Update sprint
 	if (req.method === "PUT") {
-		try {
-			const {
-				milestoneId,
-				title,
-				description,
-				startDate,
-				endDate,
-				status,
-				targetPoints,
-				completedPoints,
-				completedAt,
-			} = req.body;
+		// Validate request body
+		const validation = validateBody(updateSprintSchema, req.body);
+		if (!validation.success) {
+			return res.status(400).json({ error: validation.error });
+		}
 
-			const updateData: Record<string, unknown> = {
+		try {
+			const updates = {
+				...validation.data,
 				updatedAt: new Date(),
 			};
 
-			if (milestoneId !== undefined) updateData.milestoneId = milestoneId;
-			if (title !== undefined) updateData.title = title;
-			if (description !== undefined) updateData.description = description;
-			if (startDate !== undefined) updateData.startDate = startDate;
-			if (endDate !== undefined) updateData.endDate = endDate;
-			if (status !== undefined) updateData.status = status;
-			if (targetPoints !== undefined) updateData.targetPoints = targetPoints;
-			if (completedPoints !== undefined) updateData.completedPoints = completedPoints;
-			if (completedAt !== undefined) updateData.completedAt = completedAt ? new Date(completedAt) : null;
-
 			const updatedSprint = await db
 				.update(sprints)
-				.set(updateData)
+				.set(updates)
 				.where(eq(sprints.id, id))
 				.returning();
 
