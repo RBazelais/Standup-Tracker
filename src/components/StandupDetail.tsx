@@ -76,7 +76,7 @@ export function StandupDetail() {
 		return (
 			<div className="min-h-screen bg-surface-base">
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
-						<Card className="p-8 bg-surface-raised border-border text-center" role="alert">
+					<Card className="p-8 bg-surface-raised border-border text-center" role="alert">
 						<h2 className="text-2xl font-bold text-foreground mb-4">
 							Standup Not Found
 						</h2>
@@ -104,7 +104,14 @@ export function StandupDetail() {
 						<Button
 							variant="ghost"
 							size="sm"
-						className="text-foreground hover:text-foreground hover:bg-surface-raised"
+							className="
+								text-foreground-muted 
+								hover:text-foreground 
+								hover:bg-surface-raised"
+							aria-label="Back to Dashboard"
+						>
+							<ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
+							Back to Dashboard
 						</Button>
 					</Link>
 
