@@ -30,12 +30,12 @@ export function RepoSelector() {
 			<div className="space-y-4">
 				{/* Repository Selector */}
 				<div className="space-y-2">
-					<Label className="text-text-soft flex items-center gap-2">
-						<GitFork className="h-4 w-4" />
+					<Label htmlFor="repo-select" className="text-foreground font-medium flex items-center gap-2">
+						<GitFork className="h-4 w-4" aria-hidden="true" />
 						Repository
 					</Label>
 					<Select value={selectedRepo?.full_name} onValueChange={handleRepoChange}>
-						<SelectTrigger className="bg-surface-overlay border-border text-text">
+						<SelectTrigger id="repo-select" className="bg-surface-overlay border-border text-foreground" aria-label="Select repository">
 							<SelectValue placeholder="Select a repository" />
 						</SelectTrigger>
 						<SelectContent className="bg-surface-raised border-border">
@@ -45,7 +45,7 @@ export function RepoSelector() {
 									<SelectItem
 										key={repo.id}
 										value={repo.full_name}
-										className="text-text hover:bg-surface-overlay"
+										className="text-foreground hover:bg-surface-overlay"
 									>
 										{repoName}
 									</SelectItem>
@@ -58,8 +58,8 @@ export function RepoSelector() {
 				{/* Branch Selector */}
 				{selectedRepo && (
 					<div className="space-y-2">
-						<Label className="text-text-soft flex items-center gap-2">
-							<GitBranch className="h-4 w-4" />
+						<Label htmlFor="branch-select" className="text-foreground font-medium flex items-center gap-2">
+							<GitBranch className="h-4 w-4" aria-hidden="true" />
 							Branch
 						</Label>
 						<Select
@@ -67,7 +67,12 @@ export function RepoSelector() {
 							onValueChange={handleBranchChange}
 							disabled={branchesLoading}
 						>
-							<SelectTrigger className="bg-surface-overlay border-border text-text">
+							<SelectTrigger 
+								id="branch-select"
+								className="bg-surface-overlay border-border text-foreground"
+								aria-label="Select branch"
+								aria-busy={branchesLoading}
+							>
 								<SelectValue
 									placeholder={
 										branchesLoading ? "Loading branches..." : "Default branch"
@@ -79,7 +84,7 @@ export function RepoSelector() {
 									<SelectItem
 										key={branch}
 										value={branch}
-										className="text-text hover:bg-surface-overlay"
+										className="text-foreground hover:bg-surface-overlay"
 									>
 										{branch}
 									</SelectItem>
@@ -87,7 +92,7 @@ export function RepoSelector() {
 							</SelectContent>
 						</Select>
 						{selectedBranch && (
-							<p className="text-xs text-text-muted">
+							<p className="text-xs text-foreground-muted" role="status" aria-live="polite">
 								Fetching commits from{" "}
 								<code className="text-accent-text">{selectedBranch}</code>
 							</p>

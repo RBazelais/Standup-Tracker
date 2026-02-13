@@ -43,10 +43,10 @@ export function StandupEdit() {
 			<div className="min-h-screen bg-surface-base">
 				<main className="container mx-auto px-6 py-8 max-w-4xl">
 					<Card className="p-8 bg-surface-raised border-border text-center">
-						<h2 className="text-2xl font-bold text-text mb-4">
+						<h2 className="text-2xl font-bold text-foreground mb-4">
 							Standup Not Found
 						</h2>
-						<p className="text-text-subtle mb-6">
+						<p className="text-foreground-muted mb-6">
 							{error
 								? "Failed to load standup"
 								: "This standup doesn't exist."}
@@ -126,26 +126,20 @@ function StandupEditForm({
 						<Button
 							variant="ghost"
 							size="sm"
-							className="text-text-muted hover:text-text hover:bg-surface-raised"
-						>
-							<ArrowLeft className="h-4 w-4 mr-2" />
-							Back to Standup
-						</Button>
-					</Link>
-				</div>
-
-				{/* Edit Form */}
-				<Card className="p-8 bg-surface-raised border-border">
-					<h2 className="text-2xl font-bold text-text mb-6">
-						Edit Standup
-					</h2>
+						className="text-foreground hover:text-foreground hover:bg-surface-raised"
+					>
+						<ArrowLeft className="h-4 w-4 mr-2" />
+						Back to Standup
+					</Button>
+				</Link>
+			</div>
 
 					<form onSubmit={handleSubmit} className="space-y-6">
 						{/* Work Completed */}
 						<div className="space-y-2">
 							<Label
 								htmlFor="workCompleted"
-								className="text-text-soft"
+								className="text-foreground-muted"
 							>
 								What you worked on
 							</Label>
@@ -156,7 +150,7 @@ function StandupEditForm({
 									setWorkCompleted(e.target.value)
 								}
 								placeholder="What did you work on?"
-								className="bg-surface-overlay border-border text-text placeholder:text-text-muted min-h-[120px]"
+							className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[120px]"
 								required
 							/>
 						</div>
@@ -165,7 +159,7 @@ function StandupEditForm({
 						<div className="space-y-2">
 							<Label
 								htmlFor="workPlanned"
-								className="text-text-soft"
+								className="text-foreground-muted"
 							>
 								What you'll work on next
 							</Label>
@@ -174,7 +168,7 @@ function StandupEditForm({
 								value={workPlanned}
 								onChange={(e) => setWorkPlanned(e.target.value)}
 								placeholder="What will you work on next?"
-								className="bg-surface-overlay border-border text-text placeholder:text-text-muted min-h-[120px]"
+							className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[120px]"
 								required
 							/>
 						</div>
@@ -183,7 +177,7 @@ function StandupEditForm({
 						<div className="space-y-2">
 							<Label
 								htmlFor="blockers"
-								className="text-text-soft"
+								className="text-foreground-muted"
 							>
 								Blockers
 							</Label>
@@ -192,7 +186,7 @@ function StandupEditForm({
 								value={blockers}
 								onChange={(e) => setBlockers(e.target.value)}
 								placeholder="Any blockers?"
-								className="bg-surface-overlay border-border text-text placeholder:text-text-muted min-h-[100px]"
+							className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[100px]"
 							/>
 						</div>
 
@@ -220,7 +214,7 @@ function StandupEditForm({
 								variant="outline"
 								onClick={handleCancel}
 								disabled={isUpdating}
-								className="bg-surface-raised border-border hover:bg-surface-overlay text-text-soft hover:text-text"
+								className="bg-surface-raised border-border hover:bg-surface-overlay text-foreground-muted hover:text-foreground"
 							>
 								<X className="mr-2 h-4 w-4" />
 								Cancel

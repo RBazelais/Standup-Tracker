@@ -7,6 +7,7 @@ import { StandupPreview } from "./StandupPreview";
 const GitHubIcon = ({ className }: { className?: string }) => (
 	<svg
 		role="img"
+		aria-label="GitHub logo"
 		viewBox="0 0 24 24"
 		xmlns="http://www.w3.org/2000/svg"
 		className={className}
@@ -28,19 +29,19 @@ export function LandingPage() {
 	return (
 		<div className="dark">
 			<div className="min-h-screen transition-colors bg-surface">
-				<div className="px-6 min-h-screen flex flex-col items-center justify-center py-20">
+				<main className="px-6 min-h-screen flex flex-col items-center justify-center py-20" role="main" aria-label="StandUp Tracker landing page">
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.6 }}
 						className="text-center max-w-4xl w-full"
 					>
-						<h1 className="text-6xl font-bold mb-6 text-text">
+						<h1 className="text-6xl font-bold mb-6 text-foreground">
 							Never forget what you did
 							<span className="text-accent"> yesterday</span>
 						</h1>
 
-						<p className="text-xl mb-8 leading-relaxed text-text-subtle">
+<p className="text-xl mb-8 leading-relaxed text-foreground-muted">
 							StandUp Tracker automatically pulls your commits and helps
 							you generate standup notes in seconds. Track progress toward
 							goals and never stress about daily updates again.
@@ -52,49 +53,58 @@ export function LandingPage() {
 							transition={{ delay: 0.3, duration: 0.6 }}
 							className="mb-16"
 						>
-							<Button size="lg" className="text-lg px-8 py-6 bg-accent hover:bg-accent-strong text-text" onClick={handleGitHubLogin}>
+							<Button 
+								size="lg" 
+								className="text-lg px-8 py-6 bg-accent hover:bg-accent-strong text-foreground" 
+								onClick={handleGitHubLogin}
+								aria-label="Sign in with GitHub to get started"
+							>
 								<GitHubIcon className="mr-2 h-5 w-5" />
 								Sign in with GitHub
 							</Button>
 
-							<p className="text-sm text-text-muted mt-4">
+						<p className="text-sm text-foreground-muted mt-4" aria-label="Features: Free, No credit card required, 2 minute setup">
 								Free • No credit card required • 2 minute setup
 							</p>
 						</motion.div>
-						<motion.div
+						<motion.section
 							initial={{ opacity: 0, y: 30 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.5, duration: 0.6 }}
 							className="grid md:grid-cols-3 gap-4 mb-16 max-w-6xl mx-auto"
+							aria-labelledby="features-heading"
 						>
+							<h2 id="features-heading" className="sr-only">Key Features</h2>
 							<FeatureCard
-								icon={<GitCommit className="h-7 w-7 text-accent" />}
+								icon={<GitCommit className="h-7 w-7 text-accent" aria-hidden="true" />}
 								title="Sync with Git"
 								description="Your commits become your standup notes. One click to generate yesterday's update."
 							/>
 
 							<FeatureCard
-								icon={<Target className="h-7 w-7 text-accent" />}
+								icon={<Target className="h-7 w-7 text-accent" aria-hidden="true" />}
 								title="Link to SMART goals"
 								description="Connect daily work to bigger objectives. See progress toward what matters."
 							/>
 
 							<FeatureCard
-								icon={<TrendingUp className="h-7 w-7 text-accent" />}
+								icon={<TrendingUp className="h-7 w-7 text-accent" aria-hidden="true" />}
 								title="Learn your velocity"
 								description="Coming soon: 
 								Predict story points based on your actual work patterns."
 							/>
-						</motion.div>
-						<motion.div
+						</motion.section>
+						<motion.section
 							initial={{ opacity: 0, y: 30 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.7, duration: 0.6 }}
+							aria-labelledby="preview-heading"
 						>
+							<h2 id="preview-heading" className="sr-only">Standup Note Preview</h2>
 							<StandupPreview />
-						</motion.div>
+						</motion.section>
 					</motion.div>
-				</div>
+				</main>
 			</div>
 		</div>
 	);

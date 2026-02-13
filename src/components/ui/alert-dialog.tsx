@@ -65,7 +65,7 @@ const AlertDialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
 	<AlertDialogPrimitive.Title
 		ref={ref}
-		className={cn("text-lg font-semibold leading-none tracking-tight text-text", className)}
+		className={cn("text-lg font-semibold leading-none tracking-tight text-foreground", className)}
 		{...props}
 	/>
 ));
@@ -77,7 +77,7 @@ const AlertDialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
 	<AlertDialogPrimitive.Description
 		ref={ref}
-		className={cn("text-sm text-text-subtle", className)}
+		className={cn("text-sm text-foreground-muted", className)}
 		{...props}
 	/>
 ));
@@ -105,7 +105,7 @@ const AlertDialogCancel = React.forwardRef<
 	<AlertDialogPrimitive.Cancel
 		ref={ref}
 		className={cn(
-			"inline-flex h-9 items-center justify-center rounded-md px-4 py-2 text-sm font-medium bg-surface-raised text-text hover:bg-surface-overlay",
+			"inline-flex h-9 items-center justify-center rounded-md px-4 py-2 text-sm font-medium bg-surface-raised text-foreground hover:bg-surface-overlay",
 			className
 		)}
 		{...props}

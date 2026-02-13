@@ -15,9 +15,9 @@ export function FeatureCard({
 		<Card className="p-6 backdrop-blur transition-all text-left bg-surface-raised/30 border-border hover:bg-surface-raised/50">
 			<div className="flex items-center gap-3 mb-3">
 				{icon}
-				<h3 className="text-lg font-semibold text-text">{title}</h3>
+				<h3 className="text-lg font-semibold text-foreground">{title}</h3>
 			</div>
-			<p className="text-sm leading-relaxed text-text-subtle">{description}</p>
+			<p className="text-sm leading-relaxed text-foreground-muted">{description}</p>
 		</Card>
 	);
 }

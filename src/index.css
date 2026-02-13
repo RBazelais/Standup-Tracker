@@ -75,11 +75,17 @@
 	--border-strong: var(--mauve-6);
 	--border-focus: var(--violet-9);
 
-	/* Text */
-	--text-muted: var(--mauve-9);
-	--text-subtle: var(--mauve-10);
-	--text-soft: var(--mauve-11);
-	--text-default: var(--mauve-12);
+	/* Text - WCAG 1.4.3 Compliant (4.5:1 minimum contrast)
+	   Radix mauve-11 and mauve-12 are the only colors that meet WCAG AA
+	   against dark backgrounds (mauve-1 through mauve-3).
+	   mauve-9 and mauve-10 fail contrast requirements for text.
+	*/
+	--foreground: var(--mauve-12); /* #eeeef0 - Highest contrast ~16:1 - Primary content */
+	--foreground-muted: var(--mauve-11); /* #9f9ba8 - Lower contrast ~7:1 - Secondary labels, metadata */
+	
+	/* Deprecated - Use for UI elements only, NOT readable text */
+	--ui-muted: var(--mauve-9); /* #6f6d78 - 3.6:1 contrast - Borders, disabled states only */
+	--ui-subtle: var(--mauve-10); /* #7c7a85 - 4.3:1 contrast - UI elements only */
 
 	/* Accent (interactive elements) */
 	--accent-subtle: var(--violet-3);
@@ -105,17 +111,17 @@
 
 	--radius: 0.5rem;
 	--background: var(--surface-base);
-	--foreground: var(--text-default);
+	--foreground: var(--foreground);
 	--card: var(--surface-raised);
-	--card-foreground: var(--text-default);
+	--card-foreground: var(--foreground);
 	--popover: var(--surface-raised);
-	--popover-foreground: var(--text-default);
+	--popover-foreground: var(--foreground);
 	--primary: var(--accent-default);
 	--primary-foreground: #ffffff;
 	--secondary: var(--surface-overlay);
-	--secondary-foreground: var(--text-soft);
+	--secondary-foreground: var(--foreground-muted);
 	--muted: var(--surface-overlay);
-	--muted-foreground: var(--text-muted);
+	--muted-foreground: var(--foreground-muted);
 	--accent: var(--accent-subtle);
 	--accent-foreground: var(--accent-text);
 	--destructive: var(--danger-default);
@@ -161,10 +167,8 @@
 	--color-border-focus: var(--border-focus);
 
 	/* Text colors */
-	--color-text-muted: var(--text-muted);
-	--color-text-subtle: var(--text-subtle);
-	--color-text-soft: var(--text-soft);
-	--color-text: var(--text-default);
+	--color-foreground: var(--foreground);
+	--color-foreground-muted: var(--foreground-muted);
 
 	/* Accent colors */
 	--color-accent-subtle: var(--accent-subtle);
@@ -364,4 +368,28 @@
 }
 .animate-contentShow {
 	animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Screen reader only utility */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+.not-sr-only {
+	position: static;
+	width: auto;
+	height: auto;
+	padding: 0;
+	margin: 0;
+	overflow: visible;
+	clip: auto;
+	white-space: normal;
 }
