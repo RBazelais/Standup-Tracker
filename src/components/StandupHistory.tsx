@@ -11,9 +11,10 @@ export function StandupHistory() {
 
 	if (isLoading) {
 		return (
-			<Card className="p-8 bg-surface-raised border-border">
+			<Card className="p-8 bg-surface-raised border-border" role="status" aria-live="polite" aria-label="Loading standup notes">
 				<div className="flex items-center justify-center py-12">
-					<Loader2 className="h-8 w-8 animate-spin text-accent" />
+					<Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden="true" />
+					<span className="sr-only">Loading standup notes...</span>
 				</div>
 			</Card>
 		);
@@ -21,12 +22,12 @@ export function StandupHistory() {
 
 	if (error) {
 		return (
-			<Card className="p-8 bg-surface-raised border-border text-center">
-				<AlertCircle className="h-12 w-12 text-danger mx-auto mb-4" />
-				<h3 className="text-lg font-semibold text-text mb-2">
+			<Card className="p-8 bg-surface-raised border-border text-center" role="alert" aria-live="assertive">
+				<AlertCircle className="h-12 w-12 text-danger mx-auto mb-4" aria-hidden="true" />
+				<h3 className="text-lg font-semibold text-foreground mb-2">
 					Failed to Load Standups
 				</h3>
-				<p className="text-text-subtle">
+				<p className="text-foreground-muted">
 					There was an error loading your standup history. Please try
 					again.
 				</p>
@@ -36,12 +37,12 @@ export function StandupHistory() {
 
 	if (standups.length === 0) {
 		return (
-			<Card className="p-8 bg-surface-raised border-border text-center">
-				<GitCommit className="h-12 w-12 text-text-muted mx-auto mb-4" />
-				<h3 className="text-lg font-semibold text-text mb-2">
+			<Card className="p-8 bg-surface-raised border-border text-center" role="status">
+				<GitCommit className="h-12 w-12 text-foreground-muted mx-auto mb-4" aria-hidden="true" />
+				<h3 className="text-lg font-semibold text-foreground mb-2">
 					No Standup Notes Yet
 				</h3>
-				<p className="text-text-subtle">
+				<p className="text-foreground-muted">
 					Create your first standup note above to get started!
 				</p>
 			</Card>
@@ -49,18 +50,19 @@ export function StandupHistory() {
 	}
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4" role="region" aria-labelledby="history-heading">
 			<div className="flex items-center justify-between mb-4">
-				<h2 className="text-xl font-semibold text-text flex items-center gap-2">
-					<Calendar className="h-5 w-5 text-accent" />
+				<h2 id="history-heading" className="text-xl font-semibold text-foreground flex items-center gap-2">
+					<Calendar className="h-5 w-5 text-accent" aria-hidden="true" />
 					Standup Note History
 				</h2>
-				<span className="text-sm text-text-muted">
+				<span className="text-sm text-foreground-muted" aria-live="polite" role="status">
 					{standups.length} note{standups.length !== 1 ? "s" : ""}
 				</span>
 			</div>
 
-			{standups.map((standup) => {
+			<div role="list" aria-label="Standup notes">
+				{standups.map((standup) => {
 				const firstLineCompleted = standup.workCompleted.split("\n")[0];
 				const firstLinePlanned = standup.workPlanned.split("\n")[0];
 				const hasBlockers =
@@ -80,22 +82,22 @@ export function StandupHistory() {
 							}
 						}}
 						tabIndex={0}
-						role="button"
+						role="listitem"
 						aria-label={ariaLabel}
 						className="p-4 bg-surface-raised border-border hover:bg-surface-overlay cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
 					>
 						<div className="flex items-start justify-between mb-3">
 							<div>
-								<h3 className="font-semibold text-text" aria-hidden="true">
+								<h3 className="font-semibold text-foreground" aria-hidden="true">
 									{formattedDate}
 								</h3>
-								<p className="text-xs text-text-muted mt-1" aria-hidden="true">
+							<p className="text-xs text-foreground-muted mt-1" aria-hidden="true">
 									{commitCount} commit
 									{commitCount !== 1 ? "s" : ""}
 								</p>
 							</div>
 							{hasBlockers && (
-								<span className="px-2 py-1 text-xs bg-danger-subtle text-danger-text rounded">
+								<span className="px-2 py-1 text-xs bg-danger-subtle text-danger-text rounded" aria-label="Has blockers">
 									Blockers
 								</span>
 							)}
@@ -103,25 +105,25 @@ export function StandupHistory() {
 
 						<div className="space-y-2 text-sm">
 							<div>
-								<span className="text-text-muted">
+							<span className="text-foreground-muted">
 									Completed:{" "}
 								</span>
-								<span className="text-text-soft line-clamp-1">
+								<span className="text-foreground-muted line-clamp-1">
 									{firstLineCompleted}
 								</span>
 							</div>
 							<div>
-								<span className="text-text-muted">
+								<span className="text-foreground-muted">
 									Planned:{" "}
 								</span>
-								<span className="text-text-soft line-clamp-1">
+								<span className="text-foreground-muted line-clamp-1">
 									{firstLinePlanned}
 								</span>
 							</div>
 						</div>
 
 						<div className="mt-3 pt-3 border-t border-border">
-							<p className="text-xs text-text-muted">
+						<p className="text-xs text-foreground-muted" aria-hidden="true">
 								Click to view full details →
 							</p>
 						</div>
@@ -129,5 +131,7 @@ export function StandupHistory() {
 				);
 			})}
 		</div>
+		</div>
 	);
+	
 }

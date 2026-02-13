@@ -234,7 +234,7 @@ export function StandupForm() {
 	if (!selectedRepo) {
 		return (
 			<Card className="p-8 bg-surface-raised border-border text-center">
-				<p className="text-text-subtle">
+				<p className="text-foreground-muted">
 					Select a repository to create a standup note
 				</p>
 			</Card>
@@ -246,12 +246,12 @@ export function StandupForm() {
 			<div className="flex items-center justify-between mb-6">
 				<div className="flex items-center gap-3">
 					<GitCommit className="h-5 w-5 text-accent" />
-					<h2 className="text-lg font-semibold text-text">
+					<h2 className="text-lg font-semibold text-foreground">
 						Create Standup note
 					</h2>
 				</div>
 
-				<span className="text-sm text-text-muted">
+				<span className="text-sm text-foreground-muted">
 					{format(new Date(), "EEEE, MMM d, yyyy")}
 				</span>
 			</div>
@@ -260,8 +260,8 @@ export function StandupForm() {
 				{/* Date Range Selector */}
 				<Card className="p-4 bg-surface-overlay border-border">
 					<div className="flex items-center gap-2 mb-3">
-						<Calendar className="h-4 w-4 text-text-muted" />
-						<Label className="text-text-soft text-sm">
+					<Calendar className="h-4 w-4 text-foreground-muted" />
+						<Label className="text-foreground-muted text-sm">
 							Fetch commits from:
 						</Label>
 					</div>
@@ -273,7 +273,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setTodayRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
 						>
 							Today
 						</Button>
@@ -282,7 +282,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setYesterdayRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
 						>
 							Yesterday
 						</Button>
@@ -291,7 +291,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setThisWeekRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
 						>
 							This Week
 						</Button>
@@ -300,7 +300,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setLastFridayRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
 						>
 							Last Friday
 						</Button>
@@ -309,7 +309,7 @@ export function StandupForm() {
 							variant="outline"
 							size="sm"
 							onClick={setLastWeekRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-text-soft"
+							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
 						>
 							Last Week
 						</Button>
@@ -320,7 +320,7 @@ export function StandupForm() {
 						<div className="space-y-1">
 							<Label
 								htmlFor="start-date"
-								className="text-xs text-text-muted"
+								className="text-xs text-foreground-muted"
 							>
 								Start Date
 							</Label>
@@ -331,14 +331,14 @@ export function StandupForm() {
 								onChange={(e) =>
 									setCommitStartDate(e.target.value)
 								}
-								className="bg-surface-overlay border-border text-text text-sm"
+								className="bg-surface-overlay border-border text-foreground text-sm"
 							/>
 						</div>
 
 						<div className="space-y-1">
 							<Label
 								htmlFor="end-date"
-								className="text-xs text-text-muted"
+								className="text-xs text-foreground-muted"
 							>
 								End Date
 							</Label>
@@ -350,7 +350,7 @@ export function StandupForm() {
 									setCommitEndDate(e.target.value)
 								}
 								max={format(new Date(), "yyyy-MM-dd")}
-								className="bg-surface-overlay border-border text-text text-sm"
+								className="bg-surface-overlay border-border text-foreground text-sm"
 							/>
 						</div>
 					</div>
@@ -360,7 +360,7 @@ export function StandupForm() {
 						<div className="border-t border-border pt-3">
 							<div className="flex items-center justify-between mb-3">
 								<div className="flex items-center gap-3">
-									<span className="text-sm text-text-muted">
+								<span className="text-sm text-foreground-muted">
 										{commits.length} commit
 										{commits.length !== 1 ? "s" : ""} found •{" "}
 										{selectedCommits.size} selected
@@ -374,7 +374,7 @@ export function StandupForm() {
 											className={`text-xs rounded-none px-2 ${
 												oldestFirst
 													? "bg-accent text-white hover:bg-accent"
-													: "text-text-muted hover:bg-surface-overlay"
+												: "text-foreground-muted hover:bg-surface-overlay"
 											}`}
 										>
 											Oldest First
@@ -387,7 +387,7 @@ export function StandupForm() {
 											className={`text-xs rounded-none px-2 ${
 												!oldestFirst
 													? "bg-accent text-white hover:bg-accent"
-													: "text-text-muted hover:bg-surface-overlay"
+												: "text-foreground-muted hover:bg-surface-overlay"
 											}`}
 										>
 											Newest First
@@ -409,7 +409,7 @@ export function StandupForm() {
 										variant="ghost"
 										size="sm"
 										onClick={deselectAll}
-										className="text-xs text-text-subtle hover:text-text-soft hover:bg-surface-overlay"
+									className="text-xs text-foreground-muted hover:bg-surface-overlay"
 									>
 										Clear
 									</Button>
@@ -441,7 +441,7 @@ export function StandupForm() {
 													<div className="flex items-center justify-between">
 														<AccordionTrigger className="hover:no-underline flex-1">
 															<div className="flex items-center gap-2">
-																<span className="text-sm font-medium text-text">
+																<span className="text-sm font-medium text-foreground">
 																	{format(
 																		parseISO(
 																			date,
@@ -449,7 +449,7 @@ export function StandupForm() {
 																		"EEEE, MMM d",
 																	)}
 																</span>
-																<span className="text-xs text-text-muted">
+															<span className="text-xs text-foreground-muted">
 																	(
 																	{
 																		dayCommits.length
@@ -500,7 +500,7 @@ export function StandupForm() {
 																			className="mt-0.5"
 																		/>
 																		<div className="flex-1 min-w-0">
-																			<p className="text-sm text-text-soft truncate">
+																			<p className="text-sm text-foreground-muted truncate">
 																				{
 																					commit.commit.message.split(
 																						"\n",
@@ -550,7 +550,7 @@ export function StandupForm() {
 					)}
 
 					{commits.length === 0 && !commitsLoading && (
-						<div className="text-center py-4 text-sm text-text-muted">
+						<div className="text-center py-4 text-sm text-foreground-muted">
 							No commits found for selected date range
 						</div>
 					)}
@@ -558,7 +558,7 @@ export function StandupForm() {
 
 				{/* Work Completed */}
 				<div className="space-y-2">
-					<Label htmlFor="workCompleted" className="text-text-soft">
+					<Label htmlFor="workCompleted" className="text-foreground-muted">
 						What you worked on
 					</Label>
 					<Textarea
@@ -566,14 +566,14 @@ export function StandupForm() {
 						value={workCompleted}
 						onChange={(e) => setWorkCompleted(e.target.value)}
 						placeholder="What did you work on during this period?"
-						className="bg-surface-overlay border-border text-text placeholder:text-text-subtle min-h-[100px] focus:bg-surface-raised"
+						className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[100px] focus:bg-surface-raised"
 						required
 					/>
 				</div>
 
 				{/* Work Planned */}
 				<div className="space-y-2">
-					<Label htmlFor="workPlanned" className="text-text-soft">
+					<Label htmlFor="workPlanned" className="text-foreground-muted">
 						What you'll work on next
 					</Label>
 					<Textarea
@@ -581,14 +581,14 @@ export function StandupForm() {
 						value={workPlanned}
 						onChange={(e) => setWorkPlanned(e.target.value)}
 						placeholder="What will you work on next?"
-						className="bg-surface-overlay border-border text-text placeholder:text-text-subtle min-h-[100px] focus:bg-surface-raised"
+						className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[100px] focus:bg-surface-raised"
 						required
 					/>
 				</div>
 
 				{/* Blockers */}
 				<div className="space-y-2">
-					<Label htmlFor="blockers" className="text-text-soft">
+					<Label htmlFor="blockers" className="text-foreground-muted">
 						Blockers
 					</Label>
 					<Textarea
@@ -596,7 +596,7 @@ export function StandupForm() {
 						value={blockers}
 						onChange={(e) => setBlockers(e.target.value)}
 						placeholder="Any blockers? (Optional)"
-						className="bg-surface-overlay border-border text-text placeholder:text-text-subtle min-h-[80px] focus:bg-surface-raised"
+						className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[80px] focus:bg-surface-raised"
 					/>
 				</div>
 

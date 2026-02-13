@@ -15,40 +15,43 @@ export function Header() {
 	const homePath = isAuthenticated ? "/dashboard" : "/";
 
 	return (
-		<header className="border-b bg-surface-raised backdrop-blur">
+		<header className="border-b bg-surface-raised backdrop-blur" role="banner">
 			<div className="container mx-auto px-6 py-4 flex items-center justify-between">
-				<h1 className="text-xl font-bold text-text">
-					<Link to={homePath}>StandUp Tracker</Link>
+				<h1 className="text-xl font-bold text-foreground">
+					<Link to={homePath} aria-label="StandUp Tracker Home">StandUp Tracker</Link>
 				</h1>
-				<div className="flex items-center gap-4">
-					{isAuthenticated ? (
-						<>
-							<div className="flex items-center gap-3">
-								<img
-									src={user?.avatar_url}
-									alt={user?.name ?? "User avatar"}
-									className="h-8 w-8 rounded-full"
-								/>
-								<span className="text-sm text-text-soft">{user?.name}</span>
-							</div>
-							<Button
-								variant="outline"
-								size="sm"
-								title="Logout Button"
-								onClick={handleLogout}
-								className="bg-surface-raised border-border hover:bg-surface-strong hover:text-text text-text-soft"
-							>
-								Logout
-							</Button>
-						</>
-					) : (
-						<Link to="/">
-							<Button variant="outline" size="sm" className="bg-surface-raised border-border hover:bg-surface-strong text-text">
-								Login
-							</Button>
-						</Link>
-					)}
-				</div>
+				<nav aria-label="Main navigation">
+					<div className="flex items-center gap-4">
+						{isAuthenticated ? (
+							<>
+								<div className="flex items-center gap-3" aria-label="User information">
+									<img
+										src={user?.avatar_url}
+										alt=""
+										aria-hidden="true"
+										className="h-8 w-8 rounded-full"
+									/>
+									<span className="text-sm text-foreground-muted" aria-label={`Logged in as ${user?.name}`}>{user?.name}</span>
+								</div>
+								<Button
+									variant="outline"
+									size="sm"
+									aria-label="Logout from your account"
+									onClick={handleLogout}
+									className="bg-surface-raised border-border hover:bg-surface-strong hover:text-foreground text-foreground-muted"
+								>
+									Logout
+								</Button>
+							</>
+						) : (
+							<Link to="/">
+								<Button variant="outline" size="sm" aria-label="Login to your account" className="bg-surface-raised border-border hover:bg-surface-strong text-foreground">
+									Login
+								</Button>
+							</Link>
+						)}
+					</div>
+				</nav>
 			</div>
 		</header>
 	);
