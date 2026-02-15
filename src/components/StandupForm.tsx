@@ -28,6 +28,9 @@ export function StandupForm() {
 	const [blockers, setBlockers] = useState("");
 	const [saved, setSaved] = useState(false);
 
+	// Active preset button state
+	const [activePreset, setActivePreset] = useState<string | null>(null);
+
 	// Date range for fetching commits
 	const [commitStartDate, setCommitStartDate] = useState(
 		format(subDays(new Date(), 1), "yyyy-MM-dd"),
@@ -101,12 +104,14 @@ export function StandupForm() {
 		const yesterday = subDays(new Date(), 1);
 		setCommitStartDate(format(yesterday, "yyyy-MM-dd"));
 		setCommitEndDate(format(yesterday, "yyyy-MM-dd"));
+		setActivePreset('yesterday');
 	};
 
 	const setTodayRange = () => {
 		const today = format(new Date(), "yyyy-MM-dd");
 		setCommitStartDate(today);
 		setCommitEndDate(today);
+		setActivePreset('today');
 	};
 
 	const setLastFridayRange = () => {
@@ -124,6 +129,7 @@ export function StandupForm() {
 		const lastFriday = subDays(today, daysToLastFriday);
 		setCommitStartDate(format(lastFriday, "yyyy-MM-dd"));
 		setCommitEndDate(format(today, "yyyy-MM-dd"));
+		setActivePreset('lastFriday');
 	};
 
 	const setLastWeekRange = () => {
@@ -135,12 +141,14 @@ export function StandupForm() {
 		});
 		setCommitStartDate(format(lastWeekStart, "yyyy-MM-dd"));
 		setCommitEndDate(format(lastWeekEnd, "yyyy-MM-dd"));
+		setActivePreset('lastWeek');
 	};
 
 	const setThisWeekRange = () => {
 		const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
 		setCommitStartDate(format(weekStart, "yyyy-MM-dd"));
 		setCommitEndDate(format(new Date(), "yyyy-MM-dd"));
+		setActivePreset('thisWeek');
 	};
 
 	// Commit selection functions
@@ -260,7 +268,7 @@ export function StandupForm() {
 				{/* Date Range Selector */}
 				<Card className="p-4 bg-surface-overlay border-border">
 					<div className="flex items-center gap-2 mb-3">
-					<Calendar className="h-4 w-4 text-foreground-muted" />
+						<Calendar className="h-4 w-4 text-foreground-muted" />
 						<Label className="text-foreground-muted text-sm">
 							Fetch commits from:
 						</Label>
@@ -270,51 +278,70 @@ export function StandupForm() {
 					<div className="flex flex-wrap gap-2 mb-3">
 						<Button
 							type="button"
-							variant="outline"
+							variant="ghost"
 							size="sm"
 							onClick={setTodayRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
+							className={`text-xs border border-border ${
+								activePreset === 'today'
+									? 'bg-accent text-white'
+									: 'bg-surface-overlay text-foreground-muted hover:bg-accent hover:text-white'
+							} active:scale-95`}
 						>
 							Today
 						</Button>
 						<Button
 							type="button"
-							variant="outline"
+							variant="ghost"
 							size="sm"
 							onClick={setYesterdayRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
+							className={`text-xs border border-border ${
+								activePreset === 'yesterday'
+									? 'bg-accent text-white'
+									: 'bg-surface-overlay text-foreground-muted hover:bg-accent hover:text-white'
+							} active:scale-95`}
 						>
 							Yesterday
 						</Button>
 						<Button
 							type="button"
-							variant="outline"
+							variant="ghost"
 							size="sm"
 							onClick={setThisWeekRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
+							className={`text-xs border border-border ${
+								activePreset === 'thisWeek'
+									? 'bg-accent text-white'
+									: 'bg-surface-overlay text-foreground-muted hover:bg-accent hover:text-white'
+							} active:scale-95`}
 						>
 							This Week
 						</Button>
 						<Button
 							type="button"
-							variant="outline"
+							variant="ghost"
 							size="sm"
 							onClick={setLastFridayRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
+							className={`text-xs border border-border ${
+								activePreset === 'lastFriday'
+									? 'bg-accent text-white'
+									: 'bg-surface-overlay text-foreground-muted hover:bg-accent hover:text-white'
+							} active:scale-95`}
 						>
 							Last Friday
 						</Button>
 						<Button
 							type="button"
-							variant="outline"
+							variant="ghost"
 							size="sm"
 							onClick={setLastWeekRange}
-							className="text-xs bg-surface-overlay border-border hover:bg-surface-raised text-foreground-muted"
+							className={`text-xs border border-border ${
+								activePreset === 'lastWeek'
+									? 'bg-accent text-white'
+									: 'bg-surface-overlay text-foreground-muted hover:bg-accent hover:text-white'
+							} active:scale-95`}
 						>
 							Last Week
 						</Button>
 					</div>
-
 					{/* Custom Date Inputs */}
 					<div className="grid grid-cols-2 gap-3 mb-3">
 						<div className="space-y-1">
@@ -328,9 +355,10 @@ export function StandupForm() {
 								id="start-date"
 								type="date"
 								value={commitStartDate}
-								onChange={(e) =>
-									setCommitStartDate(e.target.value)
-								}
+								onChange={(e) => {
+									setCommitStartDate(e.target.value);
+									setActivePreset(null);
+								}}
 								className="bg-surface-overlay border-border text-foreground text-sm"
 							/>
 						</div>
@@ -346,9 +374,10 @@ export function StandupForm() {
 								id="end-date"
 								type="date"
 								value={commitEndDate}
-								onChange={(e) =>
-									setCommitEndDate(e.target.value)
-								}
+								onChange={(e) => {
+									setCommitEndDate(e.target.value);
+									setActivePreset(null);
+								}}
 								max={format(new Date(), "yyyy-MM-dd")}
 								className="bg-surface-overlay border-border text-foreground text-sm"
 							/>
@@ -360,7 +389,7 @@ export function StandupForm() {
 						<div className="border-t border-border pt-3">
 							<div className="flex items-center justify-between mb-3">
 								<div className="flex items-center gap-3">
-								<span className="text-sm text-foreground-muted">
+									<span className="text-sm text-foreground-muted">
 										{commits.length} commit
 										{commits.length !== 1 ? "s" : ""} found •{" "}
 										{selectedCommits.size} selected
@@ -374,7 +403,7 @@ export function StandupForm() {
 											className={`text-xs rounded-none px-2 ${
 												oldestFirst
 													? "bg-accent text-white hover:bg-accent"
-												: "text-foreground-muted hover:bg-surface-overlay"
+													: "text-foreground-muted hover:bg-surface-overlay"
 											}`}
 										>
 											Oldest First
@@ -387,7 +416,7 @@ export function StandupForm() {
 											className={`text-xs rounded-none px-2 ${
 												!oldestFirst
 													? "bg-accent text-white hover:bg-accent"
-												: "text-foreground-muted hover:bg-surface-overlay"
+													: "text-foreground-muted hover:bg-surface-overlay"
 											}`}
 										>
 											Newest First
@@ -409,7 +438,7 @@ export function StandupForm() {
 										variant="ghost"
 										size="sm"
 										onClick={deselectAll}
-									className="text-xs text-foreground-muted hover:bg-surface-overlay"
+										className="text-xs text-foreground-muted hover:text-foreground-muted hover:bg-surface-overlay"
 									>
 										Clear
 									</Button>
@@ -449,7 +478,7 @@ export function StandupForm() {
 																		"EEEE, MMM d",
 																	)}
 																</span>
-															<span className="text-xs text-foreground-muted">
+																<span className="text-xs text-foreground-muted">
 																	(
 																	{
 																		dayCommits.length
@@ -559,7 +588,7 @@ export function StandupForm() {
 				{/* Work Completed */}
 				<div className="space-y-2">
 					<Label htmlFor="workCompleted" className="text-foreground-muted">
-						What you worked on
+						Completed
 					</Label>
 					<Textarea
 						id="workCompleted"
@@ -574,7 +603,7 @@ export function StandupForm() {
 				{/* Work Planned */}
 				<div className="space-y-2">
 					<Label htmlFor="workPlanned" className="text-foreground-muted">
-						What you'll work on next
+						Planned
 					</Label>
 					<Textarea
 						id="workPlanned"

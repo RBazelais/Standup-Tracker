@@ -84,20 +84,20 @@ export function StandupHistory() {
 						tabIndex={0}
 						role="listitem"
 						aria-label={ariaLabel}
-						className="p-4 bg-surface-raised border-border hover:bg-surface-overlay cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
+						className="p-4 bg-surface-raised border-border hover:bg-surface-overlay cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background gap-1.5 my-5 text-white"
 					>
 						<div className="flex items-start justify-between mb-3">
 							<div>
 								<h3 className="font-semibold text-foreground" aria-hidden="true">
 									{formattedDate}
 								</h3>
-							<p className="text-xs text-foreground-muted mt-1" aria-hidden="true">
+							<p className="text-xs text-foreground-muted mt-1 text-white" aria-hidden="true">
 									{commitCount} commit
 									{commitCount !== 1 ? "s" : ""}
 								</p>
 							</div>
 							{hasBlockers && (
-								<span className="px-2 py-1 text-xs bg-danger-subtle text-danger-text rounded" aria-label="Has blockers">
+								<span className="px-2 py-1 text-xs bg-danger-subtle text-danger-text text-white rounded" aria-label="Has blockers">
 									Blockers
 								</span>
 							)}
@@ -105,25 +105,25 @@ export function StandupHistory() {
 
 						<div className="space-y-2 text-sm">
 							<div>
-							<span className="text-foreground-muted">
+							<span className="text-foreground-muted text-white">
 									Completed:{" "}
 								</span>
-								<span className="text-foreground-muted line-clamp-1">
+								<span className="text-foreground-muted line-clamp-2 text-white">
 									{firstLineCompleted}
 								</span>
 							</div>
 							<div>
-								<span className="text-foreground-muted">
+								<span className="text-foreground-muted text-white">
 									Planned:{" "}
 								</span>
-								<span className="text-foreground-muted line-clamp-1">
+								<span className="text-foreground-muted line-clamp-2 text-white">
 									{firstLinePlanned}
 								</span>
 							</div>
 						</div>
 
-						<div className="mt-3 pt-3 border-t border-border">
-						<p className="text-xs text-foreground-muted" aria-hidden="true">
+						<div className="mt-3 pt-3 border-t border-border text-white">
+							<p className="text-xs text-foreground-muted" aria-hidden="true">
 								Click to view full details →
 							</p>
 						</div>
