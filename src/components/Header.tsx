@@ -38,14 +38,14 @@ export function Header() {
 									size="sm"
 									aria-label="Logout from your account"
 									onClick={handleLogout}
-									className="bg-surface-raised border-border hover:bg-surface-strong hover:text-foreground text-foreground-muted"
+									className="bg-surface-raised border-border hover:bg-surface-overlay hover:text-foreground text-foreground-muted"
 								>
 									Logout
 								</Button>
 							</>
 						) : (
 							<Link to="/">
-								<Button variant="outline" size="sm" aria-label="Login to your account" className="bg-surface-raised border-border hover:bg-surface-strong text-foreground">
+								<Button variant="outline" size="sm" aria-label="Login to your account" className="bg-surface-raised border-border hover:bg-surface-overlay text-foreground">
 									Login
 								</Button>
 							</Link>

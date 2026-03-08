@@ -33,19 +33,19 @@ module.exports = {
 
 				// Text hierarchy
 				text: {
-					muted: mauve.mauve9, // disabled
+					muted: mauve.mauve11, // disabled (was mauve9 - insufficient contrast)
 					subtle: mauve.mauve10, // placeholder
-					soft: mauve.mauve11, // secondary, labels
+					soft: mauve.mauve11, // secondary, labels (was mauve11)
 					DEFAULT: mauve.mauve12, // primary
 				},
 
 				// Interactive accent
 				accent: {
 					subtle: violet.violet3, // hover bg
-					DEFAULT: violet.violet9, // buttons, links
+					DEFAULT: violet.violet9, // buttons, backgrounds
 					hover: violet.violet10, // hover
 					active: violet.violet11, // pressed
-					text: violet.violet11, // accent text
+					text: violet.violet12, // accent text (was violet11 - insufficient contrast)
 				},
 
 				// Status colors

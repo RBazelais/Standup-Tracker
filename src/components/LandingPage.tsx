@@ -38,10 +38,10 @@ export function LandingPage() {
 					>
 						<h1 className="text-6xl font-bold mb-6 text-foreground">
 							Never forget what you did
-							<span className="text-accent"> yesterday</span>
-						</h1>
+						<span className="text-accent-text"> yesterday</span>
+					</h1>
 
-<p className="text-xl mb-8 leading-relaxed text-foreground-muted">
+<p className="text-xl mb-8 leading-relaxed text-muted">
 							StandUp Tracker automatically pulls your commits and helps
 							you generate standup notes in seconds. Track progress toward
 							goals and never stress about daily updates again.
@@ -55,7 +55,7 @@ export function LandingPage() {
 						>
 							<Button 
 								size="lg" 
-								className="text-lg px-8 py-6 bg-accent hover:bg-accent-strong text-foreground" 
+								className="text-lg px-8 py-6 bg-accent hover:bg-accent-hover text-foreground" 
 								onClick={handleGitHubLogin}
 								aria-label="Sign in with GitHub to get started"
 							>

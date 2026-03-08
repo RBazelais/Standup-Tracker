@@ -515,9 +515,11 @@ export function StandupForm() {
 																		key={
 																			commit.sha
 																		}
+																		htmlFor={`commit-${commit.sha}`}
 																		className="flex items-start gap-3 p-2 rounded hover:bg-surface-overlay cursor-pointer"
 																	>
 																		<Checkbox
+																			id={`commit-${commit.sha}`}
 																			checked={selectedCommits.has(
 																				commit.sha,
 																			)}

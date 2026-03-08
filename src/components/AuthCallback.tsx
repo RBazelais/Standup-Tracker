@@ -65,7 +65,7 @@ export function AuthCallback() {
 				<div className="text-center">
 					<h1 className="text-2xl font-bold text-foreground mb-4">Authentication Error</h1>
 					<p className="text-foreground-muted mb-6">{error}</p>
-					<a href="/" className="text-accent hover:text-accent-strong transition-colors">Return to home</a>
+					<a href="/" className="text-accent hover:text-accent-hover transition-colors">Return to home</a>
 				</div>
 			</div>
 		);
