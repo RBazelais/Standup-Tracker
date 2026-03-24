@@ -54,7 +54,7 @@ export interface ParsedIssueRef {
 }
 
 // GITHUB ADAPTER CLASS
-export class GitHubAdater {
+export class GitHubAdapter {
 	private octokit: Octokit;
 	private readonly defaultOwner: string;
 	private readonly defaultRepo: string;
@@ -94,7 +94,13 @@ export class GitHubAdater {
 					const number = Number.parseInt(match.groups?.number || '', 10);
 					const key = `${owner}/${repo}#${number}`;
 
-					if (!seen.has(key) && Number.isFinite(number) && number > 0) {
+					// If we already captured any reference for this numeric ID, skip duplicates
+					if (!Number.isFinite(number) || number <= 0) continue;
+
+					const alreadyForNumber = Array.from(seen).some(k => k.endsWith(`#${number}`));
+					if (alreadyForNumber) continue;
+
+					if (!seen.has(key)) {
 						seen.add(key);
 						refs.push({
 							owner,
@@ -215,7 +221,7 @@ export class GitHubAdater {
 			description: issue.body || '',
 			status,
 			priority,
-			storyPoints: storyPoints || undefined,
+			storyPoints: storyPoints ?? null,
 			externalId,
 			externalSource: source,
 			externalUrl: issue.html_url,
@@ -258,7 +264,14 @@ export class GitHubAdater {
 			return 'in_progress';
 		}
 
-		if (labelNames.some(label => label.includes('review') || label.includes('pr'))) {
+		if (
+			labelNames.some(
+				label =>
+					label === 'pr' ||
+					label.includes('review') ||
+					label.includes('pull request')
+			)
+		) {
 			return 'in_review';
 		}
 
