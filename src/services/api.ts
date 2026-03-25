@@ -1,15 +1,16 @@
 import type { Standup, Milestone, Sprint, Task } from "../types";
 import { handleApiResponse } from "../lib/errors";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 // ==================== STANDUPS ====================
 export const standupsApi = {
 	getAll: async (userId: string): Promise<Standup[]> => {
-		const response = await fetch(`/api/standups?userId=${userId}`);
+		const response = await fetchWithTimeout(`/api/standups?userId=${userId}`);
 		return handleApiResponse<Standup[]>(response);
 	},
 
 	getById: async (id: string): Promise<Standup> => {
-		const response = await fetch(`/api/standups/${id}`);
+		const response = await fetchWithTimeout(`/api/standups/${id}`);
 		return handleApiResponse<Standup>(response);
 	},
 
@@ -17,7 +18,7 @@ export const standupsApi = {
 		userId: string,
 		standup: Omit<Standup, "id" | "createdAt">,
 	): Promise<Standup> => {
-		const response = await fetch(`/api/standups?userId=${userId}`, {
+		const response = await fetchWithTimeout(`/api/standups?userId=${userId}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(standup),
@@ -26,7 +27,7 @@ export const standupsApi = {
 	},
 
 	update: async (id: string, updates: Partial<Standup>): Promise<Standup> => {
-		const response = await fetch(`/api/standups/${id}`, {
+		const response = await fetchWithTimeout(`/api/standups/${id}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(updates),
@@ -35,7 +36,7 @@ export const standupsApi = {
 	},
 
 	delete: async (id: string): Promise<void> => {
-		const response = await fetch(`/api/standups/${id}`, {
+		const response = await fetchWithTimeout(`/api/standups/${id}`, {
 			method: "DELETE",
 		});
 		return handleApiResponse<void>(response);
@@ -45,7 +46,7 @@ export const standupsApi = {
 // ==================== MILESTONES ====================
 export const milestonesApi = {
 	getAll: async (userId: string): Promise<Milestone[]> => {
-		const response = await fetch(`/api/milestones?userId=${userId}`);
+		const response = await fetchWithTimeout(`/api/milestones?userId=${userId}`);
 		return handleApiResponse<Milestone[]>(response);
 	},
 
@@ -53,7 +54,7 @@ export const milestonesApi = {
 		userId: string,
 		milestone: Omit<Milestone, "id" | "createdAt">,
 	): Promise<Milestone> => {
-		const response = await fetch(`/api/milestones?userId=${userId}`, {
+		const response = await fetchWithTimeout(`/api/milestones?userId=${userId}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(milestone),
@@ -65,7 +66,7 @@ export const milestonesApi = {
 		id: string,
 		updates: Partial<Milestone>,
 	): Promise<Milestone> => {
-		const response = await fetch(`/api/milestones/${id}`, {
+		const response = await fetchWithTimeout(`/api/milestones/${id}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(updates),
@@ -74,7 +75,7 @@ export const milestonesApi = {
 	},
 
 	delete: async (id: string): Promise<void> => {
-		const response = await fetch(`/api/milestones/${id}`, {
+		const response = await fetchWithTimeout(`/api/milestones/${id}`, {
 			method: "DELETE",
 		});
 		return handleApiResponse<void>(response);
@@ -84,7 +85,7 @@ export const milestonesApi = {
 // ==================== SPRINTS ====================
 export const sprintsApi = {
 	getAll: async (userId: string): Promise<Sprint[]> => {
-		const response = await fetch(`/api/sprints?userId=${userId}`);
+		const response = await fetchWithTimeout(`/api/sprints?userId=${userId}`);
 		return handleApiResponse<Sprint[]>(response);
 	},
 
@@ -92,7 +93,7 @@ export const sprintsApi = {
 		userId: string,
 		sprint: Omit<Sprint, "id" | "createdAt">,
 	): Promise<Sprint> => {
-		const response = await fetch(`/api/sprints?userId=${userId}`, {
+		const response = await fetchWithTimeout(`/api/sprints?userId=${userId}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(sprint),
@@ -101,7 +102,7 @@ export const sprintsApi = {
 	},
 
 	update: async (id: string, updates: Partial<Sprint>): Promise<Sprint> => {
-		const response = await fetch(`/api/sprints/${id}`, {
+		const response = await fetchWithTimeout(`/api/sprints/${id}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(updates),
@@ -110,7 +111,7 @@ export const sprintsApi = {
 	},
 
 	delete: async (id: string): Promise<void> => {
-		const response = await fetch(`/api/sprints/${id}`, {
+		const response = await fetchWithTimeout(`/api/sprints/${id}`, {
 			method: "DELETE",
 		});
 		return handleApiResponse<void>(response);
@@ -120,7 +121,7 @@ export const sprintsApi = {
 // ==================== TASKS ====================
 export const tasksApi = {
 	getAll: async (userId: string): Promise<Task[]> => {
-		const response = await fetch(`/api/tasks?userId=${userId}`);
+		const response = await fetchWithTimeout(`/api/tasks?userId=${userId}`);
 		return handleApiResponse<Task[]>(response);
 	},
 
@@ -128,7 +129,7 @@ export const tasksApi = {
 		userId: string,
 		task: Omit<Task, "id" | "createdAt">,
 	): Promise<Task> => {
-		const response = await fetch(`/api/tasks?userId=${userId}`, {
+		const response = await fetchWithTimeout(`/api/tasks?userId=${userId}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(task),
@@ -137,7 +138,7 @@ export const tasksApi = {
 	},
 
 	update: async (id: string, updates: Partial<Task>): Promise<Task> => {
-		const response = await fetch(`/api/tasks/${id}`, {
+		const response = await fetchWithTimeout(`/api/tasks/${id}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(updates),
@@ -146,7 +147,7 @@ export const tasksApi = {
 	},
 
 	delete: async (id: string): Promise<void> => {
-		const response = await fetch(`/api/tasks/${id}`, {
+		const response = await fetchWithTimeout(`/api/tasks/${id}`, {
 			method: "DELETE",
 		});
 		return handleApiResponse<void>(response);

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import type { Task, Standup } from '@/types';
+import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 
 /* Hook for task detection and linking in standup form */
 
@@ -50,7 +51,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 	// Auto-detect tasks from commits
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
 		mutationFn: async (commits) => {
-			const response = await fetch('/api/tasks/detect', {
+			const response = await fetchWithTimeout('/api/tasks/detect', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -90,7 +91,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 
 	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
 		mutationFn: async (query: string) => {
-			const response = await fetch('/api/tasks/search', {
+			const response = await fetchWithTimeout('/api/tasks/search', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

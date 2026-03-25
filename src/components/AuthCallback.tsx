@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../store";
 import { GitHubService } from "../services/github";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 export function AuthCallback() {
 	const [error, setError] = useState<string | null>(null);
@@ -23,7 +24,7 @@ export function AuthCallback() {
 			}
 
 			try {
-				const response = await fetch("/api/auth/callback", {
+				const response = await fetchWithTimeout("/api/auth/callback", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ code }),

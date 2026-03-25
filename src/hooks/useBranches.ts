@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../store";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 export function useBranches() {
 	const { selectedRepo, accessToken } = useStore();
@@ -18,7 +19,7 @@ export function useBranches() {
 			setError(null);
 
 			try {
-				const response = await fetch(
+				const response = await fetchWithTimeout(
 					`https://api.github.com/repos/${selectedRepo.full_name}/branches`,
 					{
 						headers: {
@@ -26,6 +27,7 @@ export function useBranches() {
 							Accept: "application/vnd.github.v3+json",
 						},
 					},
+					15000,
 				);
 
 				if (!response.ok) {

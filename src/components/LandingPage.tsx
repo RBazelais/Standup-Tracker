@@ -20,7 +20,10 @@ const GitHubIcon = ({ className }: { className?: string }) => (
 export function LandingPage() {
 	const handleGitHubLogin = () => {
 		const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-		const redirectUri = `${import.meta.env.VITE_APP_URL}/auth/callback`;
+		// Normalize VITE_APP_URL to avoid accidental double-slashes in redirect URIs
+		const rawAppUrl = import.meta.env.VITE_APP_URL ?? '';
+		const baseAppUrl = rawAppUrl.replace(/\/+$/, '') || window.location.origin;
+		const redirectUri = `${baseAppUrl}/auth/callback`;
 		const scope = "repo read:user";
 
 		window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
