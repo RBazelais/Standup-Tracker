@@ -1,6 +1,6 @@
 // api/tasks/link.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { db } from "../db";
+import { db } from "../lib/db";
 import { createTaskLinkingService } from "../../src/services/task-linking-service";
 
 /**

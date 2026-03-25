@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import type { ExternalTaskCache, Task, ExternalSource } from '../src/types';
+import type { ExternalTaskCache, Task, ExternalSource } from '../../src/types';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -111,19 +111,7 @@ export const db = {
 			return (rows[0] as Task | undefined) || null;
 		},
 
-		async create(payload: {
-			userId: string;
-			title?: string;
-			description?: string;
-			status?: string;
-			storyPoints?: number | null;
-			priority?: string;
-			firstSprintId: string | null;
-			rolloverCount: number;
-			totalSprintsTouched: number;
-			createdAt: Date;
-			updatedAt: Date;
-		}): Promise<Task> {
+		async create(payload: Omit<Partial<Task>, 'id'> & { userId: string; createdAt: Date; updatedAt: Date }): Promise<Task> {
 			const rows = await sql`
 				INSERT INTO tasks (
 					user_id, title, description, status, story_points, priority,
@@ -154,7 +142,7 @@ export const db = {
 			return rows[0] as Task;
 		},
 
-		async update(taskId: string, payload: Partial<Task> & { updatedAt?: Date }) {
+		async update(taskId: string, payload: Partial<Task>) {
 			const now = payload.updatedAt || new Date();
 			await sql`
 				UPDATE tasks

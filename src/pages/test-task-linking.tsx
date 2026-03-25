@@ -2,8 +2,8 @@
 import { TaskLinkingSection } from '@/components/TaskLinking';
 
 const mockCommits = [
-	{ commit: { message: 'Fix bug in #42' } },
-	{ commit: { message: 'Closes #123 - add feature' } },
+	{ sha: 'abc1234', commit: { message: 'Fix bug in #42', author: null } },
+	{ sha: 'def5678', commit: { message: 'Closes #123 - add feature', author: null } },
 ];
 
 export default function TestPage() {

@@ -38,7 +38,7 @@ export function useStandups() {
 					{
 						...newStandup,
 						id: crypto.randomUUID(),
-						createdAt: new Date().toISOString(),
+						createdAt: new Date(),
 					} as Standup,
 					...old,
 				],

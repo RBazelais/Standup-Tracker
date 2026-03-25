@@ -30,17 +30,8 @@ interface DatabaseClient {
 	};
 	tasks: {
 		findByExternalLink: (query: { externalId: string; source: ExternalSource }) => Promise<Task | null>;
-		update: (
-			taskId: string,
-			payload: Omit<Partial<Task>, 'createdAt' | 'updatedAt'> & { createdAt?: Date; updatedAt?: Date }
-		) => Promise<void>;
-		create: (
-			payload: Omit<Partial<Task>, 'createdAt' | 'updatedAt'> & {
-				userId: string;
-				createdAt: Date;
-				updatedAt: Date;
-			}
-		) => Promise<Task>;
+		update: (taskId: string, payload: Partial<Task>) => Promise<void>;
+		create: (payload: Omit<Partial<Task>, 'id'> & { userId: string; createdAt: Date; updatedAt: Date }) => Promise<Task>;
 		findOne: (query: { id: string }) => Promise<Task | null>;
 	};
 	taskExternalLinks: {

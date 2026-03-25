@@ -51,17 +51,17 @@ export type ExternalSource = 'github' | 'jira' | 'linear' | 'asana';
 // Standup - daily standup notes with GitHub commits
 export interface Standup {
     id: string;
-    date: string;
-    workCompleted: string;  
-    workPlanned: string;    
+    date: string; // YYYY-MM-DD calendar date, not a timestamp
+    workCompleted: string;
+    workPlanned: string;
     blockers: string;
     taskIds: string[];
     commits: GitHubCommit[];
     snapshotSprintId?: string;
     snapshotMilestoneId?: string;
     repoFullName?: string;
-    createdAt: string;
-    updatedAt?: string;
+    createdAt: Date;
+    updatedAt?: Date;
 }
 
 // Milestone - long-term goals (renamed from Goal)
@@ -70,18 +70,18 @@ export interface Milestone {
     userId?: string;
     title: string;
     description: string;
-    targetDate?: string;
+    targetDate?: string; // YYYY-MM-DD calendar date, not a timestamp
     status: 'active' | 'completed' | 'archived';
     totalPoints?: number;
     completedPoints?: number;
-    completedAt?: string;
+    completedAt?: Date;
     externalId?: string;
     externalSource?: ExternalSource;
     externalUrl?: string;
-    lastSyncedAt?: string;
+    lastSyncedAt?: Date;
     syncStatus?: 'synced' | 'stale' | 'error';
-    createdAt: string;
-    updatedAt?: string;
+    createdAt: Date;
+    updatedAt?: Date;
 }
 
 // Sprint - time-boxed work periods
@@ -91,19 +91,19 @@ export interface Sprint {
     milestoneId?: string;
     title: string;
     description: string;
-    startDate: string;
-    endDate: string;
+    startDate: string; // YYYY-MM-DD calendar date, not a timestamp
+    endDate: string;   // YYYY-MM-DD calendar date, not a timestamp
     status: 'planned' | 'active' | 'completed';
     targetPoints?: number;
     completedPoints?: number;
-    completedAt?: string;
+    completedAt?: Date;
     externalId?: string;
     externalSource?: ExternalSource;
     externalUrl?: string;
-    lastSyncedAt?: string;
+    lastSyncedAt?: Date;
     syncStatus?: 'synced' | 'stale' | 'error';
-    createdAt: string;
-    updatedAt?: string;
+    createdAt: Date;
+    updatedAt?: Date;
 }
 
 // Task - individual work items with story points
@@ -127,10 +127,10 @@ export interface Task {
     externalUrl?: string;
     externalData?: Record<string, unknown>;
     externalLinks?: TaskExternalLink[];
-    targetDate?: string;
-    completedAt?: string;
-    createdAt: string;
-    updatedAt?: string;
+    targetDate?: string; // YYYY-MM-DD calendar date, not a timestamp
+    completedAt?: Date;
+    createdAt: Date;
+    updatedAt?: Date;
 }
 
 export interface TaskExternalLink {
@@ -139,7 +139,7 @@ export interface TaskExternalLink {
     source: ExternalSource;
     externalUrl?: string;
     confidence: 'explicit' | 'inferred';
-    linkedAt?: string;
+    linkedAt?: Date;
 }
 
 export interface ExternalTaskCache {
@@ -164,7 +164,7 @@ export interface TaskChangeLog {
     fromMilestoneId?: string | null;
     toMilestoneId?: string | null;
     changeType: 'created' | 'updated' | 'status_changed' | 'sprint_moved' | 'milestone_moved';
-    changedAt: string;
+    changedAt: Date;
 }
 
 export interface Integration {
@@ -172,8 +172,8 @@ export interface Integration {
     userId: string;
     source: ExternalSource;
     accountName?: string;
-    connectedAt: string;
-    updatedAt?: string;
+    connectedAt: Date;
+    updatedAt?: Date;
 }
 
 export type ExportFormat = 'compact' | 'detailed' | 'slack' | 'jira';
@@ -184,9 +184,9 @@ export interface Goal {
     id: string;
     title: string;
     description: string;
-    targetDate?: string;
-    createdAt: string;
-    completedAt?: string;
+    targetDate?: string; // YYYY-MM-DD calendar date, not a timestamp
+    createdAt: Date;
+    completedAt?: Date;
 }
 
 export interface AppState {
