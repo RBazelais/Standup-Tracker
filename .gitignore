@@ -39,3 +39,7 @@ test-results/
 
 # Local study notes
 notes/
+drizzle/migrations/meta/_journal.json
+drizzle/migrations/meta/0001_snapshot.json
+drizzle/migrations/meta/_journal.json
+drizzle/migrations/meta/_journal.json
