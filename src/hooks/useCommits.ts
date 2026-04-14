@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "../store";
+import { localDateToUTCStart, localDateToUTCEnd } from "../utils/dateUtils";
 import type { GitHubCommit } from "../types";
 
 export function useCommits(since?: string, until?: string) {
@@ -21,14 +22,10 @@ export function useCommits(since?: string, until?: string) {
 				params.append("sha", selectedBranch);
 			}
 			if (since) {
-				// Convert local date to UTC - start of day in local timezone
-				const sinceDate = new Date(`${since}T00:00:00`);
-				params.append("since", sinceDate.toISOString());
+				params.append("since", localDateToUTCStart(since));
 			}
 			if (until) {
-				// Convert local date to UTC - end of day in local timezone
-				const untilDate = new Date(`${until}T23:59:59`);
-				params.append("until", untilDate.toISOString());
+				params.append("until", localDateToUTCEnd(until));
 			}
 
 			const response = await fetch(
