@@ -215,7 +215,7 @@ export const db = {
 			const now = new Date();
 			const rows = await sql`
 				INSERT INTO sprints (
-					user_id, external_id, external_source, name,
+					user_id, external_id, external_source, title,
 					start_date, end_date, status, created_at, updated_at
 				) VALUES (
 					${payload.userId}, ${payload.externalId}, ${payload.source},
