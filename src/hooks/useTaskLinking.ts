@@ -60,10 +60,11 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
 		retry: false,
 		mutationFn: async (commits) => {
-			const response = await fetchWithTimeout(`/api/tasks/detect?userId=${user?.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user?.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
+					action: 'detect',
 					commits: commits.map(commit => ({ message: commit.commit.message })),
 					repoFullName: standup.repoFullName,
 				}),
@@ -101,10 +102,11 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
 		mutationFn: async (query: string) => {
 			resolveMutation.reset();
-			const response = await fetchWithTimeout(`/api/tasks/search?userId=${user?.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user?.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
+					action: 'search',
 					query,
 					source: 'github',
 					repoFullName: standup.repoFullName,
@@ -164,10 +166,11 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 	const resolveMutation = useMutation<ResolveTaskResponse, Error, Task>({
 		retry: false,
 		mutationFn: async (task: Task) => {
-			const response = await fetchWithTimeout(`/api/tasks/resolve?userId=${user?.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user?.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
+					action: 'resolve',
 					externalId: task.externalId,
 					source: task.externalSource,
 					repoFullName: standup.repoFullName,
