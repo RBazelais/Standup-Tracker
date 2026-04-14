@@ -1,23 +1,22 @@
-// api/tasks/search.ts
+// api/tasks/resolve.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { db } from "../lib/db.js";
 import { createTaskLinkingService } from "../../shared/task-linking-service.js";
 
 /**
- * POST /api/tasks/search
- * 
- * Searches for tasks in external systems (GitHub Issues)
- * 
+ * POST /api/tasks/resolve
+ *
+ * Persists a GitHub issue as a Task in the DB and returns the real Task record.
+ * Called when a user selects a search result — search results have temp IDs
+ * and must be persisted before they can be linked to a standup.
+ *
  * Body:
- * - query: string (search term)
- * - source: "github" (expandable to "jira" | "linear" | "asana")
+ * - externalId: string (e.g. "#3")
+ * - source: "github"
  * - repoFullName: string
- * - state?: "open" | "closed" | "all" (default: "open")
- * - milestone?: string (milestone number)
- * - limit?: number (default: 20)
- * 
+ *
  * Returns:
- * - tasks: Array of matching tasks
+ * - task: Task
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	if (req.method !== "POST") {
@@ -30,10 +29,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		return res.status(400).json({ error: "userId query parameter is required" });
 	}
 
-	const { query, source, repoFullName, state, milestone, limit } = req.body;
+	const { externalId, source, repoFullName } = req.body;
 
-	if (!query || typeof query !== "string") {
-		return res.status(400).json({ error: "query is required" });
+	if (!externalId || typeof externalId !== "string") {
+		return res.status(400).json({ error: "externalId is required" });
 	}
 
 	if (!source || source !== "github") {
@@ -49,21 +48,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		const adapterReady = await service.initializeAdapters(userId, repoFullName);
 
 		if (!adapterReady) {
-			console.warn(`[tasks/search] No GitHub integration found for userId=${userId}`);
-			return res.status(401).json({ error: 'GitHub integration not connected. Please sign out and sign back in.' });
+			console.warn(`[tasks/resolve] No GitHub integration found for userId=${userId}`);
+			return res.status(401).json({ error: "GitHub integration not connected. Please sign out and sign back in." });
 		}
 
-		const tasks = await service.searchTasks(query, source, {
-			state: state || "open",
-			milestone,
-			limit: limit || 20,
-		});
+		const task = await service.resolveExternalTask(externalId, source, userId);
 
-		return res.status(200).json({ tasks });
+		if (!task) {
+			return res.status(404).json({ error: `Could not resolve issue ${externalId}` });
+		}
+
+		console.log(`[tasks/resolve] Resolved ${externalId} → task ${task.id}`);
+		return res.status(200).json({ task });
 	} catch (error) {
-		console.error("Task search error:", error);
+		console.error("Task resolve error:", error);
 		return res.status(500).json({
-			error: "Failed to search tasks",
+			error: "Failed to resolve task",
 			details: error instanceof Error ? error.message : String(error),
 		});
 	}

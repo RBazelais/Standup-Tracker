@@ -77,7 +77,7 @@ export class TaskLinkingService {
 		this.db = db;
 	}
 
-	async initializeAdapters(userId: string, repoFullName: string) {
+	async initializeAdapters(userId: string, repoFullName: string): Promise<boolean> {
 		const integration = await this.db.integrations.findOne({
 			userId,
 			source: 'github',
@@ -85,7 +85,10 @@ export class TaskLinkingService {
 
 		if (integration) {
 			this.githubAdapter = createGitHubAdapter(integration.accessToken, repoFullName);
+			return true;
 		}
+
+		return false;
 	}
 
 	async detectAndResolveTasks(standup: Partial<Standup>, userId: string): Promise<LinkingResult> {
@@ -103,7 +106,9 @@ export class TaskLinkingService {
 
 		if (standup.commits?.length && this.githubAdapter) {
 			const refs = this.githubAdapter.parseIssueRefs(
-				standup.commits.map(commit => ({ message: commit.commit.message }))
+				standup.commits
+					.filter(commit => commit?.commit?.message)
+					.map(commit => ({ message: commit.commit.message }))
 			);
 
 			for (const ref of refs) {
@@ -149,6 +154,10 @@ export class TaskLinkingService {
 			return 'explicit';
 		}
 		return 'inferred';
+	}
+
+	async resolveExternalTask(externalId: string, source: ExternalSource, userId: string): Promise<Task | null> {
+		return this.resolveTask({ externalId, source, confidence: 'explicit', raw: externalId }, userId);
 	}
 
 	private async resolveTask(detected: DetectedTask, userId: string): Promise<Task | null> {

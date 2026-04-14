@@ -39,7 +39,11 @@ export function TaskLinkingSection({ standup, onTasksChange }: TaskLinkingSectio
 		showPicker,
 		searchResults,
 		isSearching,
+		searchError,
 		search,
+		isResolving,
+		resolveError,
+		resolvingTaskId,
 		confirmTask,
 		confirmAll,
 		dismissTask,
@@ -122,6 +126,10 @@ export function TaskLinkingSection({ standup, onTasksChange }: TaskLinkingSectio
 				onOpenChange={closePicker}
 				searchResults={searchResults}
 				isSearching={isSearching}
+				searchError={searchError}
+				isResolving={isResolving}
+				resolveError={resolveError}
+				resolvingTaskId={resolvingTaskId}
 				onSearch={search}
 				onSelect={addFromSearch}
 				selectedIds={selected.map(t => t.id)}
@@ -201,6 +209,7 @@ function TaskSuggestionsBanner({
 								size="sm"
 								onClick={() => onConfirm(task)}
 								className="h-7 w-7 p-0"
+								aria-label={`Link issue ${task.title}`}
 							>
 								<Check className="h-4 w-4 text-green-600" />
 							</Button>
@@ -209,6 +218,7 @@ function TaskSuggestionsBanner({
 								size="sm"
 								onClick={() => onDismiss(task.id)}
 								className="h-7 w-7 p-0"
+								aria-label={`Dismiss issue ${task.title}`}
 							>
 								<X className="h-4 w-4 text-muted-foreground" />
 							</Button>
@@ -245,9 +255,10 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 								target="_blank"
 								rel="noopener noreferrer"
 								className="font-mono text-sm text-primary hover:underline flex items-center gap-1"
+								aria-label={`Open ${externalId} on GitHub (opens in new tab)`}
 							>
 								{externalId}
-								<ExternalLink className="h-3 w-3" />
+								<ExternalLink className="h-3 w-3" aria-hidden="true" />
 							</a>
 						) : (
 							<span className="font-mono text-sm text-muted-foreground">{externalId}</span>
@@ -270,6 +281,7 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 				size="sm"
 				onClick={onRemove}
 				className="opacity-0 group-hover:opacity-100 transition-opacity"
+				aria-label={`Remove linked issue ${externalId}`}
 			>
 				<X className="h-4 w-4" />
 			</Button>
@@ -284,6 +296,10 @@ interface IssuePickerDialogProps {
 	onOpenChange: (open: boolean) => void;
 	searchResults: Task[];
 	isSearching: boolean;
+	searchError: string | null;
+	isResolving: boolean;
+	resolveError: string | null;
+	resolvingTaskId: string | null;
 	onSearch: (query: string) => void;
 	onSelect: (task: Task) => void;
 	selectedIds: string[];
@@ -294,6 +310,10 @@ function IssuePickerDialog({
 	onOpenChange,
 	searchResults,
 	isSearching,
+	searchError,
+	isResolving,
+	resolveError,
+	resolvingTaskId,
 	onSearch,
 	onSelect,
 	selectedIds,
@@ -308,7 +328,10 @@ function IssuePickerDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-lg">
+			<DialogContent
+				className="sm:max-w-lg"
+				onKeyDown={(e) => e.stopPropagation()}
+			>
 				<DialogHeader>
 					<DialogTitle>Link GitHub Issue</DialogTitle>
 				</DialogHeader>
@@ -337,7 +360,9 @@ function IssuePickerDialog({
 
 					{/* Results */}
 					<div className="max-h-80 overflow-y-auto space-y-2">
-						{searchResults.length === 0 && !isSearching && (
+						{searchError && <ErrorMessage message={searchError} />}
+						{resolveError && <ErrorMessage message={resolveError} />}
+						{!searchError && searchResults.length === 0 && !isSearching && (
 							<div className="text-center py-8 text-muted-foreground">
 								Search for issues to link
 							</div>
@@ -345,22 +370,27 @@ function IssuePickerDialog({
 
 						{searchResults.map(task => {
 							const isSelected = selectedIds.includes(task.id);
+							const isBeingResolved = isResolving && resolvingTaskId === task.externalId;
 							const externalLink = task.externalLinks?.[0];
 
 							return (
 								<button
+									type="button"
 									key={task.id}
-									onClick={() => !isSelected && onSelect(task)}
-									disabled={isSelected}
+									onClick={() => !isSelected && !isResolving && onSelect(task)}
+									disabled={isSelected || isResolving}
 									className={`
 										w-full text-left p-3 rounded-lg border transition-colors
-										${isSelected 
-											? 'bg-muted/50 opacity-50 cursor-not-allowed' 
+										${isSelected || isResolving
+											? 'bg-muted/50 opacity-50 cursor-not-allowed'
 											: 'hover:bg-muted/50 cursor-pointer'}
 									`}
 								>
 									<div className="flex items-center gap-2">
-										<TaskStatusBadge status={task.status} />
+										{isBeingResolved
+											? <Loader2 className="h-2 w-2 animate-spin" />
+											: <TaskStatusBadge status={task.status} />
+										}
 										<span className="font-mono text-sm">
 											{externalLink?.externalId}
 										</span>
@@ -369,6 +399,9 @@ function IssuePickerDialog({
 										)}
 										{isSelected && (
 											<Badge variant="secondary">Linked</Badge>
+										)}
+										{isBeingResolved && (
+											<Badge variant="secondary">Linking...</Badge>
 										)}
 									</div>
 									<p className="text-sm text-muted-foreground mt-1 truncate">
@@ -381,6 +414,17 @@ function IssuePickerDialog({
 				</div>
 			</DialogContent>
 		</Dialog>
+	);
+}
+
+// ERROR MESSAGE
+
+function ErrorMessage({ message }: { message: string }) {
+	return (
+		<div className="flex items-center gap-2 text-sm text-destructive p-3 bg-destructive/10 rounded-lg">
+			<AlertCircle className="h-4 w-4 shrink-0" />
+			{message}
+		</div>
 	);
 }
 

@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import type { Task, Standup } from '@/types';
 import { fetchWithTimeout } from '../lib/fetchWithTimeout';
+import { handleApiResponse } from '../lib/errors';
+import { useStore } from '../store';
 
 /* Hook for task detection and linking in standup form */
 
@@ -37,9 +39,15 @@ interface DetectTasksResponse {
 
 interface SearchTasksResponse {
 	tasks: Task[];
+	error?: string;
+}
+
+interface ResolveTaskResponse {
+	task: Task;
 }
 
 export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOptions) {
+	const user = useStore((state) => state.user);
 	const [state, setState] = useState<TaskLinkingState>({
 		detected: [],
 		isDetecting: false,
@@ -52,7 +60,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
 		retry: false,
 		mutationFn: async (commits) => {
-			const response = await fetchWithTimeout('/api/tasks/detect', {
+			const response = await fetchWithTimeout(`/api/tasks/detect?userId=${user?.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -92,7 +100,8 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 
 	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
 		mutationFn: async (query: string) => {
-			const response = await fetchWithTimeout('/api/tasks/search', {
+			resolveMutation.reset();
+			const response = await fetchWithTimeout(`/api/tasks/search?userId=${user?.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -101,9 +110,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 					repoFullName: standup.repoFullName,
 				}),
 			});
-			
-			if (!response.ok) throw new Error('Search failed');
-			return response.json() as Promise<SearchTasksResponse>;
+			return handleApiResponse<SearchTasksResponse>(response);
 		},
 	});
 
@@ -154,15 +161,32 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 		}));
 	}, []);
 
-	const addFromSearch = useCallback((task: Task) => {
-		setState(prev => ({
-			...prev,
-			selected: prev.selected.some(t => t.id === task.id)
-				? prev.selected
-				: [...prev.selected, task],
-			showPicker: false,
-		}));
-	}, []);
+	const resolveMutation = useMutation<ResolveTaskResponse, Error, Task>({
+		retry: false,
+		mutationFn: async (task: Task) => {
+			const response = await fetchWithTimeout(`/api/tasks/resolve?userId=${user?.id}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					externalId: task.externalId,
+					source: task.externalSource,
+					repoFullName: standup.repoFullName,
+				}),
+			});
+			return handleApiResponse<ResolveTaskResponse>(response);
+		},
+		onSuccess: (data) => {
+			setState(prev => ({
+				...prev,
+				selected: prev.selected.some(t => t.id === data.task.id)
+					? prev.selected
+					: [...prev.selected, data.task],
+				showPicker: false,
+			}));
+		},
+	});
+
+	const addFromSearch = resolveMutation.mutate;
 
 	const openPicker = useCallback(() => {
 		setState(prev => ({ ...prev, showPicker: true }));
@@ -191,8 +215,14 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 		// Search
 		searchResults: searchMutation.data?.tasks || [],
 		isSearching: searchMutation.isPending,
+		searchError: searchMutation.error?.message || null,
 		search: searchMutation.mutate,
-		
+
+		// Resolve (persisting a search result as a real task)
+		isResolving: resolveMutation.isPending,
+		resolveError: resolveMutation.error?.message || null,
+		resolvingTaskId: resolveMutation.variables?.externalId || null,
+
 		// Actions
 		confirmTask,
 		confirmAll,
