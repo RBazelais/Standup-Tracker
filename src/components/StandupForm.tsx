@@ -25,6 +25,7 @@ export function StandupForm() {
 	const [blockers, setBlockers] = useState("");
 	const [saved, setSaved] = useState(false);
 	const [linkedTaskIds, setLinkedTaskIds] = useState<string[]>([]);
+	const [taskSectionKey, setTaskSectionKey] = useState(0);
 
 	const [activePreset, setActivePreset] = useState<Preset | null>(null);
 	const [commitStartDate, setCommitStartDate] = useState(getYesterday());
@@ -117,6 +118,7 @@ export function StandupForm() {
 						setBlockers("");
 						setSelectedCommits(new Set());
 						setLinkedTaskIds([]);
+						setTaskSectionKey(k => k + 1);
 						setSaved(false);
 					}, 2000);
 				},
@@ -148,7 +150,15 @@ export function StandupForm() {
 				</span>
 			</div>
 
-			<form onSubmit={handleSubmit} className="space-y-6">
+			<form
+				onSubmit={handleSubmit}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+						e.preventDefault();
+					}
+				}}
+				className="space-y-6"
+			>
 				<Card className="p-4 bg-surface-overlay border-border">
 					<DateRangePresets
 						startDate={commitStartDate}
@@ -185,6 +195,7 @@ export function StandupForm() {
 
 				{/* Task Linking */}
 				<TaskLinkingSection
+					key={taskSectionKey}
 					standup={{
 						commits: commits,
 						repoFullName: selectedRepo.full_name,
