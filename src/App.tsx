@@ -7,11 +7,13 @@ import { StandupDetail } from "./components/StandupDetail";
 import { StandupEdit } from "./components/StandupEdit";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
 	const { accessToken } = useStore();
 
 	return (
+		<>
 		<Routes>
 				<Route
 					path="/"
@@ -55,6 +57,8 @@ function App() {
 					}
 				/>
 		</Routes>
+		<Toaster />
+		</>
 	);
 }
 
