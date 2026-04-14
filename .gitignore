@@ -36,3 +36,6 @@ migrate-schema.mjs
 # Playwright test artifacts
 playwright-report/
 test-results/
+
+# Local study notes
+notes/
