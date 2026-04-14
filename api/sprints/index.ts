@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { sprints } from "../../drizzle/schema.ts";
-import { createSprintSchema, validateBody } from "../../drizzle/validation.ts";
+import { sprints } from "../../drizzle/schema.js";
+import { createSprintSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, desc } from "drizzle-orm";
 
 const db = drizzle(sql);

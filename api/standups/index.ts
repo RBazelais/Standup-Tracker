@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { standups } from "../../drizzle/schema.ts";
-import { createStandupSchema, validateBody } from "../../drizzle/validation.ts";
+import { standups } from "../../drizzle/schema.js";
+import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, desc } from "drizzle-orm";
 
 // Initialize db directly in API route
