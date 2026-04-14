@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { db } from "../lib/db.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const clientId = process.env.GITHUB_CLIENT_ID || process.env.VITE_GITHUB_CLIENT_ID;
 	const clientSecret = process.env.GITHUB_CLIENT_SECRET;
-	
+
 	// Only allow POST requests
 	if (req.method !== "POST") {
 		return res.status(405).json({ error: "Method not allowed" });
@@ -48,8 +49,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 					.json({ error: data.error_description || data.error });
 			}
 
-			// Return the access token to the client
-			return res.status(200).json({ access_token: data.access_token });
+			// Get user info from GitHub API
+			const userResponse = await fetch("https://api.github.com/user", {
+				headers: {
+					Authorization: `Bearer ${data.access_token}`,
+					Accept: "application/json",
+				},
+				signal: controller.signal,
+			});
+
+			const user = await userResponse.json();
+
+			if (!userResponse.ok || !user.id) {
+				return res
+					.status(400)
+					.json({ error: "Failed to get user info from GitHub" });
+			}
+
+			// Store GitHub integration in database
+			await db.integrations.upsert({
+				userId: user.id.toString(),
+				source: "github",
+				accessToken: data.access_token,
+				accountName: user.login,
+			});
+
+			// Return user and token
+			return res.status(200).json({
+				access_token: data.access_token,
+				user: {
+					id: user.id,
+					login: user.login,
+					name: user.name,
+					avatar_url: user.avatar_url,
+				},
+			});
 		} catch (err: any) {
 			clearTimeout(timeout);
 			if (err?.name === "AbortError") {
