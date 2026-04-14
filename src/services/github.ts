@@ -1,5 +1,5 @@
 import { Octokit } from "@octokit/rest";
-import type { GitHubRepo, GitHubCommit, GitHubUser } from "../types";
+import type { GitHubRepo, GitHubUser } from "../types";
 
 export class GitHubService {
 	private octokit: Octokit;
@@ -26,32 +26,4 @@ export class GitHubService {
 		return data;
 	}
 
-	async getCommits(
-		owner: string,
-		repo: string,
-		since: Date,
-		until?: Date,
-	): Promise<GitHubCommit[]> {
-		const { data } = await this.octokit.repos.listCommits({
-			owner,
-			repo,
-			since: since.toISOString(),
-			until: until?.toISOString(),
-			per_page: 50,
-		});
-		return data;
-	}
-
-	async getCommitDetails(
-		owner: string,
-		repo: string,
-		sha: string,
-	): Promise<GitHubCommit> {
-		const { data } = await this.octokit.repos.getCommit({
-			owner,
-			repo,
-			ref: sha,
-		});
-		return data;
-	}
 }
