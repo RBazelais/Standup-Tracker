@@ -50,6 +50,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 
 	// Auto-detect tasks from commits
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
+		retry: false,
 		mutationFn: async (commits) => {
 			const response = await fetchWithTimeout('/api/tasks/detect', {
 				method: 'POST',
@@ -84,7 +85,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 		if (enabled && standup.commits?.length) {
 			detectMutation.mutate(standup.commits);
 		}
-	}, [standup.commits, enabled, detectMutation]);
+	}, [standup.commits, enabled, detectMutation.mutate]);
 
 
 	// Search for tasks manually
