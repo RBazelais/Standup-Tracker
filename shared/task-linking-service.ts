@@ -149,7 +149,7 @@ export class TaskLinkingService {
 		return result;
 	}
 
-	private determineConfidence(raw: string): 'explicit' | 'inferred' {
+	determineConfidence(raw: string): 'explicit' | 'inferred' {
 		if (/^(fix(es)?|close[sd]?|resolve[sd]?)\s+/i.test(raw)) {
 			return 'explicit';
 		}

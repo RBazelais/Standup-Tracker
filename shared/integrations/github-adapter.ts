@@ -219,7 +219,7 @@ export class GitHubAdapter {
 			description: issue.body || '',
 			status,
 			priority,
-			storyPoints: storyPoints ?? undefined,
+			storyPoints: storyPoints,
 			externalId,
 			externalSource: source,
 			externalUrl: issue.html_url,

@@ -12,6 +12,7 @@ export default defineConfig({
     include: [
       'src/**/*.test.{ts,tsx,js,mjs,cjs}',
       'src/**/__tests__/**/*.{ts,tsx,js}',
+      'shared/**/*.test.{ts,js}',
       'drizzle/**/*.test.{ts,js}',
     ],
     // Exclude Playwright e2e and third-party tests in node_modules.
