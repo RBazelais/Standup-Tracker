@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useStandups } from "../hooks/useStandups";
 import { Card } from "@/components/ui/card";
 import { Loader2, Calendar, GitCommit, AlertCircle } from "lucide-react";
+import { StandupSourceChips } from "./StandupSourceChips";
 import { format, parseISO } from "date-fns";
 
 
@@ -95,6 +96,9 @@ export function StandupHistory() {
 									{commitCount} commit
 									{commitCount !== 1 ? "s" : ""}
 								</p>
+								<div className="mt-2">
+									<StandupSourceChips repoFullName={standup.repoFullName} commits={standup.commits} />
+								</div>
 							</div>
 							{hasBlockers && (
 								<span className="px-2 py-1 text-xs bg-danger-subtle text-danger-text rounded" aria-label="Has blockers">

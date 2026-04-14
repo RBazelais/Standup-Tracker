@@ -23,6 +23,7 @@ import {
 	AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Loader2, ArrowLeft, GitCommit, Edit, Trash2, ExternalLink } from "lucide-react";
+import { StandupSourceChips } from "./StandupSourceChips";
 import { format, parseISO } from "date-fns";
 import ReactMarkdown from "react-markdown";
 
@@ -104,10 +105,7 @@ export function StandupDetail() {
 						<Button
 							variant="ghost"
 							size="sm"
-							className="
-								text-foreground-muted 
-								hover:text-foreground 
-								hover:bg-surface-raised"
+							className="text-foreground-muted"
 							aria-label="Back to Dashboard"
 						>
 							<ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -179,7 +177,7 @@ export function StandupDetail() {
 							<h2 className="text-3xl font-bold text-foreground mb-2">
 								{format(parseISO(standup.date), "EEEE, MMMM d, yyyy")}
 							</h2>
-						<div className="flex items-center gap-4 text-sm text-foreground-muted" role="contentinfo">
+						<div className="flex items-center gap-4 text-sm text-foreground-muted flex-wrap" role="contentinfo">
 							<div className="flex items-center gap-2">
 								<GitCommit className="h-4 w-4" aria-hidden="true" />
 								<span>
@@ -187,12 +185,8 @@ export function StandupDetail() {
 									{standup.commits.length !== 1 ? "s" : ""}
 								</span>
 							</div>
-							{standup.repoFullName && (
-								<span className="text-foreground-muted">
-										from <code className="text-accent-text">{standup.repoFullName}</code>
-									</span>
-								)}
-							</div>
+							<StandupSourceChips repoFullName={standup.repoFullName} commits={standup.commits} />
+						</div>
 						</div>
 
 						<div className="space-y-6">
