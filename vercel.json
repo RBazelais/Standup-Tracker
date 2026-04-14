@@ -1,8 +1,9 @@
 {
 	"rewrites": [
-		{
-			"source": "/(.*)",
-			"destination": "/index.html"
-		}
+		{ "source": "/", "destination": "/index.html" },
+		{ "source": "/auth/callback", "destination": "/index.html" },
+		{ "source": "/dashboard", "destination": "/index.html" },
+		{ "source": "/standup/:id/edit", "destination": "/index.html" },
+		{ "source": "/standup/:id", "destination": "/index.html" }
 	]
 }
