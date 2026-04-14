@@ -19,6 +19,18 @@ export const db = {
 			`;
 			return (rows[0] as { accessToken: string } | undefined) || null;
 		},
+
+		async upsert(payload: { userId: string; source: string; accessToken: string; accountName?: string }) {
+			const now = new Date();
+			await sql`
+				INSERT INTO integrations (user_id, source, access_token, account_name, connected_at, updated_at)
+				VALUES (${payload.userId}, ${payload.source}, ${payload.accessToken}, ${payload.accountName || null}, ${now}, ${now})
+				ON CONFLICT (user_id, source) DO UPDATE SET
+					access_token = EXCLUDED.access_token,
+					account_name = EXCLUDED.account_name,
+					updated_at = EXCLUDED.updated_at
+			`;
+		},
 	},
 
 	// EXTERNAL TASK CACHE
