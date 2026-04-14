@@ -1,7 +1,7 @@
 // api/tasks/search.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { db } from "../lib/db.js";
-import { createTaskLinkingService } from "../../src/services/task-linking-service";
+import { createTaskLinkingService } from "../../shared/task-linking-service.js";
 
 /**
  * POST /api/tasks/search
