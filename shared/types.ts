@@ -60,6 +60,7 @@ export interface Standup {
     snapshotSprintId?: string;
     snapshotMilestoneId?: string;
     repoFullName?: string;
+    linkedTasks?: Task[]; // Populated by API when taskIds is non-empty
     createdAt: Date;
     updatedAt?: Date;
 }

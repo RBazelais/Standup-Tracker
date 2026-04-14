@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { standups } from "../../drizzle/schema.js";
+import { standups, tasks } from "../../drizzle/schema.js";
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 
 // Initialize db directly in API route
 const db = drizzle(sql);
@@ -24,7 +24,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				.where(eq(standups.userId, userId))
 				.orderBy(desc(standups.createdAt));
 
-			return res.status(200).json(userStandups);
+			// Collect all task IDs referenced across all standups.
+			// Filter out temp-* IDs from before the resolve fix was in place.
+			const allTaskIds = [
+				...new Set(
+					userStandups
+						.flatMap(s => (s.taskIds as string[]) ?? [])
+						.filter(id => !id.startsWith('temp-'))
+				),
+			];
+
+			type TaskRow = typeof tasks.$inferSelect;
+			const linkedTasksMap: Record<string, TaskRow[]> = {};
+
+			if (allTaskIds.length > 0) {
+				const linkedTasks = await db
+					.select()
+					.from(tasks)
+					.where(inArray(tasks.id, allTaskIds));
+
+				// Group tasks back to their standups
+				for (const standup of userStandups) {
+					const ids = (standup.taskIds as string[]) ?? [];
+					linkedTasksMap[standup.id] = linkedTasks.filter(t => ids.includes(t.id));
+				}
+			}
+
+			const enriched = userStandups.map(s => ({
+				...s,
+				linkedTasks: linkedTasksMap[s.id] ?? [],
+			}));
+
+			return res.status(200).json(enriched);
 		} catch (error) {
 			console.error("Failed to fetch standups:", error);
 			return res.status(500).json({
