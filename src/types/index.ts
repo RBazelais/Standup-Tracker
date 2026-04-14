@@ -117,7 +117,7 @@ export interface Task {
     description: string;
     status: TaskStatus;
     priority?: TaskPriority;
-    storyPoints?: number;
+    storyPoints?: number | null;
     storyPointSystem?: 'fibonacci' | 'tshirt' | 'linear';
     rolloverCount?: number;
     totalSprintsTouched?: number;
