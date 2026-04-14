@@ -41,7 +41,7 @@ export function LandingPage() {
 						<span className="text-accent-text"> yesterday</span>
 					</h1>
 
-<p className="text-xl mb-8 leading-relaxed text-muted">
+<p className="text-xl mb-8 leading-relaxed text-foreground">
 							StandUp Tracker automatically pulls your commits and helps
 							you generate standup notes in seconds. Track progress toward
 							goals and never stress about daily updates again.
