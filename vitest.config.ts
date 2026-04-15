@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    env: { TZ: 'UTC' },
     // Project unit tests only
     include: [
       'src/**/*.test.{ts,tsx,js,mjs,cjs}',
