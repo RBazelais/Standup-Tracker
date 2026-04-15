@@ -1,17 +1,14 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@vercel/postgres';
 import type { ExternalTaskCache, Task, ExternalSource } from '../../src/types';
-
-const sql = neon(process.env.DATABASE_URL!);
 
 /**
  * Shared database client for Vercel serverless functions
- * Wraps Neon SQL queries with typed methods
  */
 export const db = {
 	// INTEGRATIONS
 	integrations: {
 		async findOne(query: { userId: string; source: 'github' }) {
-			const rows = await sql`
+			const { rows } = await sql`
 				SELECT access_token as "accessToken"
 				FROM integrations
 				WHERE user_id = ${query.userId} AND source = ${query.source}
@@ -21,7 +18,7 @@ export const db = {
 		},
 
 		async upsert(payload: { userId: string; source: string; accessToken: string; accountName?: string }) {
-			const now = new Date();
+			const now = new Date().toISOString();
 			await sql`
 				INSERT INTO integrations (user_id, source, access_token, account_name, connected_at, updated_at)
 				VALUES (${payload.userId}, ${payload.source}, ${payload.accessToken}, ${payload.accountName || null}, ${now}, ${now})
@@ -36,8 +33,8 @@ export const db = {
 	// EXTERNAL TASK CACHE
 	externalTaskCache: {
 		async findOne(query: { externalId: string; source: ExternalSource }) {
-			const rows = await sql`
-				SELECT 
+			const { rows } = await sql`
+				SELECT
 					external_id as "externalId",
 					source,
 					external_url as "externalUrl",
@@ -57,7 +54,7 @@ export const db = {
 		},
 
 		async upsert(payload: Partial<ExternalTaskCache> & { externalId: string; source: ExternalSource }) {
-			const now = new Date();
+			const now = new Date().toISOString();
 			await sql`
 				INSERT INTO external_task_cache (
 					external_id, source, external_url, title, description,
@@ -89,8 +86,8 @@ export const db = {
 	// TASKS
 	tasks: {
 		async findOne(query: { id: string }) {
-			const rows = await sql`
-				SELECT 
+			const { rows } = await sql`
+				SELECT
 					id,
 					user_id as "userId",
 					title,
@@ -99,21 +96,20 @@ export const db = {
 					story_points as "storyPoints",
 					priority,
 					current_sprint_id as "currentSprintId",
-					current_milestone_id as "currentMilestoneId",
 					first_sprint_id as "firstSprintId",
 					rollover_count as "rolloverCount",
 					total_sprints_touched as "totalSprintsTouched",
 					created_at as "createdAt",
 					updated_at as "updatedAt"
-				FROM tasks 
-				WHERE id = ${query.id} 
+				FROM tasks
+				WHERE id = ${query.id}
 				LIMIT 1
 			`;
 			return (rows[0] as Task | undefined) || null;
 		},
 
 		async findByExternalLink(query: { externalId: string; source: ExternalSource }) {
-			const rows = await sql`
+			const { rows } = await sql`
 				SELECT t.*
 				FROM tasks t
 				JOIN task_external_links tel ON t.id = tel.task_id
@@ -124,7 +120,9 @@ export const db = {
 		},
 
 		async create(payload: Omit<Partial<Task>, 'id'> & { userId: string; createdAt: Date; updatedAt: Date }): Promise<Task> {
-			const rows = await sql`
+			const createdAt = payload.createdAt.toISOString();
+			const updatedAt = payload.updatedAt.toISOString();
+			const { rows } = await sql`
 				INSERT INTO tasks (
 					user_id, title, description, status, story_points, priority,
 					first_sprint_id, rollover_count, total_sprints_touched,
@@ -132,11 +130,11 @@ export const db = {
 				) VALUES (
 					${payload.userId}, ${payload.title || null}, ${payload.description || null},
 					${payload.status || 'planned'}, ${payload.storyPoints || null},
-					${payload.priority || 'none'}, ${payload.firstSprintId},
-					${payload.rolloverCount}, ${payload.totalSprintsTouched},
-					${payload.createdAt}, ${payload.updatedAt}
+					${payload.priority || 'none'}, ${payload.firstSprintId || null},
+					${payload.rolloverCount ?? 0}, ${payload.totalSprintsTouched ?? 0},
+					${createdAt}, ${updatedAt}
 				)
-				RETURNING 
+				RETURNING
 					id,
 					user_id as "userId",
 					title,
@@ -155,10 +153,10 @@ export const db = {
 		},
 
 		async update(taskId: string, payload: Partial<Task>) {
-			const now = payload.updatedAt || new Date();
+			const now = (payload.updatedAt || new Date()).toISOString();
 			await sql`
 				UPDATE tasks
-				SET 
+				SET
 					updated_at = ${now},
 					title = COALESCE(${payload.title || null}, title),
 					description = COALESCE(${payload.description || null}, description),
@@ -174,7 +172,7 @@ export const db = {
 	// TASK EXTERNAL LINKS
 	taskExternalLinks: {
 		async findOne(query: { externalId: string; source: ExternalSource }) {
-			const rows = await sql`
+			const { rows } = await sql`
 				SELECT task_id as "taskId"
 				FROM task_external_links
 				WHERE external_id = ${query.externalId} AND source = ${query.source}
@@ -190,7 +188,7 @@ export const db = {
 			externalUrl?: string;
 			confidence: 'explicit' | 'inferred';
 		}) {
-			const now = new Date();
+			const now = new Date().toISOString();
 			await sql`
 				INSERT INTO task_external_links (
 					task_id, external_id, source, external_url, confidence, created_at
@@ -205,7 +203,7 @@ export const db = {
 	// SPRINTS
 	sprints: {
 		async findOne(query: { externalId: string; source: string; userId: string }) {
-			const rows = await sql`
+			const { rows } = await sql`
 				SELECT id FROM sprints
 				WHERE external_id = ${query.externalId}
 					AND external_source = ${query.source}
@@ -224,14 +222,16 @@ export const db = {
 			endDate: Date | null;
 			status: string;
 		}): Promise<{ id: string }> {
-			const now = new Date();
-			const rows = await sql`
+			const now = new Date().toISOString();
+			const startDate = payload.startDate?.toISOString() || null;
+			const endDate = payload.endDate?.toISOString() || null;
+			const { rows } = await sql`
 				INSERT INTO sprints (
 					user_id, external_id, external_source, title,
 					start_date, end_date, status, created_at, updated_at
 				) VALUES (
 					${payload.userId}, ${payload.externalId}, ${payload.source},
-					${payload.name}, ${payload.startDate}, ${payload.endDate},
+					${payload.name}, ${startDate}, ${endDate},
 					${payload.status}, ${now}, ${now}
 				)
 				RETURNING id
@@ -249,19 +249,20 @@ export const db = {
 			snapshotStatus: string | null;
 			linkedAt: Date;
 		}) {
+			const linkedAt = payload.linkedAt.toISOString();
 			await sql`
 				INSERT INTO standup_tasks (
 					standup_id, task_id, snapshot_sprint_id, snapshot_status, linked_at
 				) VALUES (
 					${payload.standupId}, ${payload.taskId},
-					${payload.snapshotSprintId}, ${payload.snapshotStatus}, ${payload.linkedAt}
+					${payload.snapshotSprintId}, ${payload.snapshotStatus}, ${linkedAt}
 				)
 			`;
 		},
 
 		async findByStandup(standupId: string) {
-			const rows = await sql`
-				SELECT 
+			const { rows } = await sql`
+				SELECT
 					st.task_id as "taskId",
 					st.snapshot_sprint_id as "snapshotSprintId",
 					st.snapshot_status as "snapshotStatus",
@@ -280,8 +281,8 @@ export const db = {
 	// STANDUPS
 	standups: {
 		async findOne(query: { id: string; userId: string }) {
-			const rows = await sql`
-				SELECT 
+			const { rows } = await sql`
+				SELECT
 					id,
 					user_id as "userId",
 					snapshot_sprint_id as "snapshotSprintId",
@@ -294,7 +295,7 @@ export const db = {
 		},
 
 		async updateSnapshotSprint(standupId: string, snapshotSprintId: string) {
-			const now = new Date();
+			const now = new Date().toISOString();
 			await sql`
 				UPDATE standups
 				SET snapshot_sprint_id = ${snapshotSprintId}, updated_at = ${now}
