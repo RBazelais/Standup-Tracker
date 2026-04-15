@@ -3,7 +3,7 @@ import { standupsApi } from "../services/api";
 import { useStore } from "../store";
 import { toast } from "sonner";
 import { getErrorMessage } from "../lib/errors";
-import type { Standup } from "../types";
+import type { Standup, CreateStandupInput } from "../types";
 
 export function useStandups() {
 	const user = useStore((state) => state.user);
@@ -20,7 +20,7 @@ export function useStandups() {
 	});
 
 	const createMutation = useMutation({
-		mutationFn: (standup: Omit<Standup, "id" | "createdAt">) =>
+		mutationFn: (standup: CreateStandupInput) =>
 			standupsApi.create(user!.id.toString(), standup),
 
 		onMutate: async (newStandup) => {

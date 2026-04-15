@@ -1,4 +1,4 @@
-import type { Standup, Milestone, Sprint, Task } from "../types";
+import type { Standup, CreateStandupInput, Milestone, Sprint, Task } from "../types";
 import { handleApiResponse } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
@@ -16,7 +16,7 @@ export const standupsApi = {
 
 	create: async (
 		userId: string,
-		standup: Omit<Standup, "id" | "createdAt">,
+		standup: CreateStandupInput,
 	): Promise<Standup> => {
 		const response = await fetchWithTimeout(`/api/standups?userId=${userId}`, {
 			method: "POST",
