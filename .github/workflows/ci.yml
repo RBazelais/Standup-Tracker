@@ -51,7 +51,7 @@ jobs:
       - name: Deploy to Vercel preview
         id: deploy
         run: |
-          URL=$(npx vercel@latest deploy --token ${{ secrets.VERCEL_TOKEN }} --yes)
+          URL=$(npx vercel@latest deploy --token ${{ secrets.VERCEL_TOKEN }} --yes | grep -Eo 'https://[a-zA-Z0-9._-]+\.vercel\.app' | head -1)
           echo "preview-url=$URL" >> $GITHUB_OUTPUT
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
