@@ -1,12 +1,13 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { standups, tasks } from "../../drizzle/schema.js";
+import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, desc, inArray } from "drizzle-orm";
 
-// Initialize db directly in API route
 const db = drizzle(sql);
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const { userId } = req.query;
@@ -15,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		return res.status(400).json({ error: "User ID is required" });
 	}
 
-	// GET: Fetch all standups for user
+	// GET: Fetch all standups for user, enriched with linked tasks via junction table
 	if (req.method === "GET") {
 		try {
 			const userStandups = await db
@@ -24,29 +25,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				.where(eq(standups.userId, userId))
 				.orderBy(desc(standups.createdAt));
 
-			// Collect all task IDs referenced across all standups.
-			// Filter out temp-* IDs from before the resolve fix was in place.
-			const allTaskIds = [
-				...new Set(
-					userStandups
-						.flatMap(s => (s.taskIds as string[]) ?? [])
-						.filter(id => !id.startsWith('temp-'))
-				),
-			];
-
 			type TaskRow = typeof tasks.$inferSelect;
 			const linkedTasksMap: Record<string, TaskRow[]> = {};
 
-			if (allTaskIds.length > 0) {
-				const linkedTasks = await db
-					.select()
-					.from(tasks)
-					.where(inArray(tasks.id, allTaskIds));
+			if (userStandups.length > 0) {
+				const standupIds = userStandups.map(s => s.id);
 
-				// Group tasks back to their standups
-				for (const standup of userStandups) {
-					const ids = (standup.taskIds as string[]) ?? [];
-					linkedTasksMap[standup.id] = linkedTasks.filter(t => ids.includes(t.id));
+				const linkedRows = await db
+					.select({
+						standupId: standupTasks.standupId,
+						task: tasks,
+					})
+					.from(standupTasks)
+					.innerJoin(tasks, eq(standupTasks.taskId, tasks.id))
+					.where(inArray(standupTasks.standupId, standupIds));
+
+				for (const row of linkedRows) {
+					if (!linkedTasksMap[row.standupId]) linkedTasksMap[row.standupId] = [];
+					linkedTasksMap[row.standupId].push(row.task);
 				}
 			}
 
@@ -65,9 +61,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		}
 	}
 
-	// POST: Create new standup
+	// POST: Create new standup and link tasks via junction table
 	if (req.method === "POST") {
-		// Validate request body
 		const validation = validateBody(createStandupSchema, req.body);
 		if (!validation.success) {
 			return res.status(400).json({ error: validation.error });
@@ -76,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		try {
 			const { repoFullName, date, workCompleted, workPlanned, blockers, commits, taskIds } = validation.data;
 
-			const newStandup = await db
+			const [newStandup] = await db
 				.insert(standups)
 				.values({
 					userId,
@@ -86,11 +81,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 					workPlanned,
 					blockers,
 					commits,
-					taskIds,
 				})
 				.returning();
 
-			return res.status(201).json(newStandup[0]);
+			// Link tasks via junction table — filter to valid UUIDs only
+			const validTaskIds = taskIds.filter(id => UUID_RE.test(id));
+			if (validTaskIds.length > 0) {
+				await db.insert(standupTasks).values(
+					validTaskIds.map(taskId => ({
+						standupId: newStandup.id,
+						taskId,
+					}))
+				);
+			}
+
+			return res.status(201).json({ ...newStandup, linkedTasks: [] });
 		} catch (error) {
 			console.error("Failed to create standup:", error);
 			return res.status(500).json({

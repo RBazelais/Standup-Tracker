@@ -8,6 +8,7 @@ export const createStandupSchema = z.object({
 	workPlanned: z.string().min(1, "Work planned is required"),
 	blockers: z.string().default("None"),
 	commits: z.array(z.any()).default([]),
+	// Task IDs are accepted from the client and written to standup_tasks junction table
 	taskIds: z.array(z.string()).default([]),
 });
 

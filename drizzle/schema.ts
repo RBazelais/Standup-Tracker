@@ -10,7 +10,6 @@ export const standups = pgTable("standups", {
 	workPlanned: text("work_planned").notNull(),
 	blockers: text("blockers").notNull(),
 	commits: jsonb("commits").notNull(),
-	taskIds: jsonb("task_ids").notNull().default([]),
 	snapshotSprintId: uuid("snapshot_sprint_id"),
 	snapshotMilestoneId: uuid("snapshot_milestone_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
