@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, getTableColumns } from "drizzle-orm";
 
 const db = drizzle(sql);
 
@@ -34,15 +34,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				const linkedRows = await db
 					.select({
 						standupId: standupTasks.standupId,
-						task: tasks,
+						...getTableColumns(tasks),
 					})
 					.from(standupTasks)
 					.innerJoin(tasks, eq(standupTasks.taskId, tasks.id))
 					.where(inArray(standupTasks.standupId, standupIds));
 
 				for (const row of linkedRows) {
-					if (!linkedTasksMap[row.standupId]) linkedTasksMap[row.standupId] = [];
-					linkedTasksMap[row.standupId].push(row.task);
+					const { standupId, ...task } = row;
+					if (!linkedTasksMap[standupId]) linkedTasksMap[standupId] = [];
+					linkedTasksMap[standupId].push(task as TaskRow);
 				}
 			}
 
