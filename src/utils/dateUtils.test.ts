@@ -183,21 +183,20 @@ describe("dateUtils", () => {
 	});
 
 	describe("Date display bug: new Date(yyyy-MM-dd) vs parseISO(yyyy-MM-dd)", () => {
-		it("new Date('yyyy-MM-dd') parses as UTC midnight, causing timezone shift", () => {
-			// This is the BUG: new Date() with date-only string is parsed as UTC
-			const dateStr = "2026-02-02";
-			const buggyDate = new Date(dateStr);
-			// In PST (UTC-8), midnight UTC is 4 PM the previous day
-			// So format() shows Feb 1 instead of Feb 2
-			const buggyFormatted = format(buggyDate, "EEEE, MMM d");
-			// This will be "Sunday, Feb 1" in PST - the bug!
-			expect(buggyFormatted).not.toBe("Monday, Feb 2");
+		it("new Date('yyyy-MM-dd') parses as UTC midnight", () => {
+			// new Date() with a date-only string anchors to UTC midnight regardless of local timezone
+			const buggyDate = new Date("2026-02-02");
+			expect(buggyDate.getUTCHours()).toBe(0);
+			expect(buggyDate.getUTCMinutes()).toBe(0);
+			// In any negative-offset timezone this shifts the local date back a day,
+			// which is the display bug — but we test the root cause, not the offset-specific symptom
 		});
 
 		it("parseISO('yyyy-MM-dd') correctly treats date as local midnight", () => {
-			// This is the FIX: parseISO treats date-only strings as local time
-			const dateStr = "2026-02-02";
-			const correctDate = parseISO(dateStr);
+			// parseISO treats date-only strings as local midnight, so format() always matches the string
+			const correctDate = parseISO("2026-02-02");
+			expect(correctDate.getHours()).toBe(0);
+			expect(correctDate.getMinutes()).toBe(0);
 			const correctFormatted = format(correctDate, "EEEE, MMM d");
 			expect(correctFormatted).toBe("Monday, Feb 2");
 		});
