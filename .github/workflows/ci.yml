@@ -49,12 +49,13 @@ jobs:
         run: npm ci --include=dev
 
       - name: Deploy to Vercel preview
-        id: vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        id: deploy
+        run: |
+          URL=$(npx vercel@latest deploy --token ${{ secrets.VERCEL_TOKEN }} --yes)
+          echo "preview-url=$URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
@@ -62,7 +63,7 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
         env:
-          PLAYWRIGHT_BASE_URL: ${{ steps.vercel.outputs.preview-url }}
+          PLAYWRIGHT_BASE_URL: ${{ steps.deploy.outputs.preview-url }}
 
       - name: Upload Playwright report
         if: always()
