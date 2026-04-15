@@ -64,6 +64,7 @@ jobs:
         run: npm run test:e2e
         env:
           PLAYWRIGHT_BASE_URL: ${{ steps.deploy.outputs.preview-url }}
+          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_BYPASS_SECRET }}
 
       - name: Upload Playwright report
         if: always()
