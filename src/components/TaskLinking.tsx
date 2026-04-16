@@ -244,7 +244,7 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 	const externalUrl = externalLink?.externalUrl || task.externalUrl;
 
 	return (
-		<div className="flex items-center justify-between bg-muted/50 rounded-lg p-3 group">
+		<div className="flex items-center justify-between bg-surface-raised border border-border rounded-md p-3 shadow-sm group">
 			<div className="flex items-center gap-3 min-w-0">
 				<TaskStatusBadge status={task.status} />
 				
