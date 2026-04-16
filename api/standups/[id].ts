@@ -1,48 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { standups, standupTasks, tasks, taskExternalLinks } from "../../drizzle/schema.js";
+import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { updateStandupSchema, validateBody } from "../../drizzle/validation.js";
-import { eq, inArray, getTableColumns } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
+import { fetchLinkedTasks } from "./_helpers.js";
 
 const db = drizzle(sql);
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-type TaskRow = typeof tasks.$inferSelect;
-
-async function fetchLinkedTasks(standupId: string): Promise<(TaskRow & { externalLinks: { externalId: string; externalUrl: string | null; source: string }[] })[]> {
-	const linkedRows = await db
-		.select({
-			standupId: standupTasks.standupId,
-			...getTableColumns(tasks),
-		})
-		.from(standupTasks)
-		.innerJoin(tasks, eq(standupTasks.taskId, tasks.id))
-		.where(eq(standupTasks.standupId, standupId));
-
-	if (linkedRows.length === 0) return [];
-
-	const taskIds = linkedRows.map((r) => r.id);
-	const linkRows = await db
-		.select()
-		.from(taskExternalLinks)
-		.where(inArray(taskExternalLinks.taskId, taskIds));
-
-	const linksByTaskId = linkRows.reduce<Record<string, typeof linkRows>>((acc, link) => {
-		(acc[link.taskId] ??= []).push(link);
-		return acc;
-	}, {});
-
-	return linkedRows.map(({ standupId: _s, ...task }) => ({
-		...(task as TaskRow),
-		externalLinks: (linksByTaskId[task.id] ?? []).map((l) => ({
-			externalId: l.externalId,
-			externalUrl: l.externalUrl,
-			source: l.source,
-		})),
-	}));
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const { id } = req.query;

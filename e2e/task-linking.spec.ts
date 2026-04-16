@@ -348,7 +348,7 @@ test.describe("Task Linking - Edit Flow", () => {
 			route.fulfill({ json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] } })
 		);
 
-		await page.reload();
+		await page.goto(`/standup/${STANDUP_ID}/edit`);
 		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
 
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
@@ -399,7 +399,7 @@ test.describe("Task Linking - Edit Flow", () => {
 			});
 		});
 
-		await page.reload();
+		await page.goto(`/standup/${STANDUP_ID}/edit`);
 		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 
@@ -429,7 +429,7 @@ test.describe("Task Linking - Edit Flow", () => {
 			});
 		});
 
-		await page.reload();
+		await page.goto(`/standup/${STANDUP_ID}/edit`);
 		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 

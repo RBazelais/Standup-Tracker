@@ -3,7 +3,8 @@ import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
-import { eq, desc, inArray, getTableColumns } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
+import { fetchLinkedTasks } from "./_helpers.js";
 
 const db = drizzle(sql);
 
@@ -105,7 +106,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				}
 			}
 
-			return res.status(201).json({ ...newStandup, linkedTasks: [] });
+			const linkedTasks = await fetchLinkedTasks(newStandup.id);
+
+			return res.status(201).json({ ...newStandup, linkedTasks });
 		} catch (error) {
 			console.error("Failed to create standup:", error);
 			return res.status(500).json({

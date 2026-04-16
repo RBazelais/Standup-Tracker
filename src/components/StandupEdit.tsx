@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft, Save, X } from "lucide-react";
 import { TaskLinkingSection } from "@/components/TaskLinking";
-import type { Standup } from "@/types";
+import type { Standup, UpdateStandupInput } from "@/types";
 
 export function StandupEdit() {
 	const { id } = useParams<{ id: string }>();
@@ -87,7 +87,7 @@ function StandupEditForm({
 }: {
 	id: string;
 	initialData: Standup;
-	updateStandup: (params: { id: string; updates: object }, options?: object) => void;
+	updateStandup: (params: { id: string; updates: UpdateStandupInput }, options?: object) => void;
 	isUpdating: boolean;
 	navigate: (path: string) => void;
 }) {

@@ -1,4 +1,4 @@
-import type { Standup, CreateStandupInput, Milestone, Sprint, Task } from "@/types";
+import type { Standup, CreateStandupInput, UpdateStandupInput, Milestone, Sprint, Task } from "@/types";
 import { handleApiResponse } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
@@ -26,7 +26,7 @@ export const standupsApi = {
 		return handleApiResponse<Standup>(response);
 	},
 
-	update: async (id: string, updates: Partial<Standup>): Promise<Standup> => {
+	update: async (id: string, updates: UpdateStandupInput): Promise<Standup> => {
 		const response = await fetchWithTimeout(`/api/standups/${id}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
