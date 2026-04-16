@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../store";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { handleApiResponse } from "../lib/errors";
 
 export function useBranches() {
 	const { selectedRepo, accessToken } = useStore();
@@ -30,11 +31,7 @@ export function useBranches() {
 					15000,
 				);
 
-				if (!response.ok) {
-					throw new Error("Failed to fetch branches");
-				}
-
-				const data = await response.json();
+				const data = await handleApiResponse<{ name: string }[]>(response);
 				setBranches(
 					data.map((branch: { name: string }) => branch.name),
 				);

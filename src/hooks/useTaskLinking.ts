@@ -47,7 +47,7 @@ interface ResolveTaskResponse {
 }
 
 export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOptions) {
-	const user = useStore((state) => state.user);
+	const user = useStore((state) => state.user)!;
 	const [state, setState] = useState<TaskLinkingState>({
 		detected: [],
 		isDetecting: false,
@@ -60,7 +60,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
 		retry: false,
 		mutationFn: async (commits) => {
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user?.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -70,8 +70,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 				}),
 			});
 			
-			if (!response.ok) throw new Error('Detection failed');
-			return response.json() as Promise<DetectTasksResponse>;
+			return handleApiResponse<DetectTasksResponse>(response);
 		},
 		onSuccess: (data) => {
 			setState(prev => ({
@@ -89,12 +88,14 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 		},
 	});
 
+	const detectMutate = detectMutation.mutate;
+
 	// Trigger detection when commits change
 	useEffect(() => {
-		if (enabled && standup.commits?.length) {
-			detectMutation.mutate(standup.commits);
+		if (enabled && standup.commits?.length && standup.repoFullName) {
+			detectMutate(standup.commits);
 		}
-	}, [standup.commits, enabled, detectMutation.mutate]);
+	}, [standup.commits, enabled, detectMutate, standup.repoFullName]);
 
 
 	// Search for tasks manually
@@ -102,7 +103,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
 		mutationFn: async (query: string) => {
 			resolveMutation.reset();
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user?.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -166,7 +167,7 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 	const resolveMutation = useMutation<ResolveTaskResponse, Error, Task>({
 		retry: false,
 		mutationFn: async (task: Task) => {
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user?.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
