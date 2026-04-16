@@ -205,7 +205,6 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 		0
 	);
 
-	const suggestedSprint = state.selected.find(t => t.currentSprintId)?.currentSprintId;
 
 	return {
 		// State
@@ -238,6 +237,5 @@ export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOption
 		
 		// Computed
 		totalPoints,
-		suggestedSprint,
 	};
 }
