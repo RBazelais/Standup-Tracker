@@ -267,7 +267,7 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 						{task.storyPoints != null && task.storyPoints > 0 && (
 							<Badge variant="outline">{task.storyPoints} pts</Badge>
 						)}
-						{task.rolloverCount && task.rolloverCount > 0 && (
+						{task.rolloverCount != null && task.rolloverCount > 0 && (
 							<Badge variant="destructive" className="text-xs">
 								{task.rolloverCount}x rollover
 							</Badge>
