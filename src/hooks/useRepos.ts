@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useGitHub } from "./useGitHub";
-import type { GitHubRepo } from "../types";
+import type { GitHubRepo } from "@/types";
 
 export function useRepos() {
 	const github = useGitHub();

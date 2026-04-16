@@ -1,4 +1,4 @@
-import type { Standup, CreateStandupInput, Milestone, Sprint, Task } from "../types";
+import type { Standup, CreateStandupInput, Milestone, Sprint, Task } from "@/types";
 import { handleApiResponse } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 

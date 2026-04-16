@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { GitHubUser, GitHubRepo } from "../types";
+import type { GitHubUser, GitHubRepo } from "@/types";
 
 interface StoreState {
 	user: GitHubUser | null;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "../store";
 import { localDateToUTCStart, localDateToUTCEnd } from "../utils/dateUtils";
-import type { GitHubCommit } from "../types";
+import type { GitHubCommit } from "@/types";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleApiResponse } from "../lib/errors";
 

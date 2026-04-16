@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { isCommitInDateRange } from "./dateUtils";
-import type { GitHubCommit } from "../types";
+import type { GitHubCommit } from "@/types";
 
 /**
  * Filter commits to those whose author date falls within a local date range.

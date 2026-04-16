@@ -12,7 +12,7 @@ import { DateRangePresets } from "./DateRangePresets";
 import type { Preset } from "./DateRangePresets";
 import { CommitPreviewer } from "./CommitPreviewer";
 import { StandupFormFields } from "./StandupFormFields";
-import type { GitHubCommit } from "../types";
+import type { GitHubCommit } from "@/types";
 import { TaskLinkingSection } from '@/components/TaskLinking';
 
 

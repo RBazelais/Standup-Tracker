@@ -11,7 +11,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { groupCommitsByDay } from "../utils/commitUtils";
-import type { GitHubCommit } from "../types";
+import type { GitHubCommit } from "@/types";
 
 interface CommitPreviewerProps {
 	commits: GitHubCommit[];
