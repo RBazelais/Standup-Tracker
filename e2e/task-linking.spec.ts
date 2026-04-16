@@ -207,7 +207,9 @@ test.describe("Task Linking", () => {
 		await page.getByPlaceholder(/search issues by number or title/i).fill("anything");
 		await page.getByRole("button", { name: /^search$/i }).click();
 
-		await expect(page.locator("[class*='destructive']")).toBeVisible();
+		await expect(
+			page.getByText(/something went wrong/i)
+		).toBeVisible();
 	});
 
 	test("standup form has the expected fields and submit button", async ({ page }) => {
