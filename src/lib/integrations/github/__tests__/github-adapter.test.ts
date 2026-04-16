@@ -50,17 +50,17 @@ describe('GitHubAdapter', () => {
 
 		it('parses owner/repo#123 format', () => {
 			const commits = [
-				{ message: 'Related to anthropic/claude#100' },
+				{ message: 'Related to umbrella/nemesis#100' },
 			];
 
 			const refs = adapter.parseIssueRefs(commits);
 
 			expect(refs).toHaveLength(1);
 			expect(refs[0]).toEqual({
-				owner: 'anthropic',
-				repo: 'claude',
+				owner: 'umbrella',
+				repo: 'nemesis',
 				number: 100,
-				raw: 'anthropic/claude#100',
+				raw: 'umbrella/nemesis#100',
 			});
 		});
 
@@ -87,6 +87,31 @@ describe('GitHubAdapter', () => {
 
 			expect(refs).toHaveLength(1);
 			expect(refs[0].number).toBe(42);
+		});
+
+		it('keeps issues with the same number from different repos', () => {
+			const commits = [
+				{ message: 'See acme/frontend#42 and acme/backend#42' },
+			];
+
+			const refs = adapter.parseIssueRefs(commits);
+
+			expect(refs).toHaveLength(2);
+			expect(refs.map(r => `${r.owner}/${r.repo}#${r.number}`)).toEqual([
+				'acme/frontend#42',
+				'acme/backend#42',
+			]);
+		});
+
+		it('deduplicates owner/repo refs regardless of casing', () => {
+			const commits = [
+				{ message: 'Fixes Acme/Widget#1 and acme/widget#1' },
+			];
+
+			const refs = adapter.parseIssueRefs(commits);
+
+			expect(refs).toHaveLength(1);
+			expect(refs[0].number).toBe(1);
 		});
 
 		it('handles multiple references in one commit', () => {

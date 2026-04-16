@@ -96,7 +96,7 @@ export class GitHubAdapter {
 					const owner = match.groups?.owner || this.defaultOwner;
 					const repo = match.groups?.repo || this.defaultRepo;
 					const number = Number.parseInt(match.groups?.number || '', 10);
-					const key = `${owner}/${repo}#${number}`;
+					const key = `${owner.toLowerCase()}/${repo.toLowerCase()}#${number}`;
 
 					if (!Number.isFinite(number) || number <= 0) continue;
 					if (!hasExplicitRepo && explicitNumbers.has(number)) continue;
