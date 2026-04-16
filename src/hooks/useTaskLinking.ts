@@ -12,6 +12,7 @@ import { useStore } from '../store';
 interface UseTaskLinkingOptions {
 	standup: Partial<Standup>;
 	enabled?: boolean;
+	initialSelected?: Task[];
 }
 
 interface DetectedTask extends Task {
@@ -46,12 +47,12 @@ interface ResolveTaskResponse {
 	task: Task;
 }
 
-export function useTaskLinking({ standup, enabled = true }: UseTaskLinkingOptions) {
+export function useTaskLinking({ standup, enabled = true, initialSelected = [] }: UseTaskLinkingOptions) {
 	const user = useStore((state) => state.user)!;
 	const [state, setState] = useState<TaskLinkingState>({
 		detected: [],
 		isDetecting: false,
-		selected: [],
+		selected: initialSelected,
 		showSuggestions: false,
 		showPicker: false,
 	});

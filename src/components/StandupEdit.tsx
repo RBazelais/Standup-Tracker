@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft, Save, X } from "lucide-react";
+import { TaskLinkingSection } from "@/components/TaskLinking";
+import type { Standup } from "@/types";
 
 export function StandupEdit() {
 	const { id } = useParams<{ id: string }>();
@@ -84,7 +86,7 @@ function StandupEditForm({
 	navigate,
 }: {
 	id: string;
-	initialData: { workCompleted: string; workPlanned: string; blockers: string };
+	initialData: Standup;
 	updateStandup: (params: { id: string; updates: object }, options?: object) => void;
 	isUpdating: boolean;
 	navigate: (path: string) => void;
@@ -92,6 +94,9 @@ function StandupEditForm({
 	const [workCompleted, setWorkCompleted] = useState(initialData.workCompleted || "");
 	const [workPlanned, setWorkPlanned] = useState(initialData.workPlanned || "");
 	const [blockers, setBlockers] = useState(initialData.blockers || "");
+	const [linkedTaskIds, setLinkedTaskIds] = useState<string[]>(
+		() => initialData.linkedTasks?.map((t) => t.id) ?? []
+	);
 
 	const handleCancel = () => {
 		navigate(`/standup/${id}`);
@@ -107,6 +112,7 @@ function StandupEditForm({
 					workCompleted,
 					workPlanned,
 					blockers,
+					taskIds: linkedTaskIds,
 				},
 			},
 			{
@@ -195,6 +201,16 @@ function StandupEditForm({
 							className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[100px]"
 							/>
 						</div>
+
+						{/* Task Linking */}
+						<TaskLinkingSection
+							standup={{
+								commits: initialData.commits,
+								repoFullName: initialData.repoFullName,
+							}}
+							initialSelected={initialData.linkedTasks ?? []}
+							onTasksChange={setLinkedTaskIds}
+						/>
 
 						{/* Action Buttons */}
 						<div className="flex gap-3 pt-4">

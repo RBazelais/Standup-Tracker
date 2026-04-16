@@ -22,7 +22,7 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Loader2, ArrowLeft, GitCommit, Edit, Trash2, ExternalLink } from "lucide-react";
+import { Loader2, ArrowLeft, GitCommit, Edit, Trash2, ExternalLink, GitBranch } from "lucide-react";
 import { StandupSourceChips } from "./StandupSourceChips";
 import { format, parseISO } from "date-fns";
 import ReactMarkdown from "react-markdown";
@@ -217,6 +217,47 @@ export function StandupDetail() {
 									<ReactMarkdown>{standup.blockers.replace(/\n/g, '  \n')}</ReactMarkdown>
 								</div>
 							</section>
+
+							{/* Linked Issues */}
+							{standup.linkedTasks && standup.linkedTasks.length > 0 && (
+								<section className="pt-6 border-t border-border" aria-labelledby="linked-issues-heading">
+									<h3 id="linked-issues-heading" className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+										<GitBranch className="h-4 w-4" aria-hidden="true" />
+										Linked Issues
+									</h3>
+									<div className="space-y-2">
+										{standup.linkedTasks.map((task) => {
+											const link = task.externalLinks?.[0];
+											return (
+												<div
+													key={task.id}
+													className="flex items-center justify-between p-3 bg-surface-overlay rounded-md border border-border"
+												>
+													<div className="flex items-center gap-2 min-w-0">
+														<span className="text-xs text-accent-text font-mono shrink-0">
+															{link?.externalId ?? task.externalId}
+														</span>
+														<span className="text-sm text-foreground truncate">
+															{task.title}
+														</span>
+													</div>
+													{link?.externalUrl && (
+														<a
+															href={link.externalUrl}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="text-accent-text hover:text-accent-active ml-3 shrink-0"
+															aria-label={`View ${task.title} on GitHub`}
+														>
+															<ExternalLink className="h-4 w-4" aria-hidden="true" />
+														</a>
+													)}
+												</div>
+											);
+										})}
+									</div>
+								</section>
+							)}
 
 							{/* Commits Accordion */}
 							{standup.commits.length > 0 && (

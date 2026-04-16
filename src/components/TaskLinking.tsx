@@ -28,9 +28,10 @@ import type { Task, Standup } from '@/types';
 interface TaskLinkingSectionProps {
 	standup: Partial<Standup>;
 	onTasksChange: (taskIds: string[]) => void;
+	initialSelected?: Task[];
 }
 
-export function TaskLinkingSection({ standup, onTasksChange }: TaskLinkingSectionProps) {
+export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: TaskLinkingSectionProps) {
 	const {
 		detected,
 		selected,
@@ -53,7 +54,7 @@ export function TaskLinkingSection({ standup, onTasksChange }: TaskLinkingSectio
 		openPicker,
 		closePicker,
 		totalPoints,
-	} = useTaskLinking({ standup });
+	} = useTaskLinking({ standup, initialSelected });
 
 	// Update parent when selected tasks change
 	useEffect(() => {
