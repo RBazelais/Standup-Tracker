@@ -48,7 +48,15 @@ test.describe("Task Linking", () => {
 		await page.goto("/dashboard");
 
 		// Wait until the task linking section is visible (confirms StandupForm rendered)
-		await expect(page.getByText("Linked Issues")).toBeVisible();
+		await expect(
+			page.getByRole("button", { name: /link issue/i })
+		).toBeVisible();
+	});
+
+	test("shows Linked Issues heading", async ({ page }) => {
+		await expect(
+			page.locator("h3").filter({ hasText: "Linked Issues" })
+		).toBeVisible();
 	});
 
 	test("shows empty state when no issues are linked", async ({ page }) => {
