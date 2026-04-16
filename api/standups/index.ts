@@ -85,15 +85,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				})
 				.returning();
 
-			// Link tasks via junction table — filter to valid UUIDs only
-			const validTaskIds = taskIds.filter(id => UUID_RE.test(id));
-			if (validTaskIds.length > 0) {
-				await db.insert(standupTasks).values(
-					validTaskIds.map(taskId => ({
-						standupId: newStandup.id,
-						taskId,
-					}))
-				);
+			// Link tasks via junction table — verify tasks exist before inserting
+			// to avoid foreign key violations from stale or invalid IDs
+			const validShapeIds = taskIds.filter(id => UUID_RE.test(id));
+			if (validShapeIds.length > 0) {
+				const existingTasks = await db
+					.select({ id: tasks.id })
+					.from(tasks)
+					.where(inArray(tasks.id, validShapeIds));
+
+				const existingIds = existingTasks.map(t => t.id);
+				if (existingIds.length > 0) {
+					await db.insert(standupTasks).values(
+						existingIds.map(taskId => ({
+							standupId: newStandup.id,
+							taskId,
+						}))
+					);
+				}
 			}
 
 			return res.status(201).json({ ...newStandup, linkedTasks: [] });
