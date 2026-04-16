@@ -73,6 +73,9 @@ export class GitHubAdapter {
 	parseIssueRefs(commits: Array<{ message: string }>): ParsedIssueRef[] {
 		const refs: ParsedIssueRef[] = [];
 		const seen = new Set<string>();
+		// Track numbers captured with an explicit owner/repo so bare #number
+		// patterns don't create a duplicate ref for the same issue.
+		const explicitNumbers = new Set<number>();
 
 		const patterns = [
 			/(?<owner>[\w.-]+)\/(?<repo>[\w.-]+)#(?<number>\d+)/g,
@@ -87,15 +90,18 @@ export class GitHubAdapter {
 
 				let match: RegExpExecArray | null;
 				while ((match = pattern.exec(commit.message)) !== null) {
+					const hasExplicitRepo = !!match.groups?.owner;
 					const owner = match.groups?.owner || this.defaultOwner;
 					const repo = match.groups?.repo || this.defaultRepo;
 					const number = Number.parseInt(match.groups?.number || '', 10);
 					const key = `${owner}/${repo}#${number}`;
 
 					if (!Number.isFinite(number) || number <= 0) continue;
+					if (!hasExplicitRepo && explicitNumbers.has(number)) continue;
 
 					if (!seen.has(key)) {
 						seen.add(key);
+						if (hasExplicitRepo) explicitNumbers.add(number);
 						refs.push({
 							owner,
 							repo,
