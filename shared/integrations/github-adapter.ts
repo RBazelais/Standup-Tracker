@@ -92,11 +92,7 @@ export class GitHubAdapter {
 					const number = Number.parseInt(match.groups?.number || '', 10);
 					const key = `${owner}/${repo}#${number}`;
 
-					// If we already captured any reference for this numeric ID, skip duplicates
 					if (!Number.isFinite(number) || number <= 0) continue;
-
-					const alreadyForNumber = Array.from(seen).some(k => k.endsWith(`#${number}`));
-					if (alreadyForNumber) continue;
 
 					if (!seen.has(key)) {
 						seen.add(key);
