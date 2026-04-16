@@ -75,6 +75,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 					)}
 				</h3>
 				<Button
+					type="button"
 					variant="ghost"
 					size="sm"
 					onClick={openPicker}
@@ -167,6 +168,7 @@ function TaskSuggestionsBanner({
 				</div>
 				<div className="flex items-center gap-2">
 					<Button
+						type="button"
 						variant="ghost"
 						size="sm"
 						onClick={onConfirmAll}
@@ -176,6 +178,7 @@ function TaskSuggestionsBanner({
 						Link All
 					</Button>
 					<Button
+						type="button"
 						variant="ghost"
 						size="sm"
 						onClick={onDismissAll}
@@ -206,6 +209,7 @@ function TaskSuggestionsBanner({
 						</div>
 						<div className="flex items-center gap-1 shrink-0">
 							<Button
+								type="button"
 								variant="ghost"
 								size="sm"
 								onClick={() => onConfirm(task)}
@@ -215,6 +219,7 @@ function TaskSuggestionsBanner({
 								<Check className="h-4 w-4 text-green-600" />
 							</Button>
 							<Button
+								type="button"
 								variant="ghost"
 								size="sm"
 								onClick={() => onDismiss(task.id)}
@@ -276,6 +281,7 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 			</div>
 
 			<Button
+				type="button"
 				variant="ghost"
 				size="sm"
 				onClick={onRemove}

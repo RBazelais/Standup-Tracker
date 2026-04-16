@@ -343,9 +343,8 @@ test.describe("Task Linking - Edit Flow", () => {
 		await expect(page.getByText("No linked issues yet")).toBeVisible();
 	});
 
-	// Fresh navigation helper — clears in-memory React Query cache so useState in StandupEditForm initializes from the new mock, not stale cached data.
+	// Fresh navigation helper — page.goto() creates a new JS execution context, so React Query's in-memory cache starts empty and useState in StandupEditForm initializes from the freshly fetched mock, not stale data from beforeEach.
 	async function freshNavigateToEdit(page: import("@playwright/test").Page) {
-		await page.goto("/");
 		await page.evaluate((auth) => {
 			localStorage.setItem("standup-storage", JSON.stringify(auth));
 		}, MOCK_AUTH);

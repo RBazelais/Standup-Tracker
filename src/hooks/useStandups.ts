@@ -97,7 +97,7 @@ export function useStandups() {
 					context.previousStandups,
 				);
 			}
-			toast.error(getErrorMessage(err));
+			toast.error(`Failed to save standup — ${err instanceof Error ? err.message : "Unknown error"}`);
 		},
 
 		onSuccess: (_data, { id }) => {
