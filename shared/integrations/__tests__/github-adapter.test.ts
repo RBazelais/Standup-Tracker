@@ -64,6 +64,19 @@ describe('GitHubAdapter', () => {
 			});
 		});
 
+		it('does not double-count owner/repo#N as a separate bare #N ref', () => {
+			// The bare #number pattern also matches the number inside owner/repo#N.
+			// Without the explicitNumbers guard this would produce two refs.
+			const commits = [
+				{ message: 'Related to umbrella/nemesis#100' },
+			];
+
+			const refs = adapter.parseIssueRefs(commits);
+
+			expect(refs).toHaveLength(1);
+			expect(refs[0].raw).toBe('umbrella/nemesis#100');
+		});
+
 		it('parses GH-123 format', () => {
 			const commits = [
 				{ message: 'Working on GH-42' },
