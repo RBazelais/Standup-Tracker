@@ -12,7 +12,15 @@ export const createStandupSchema = z.object({
 	taskIds: z.array(z.string()).default([]),
 });
 
-export const updateStandupSchema = createStandupSchema.partial();
+export const updateStandupSchema = z.object({
+	repoFullName: z.string().min(1, "Repository is required").optional(),
+	date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format").optional(),
+	workCompleted: z.string().min(1, "Work completed is required").optional(),
+	workPlanned: z.string().min(1, "Work planned is required").optional(),
+	blockers: z.string().optional(),
+	commits: z.array(z.any()).optional(),
+	taskIds: z.array(z.string()).optional(),
+});
 
 // ==================== MILESTONES ====================
 export const createMilestoneSchema = z.object({
