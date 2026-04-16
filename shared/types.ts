@@ -74,6 +74,7 @@ export type UpdateStandupInput = Partial<Omit<Standup, 'id' | 'createdAt' | 'upd
     taskIds?: string[];
 };
 
+
 // Milestone - long-term goals (renamed from Goal)
 export interface Milestone {
     id: string;
