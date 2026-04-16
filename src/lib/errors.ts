@@ -38,12 +38,22 @@ export class ApiError extends Error {
 	}
 }
 
+// Revives ISO timestamp strings (e.g. "2024-01-15T10:30:00.000Z") to Date objects.
+// Intentionally does NOT match YYYY-MM-DD calendar date strings.
+const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+function dateReviver(_key: string, value: unknown): unknown {
+	if (typeof value === 'string' && ISO_TIMESTAMP_RE.test(value)) {
+		return new Date(value);
+	}
+	return value;
+}
+
 // Parse API response and throw appropriate error
 export async function handleApiResponse<T>(response: Response): Promise<T> {
 	if (response.ok) {
 		// Handle empty responses (like DELETE)
 		const text = await response.text();
-		return text ? JSON.parse(text) : (undefined as T);
+		return text ? JSON.parse(text, dateReviver) : (undefined as T);
 	}
 
 	// Try to parse error details from response

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useStore } from "../store";
 import { localDateToUTCStart, localDateToUTCEnd } from "../utils/dateUtils";
 import type { GitHubCommit } from "../types";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 export function useCommits(since?: string, until?: string) {
 	const { selectedRepo, selectedBranch, accessToken } = useStore();
@@ -28,7 +29,7 @@ export function useCommits(since?: string, until?: string) {
 				params.append("until", localDateToUTCEnd(until));
 			}
 
-			const response = await fetch(
+			const response = await fetchWithTimeout(
 				`https://api.github.com/repos/${selectedRepo.full_name}/commits?${params.toString()}`,
 				{
 					headers: {
@@ -36,6 +37,7 @@ export function useCommits(since?: string, until?: string) {
 						Accept: "application/vnd.github.v3+json",
 					},
 				},
+				15000,
 			);
 
 			if (!response.ok) {

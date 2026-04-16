@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173";
+
 export default defineConfig({
 	testDir: "./e2e",
 	fullyParallel: true,
@@ -8,9 +10,12 @@ export default defineConfig({
 	workers: process.env.CI ? 1 : undefined,
 	reporter: "html",
 	use: {
-		baseURL: "http://localhost:5173",
+		baseURL,
 		trace: "on-first-retry",
 		screenshot: "only-on-failure",
+		extraHTTPHeaders: process.env.VERCEL_BYPASS_SECRET
+			? { "x-vercel-protection-bypass": process.env.VERCEL_BYPASS_SECRET }
+			: undefined,
 	},
 	projects: [
 		{
@@ -18,10 +23,12 @@ export default defineConfig({
 			use: { ...devices["Desktop Chrome"] },
 		},
 	],
-	webServer: {
-		command: "npm run dev",
-		url: "http://localhost:5173",
-		reuseExistingServer: !process.env.CI,
-		timeout: 120 * 1000,
-	},
+	webServer: process.env.PLAYWRIGHT_BASE_URL
+		? undefined
+		: {
+				command: "npm run dev",
+				url: "http://localhost:5173",
+				reuseExistingServer: !process.env.CI,
+				timeout: 120 * 1000,
+			},
 });

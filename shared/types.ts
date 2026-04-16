@@ -55,20 +55,15 @@ export interface Standup {
     workCompleted: string;
     workPlanned: string;
     blockers: string;
+    taskIds: string[];
     commits: GitHubCommit[];
     snapshotSprintId?: string;
     snapshotMilestoneId?: string;
     repoFullName?: string;
-    linkedTasks?: Task[]; // Populated by API via standup_tasks junction table
+    linkedTasks?: Task[]; // Populated by API when taskIds is non-empty
     createdAt: Date;
     updatedAt?: Date;
 }
-
-// Input type for creating a standup — taskIds are sent to the API and written
-// to the standup_tasks junction table, not stored on the standup row itself.
-export type CreateStandupInput = Omit<Standup, 'id' | 'createdAt' | 'updatedAt' | 'linkedTasks'> & {
-    taskIds?: string[];
-};
 
 // Milestone - long-term goals (renamed from Goal)
 export interface Milestone {

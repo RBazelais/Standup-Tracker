@@ -267,7 +267,7 @@ export function StandupDetail() {
 																					{commit.commit.author?.date && (
 																					<span className="text-xs text-foreground-muted">
 																							{format(
-																								parseISO(commit.commit.author.date),
+																								new Date(commit.commit.author.date),
 																								"MMM d, h:mm a"
 																							)}
 																						</span>

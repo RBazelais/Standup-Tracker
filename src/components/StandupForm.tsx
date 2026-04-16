@@ -13,6 +13,8 @@ import type { Preset } from "./DateRangePresets";
 import { CommitPreviewer } from "./CommitPreviewer";
 import { StandupFormFields } from "./StandupFormFields";
 import type { GitHubCommit } from "../types";
+import { TaskLinkingSection } from '@/components/TaskLinking';
+
 
 export function StandupForm() {
 	const { selectedRepo, selectedBranch } = useStore();
@@ -22,6 +24,8 @@ export function StandupForm() {
 	const [workPlanned, setWorkPlanned] = useState("");
 	const [blockers, setBlockers] = useState("");
 	const [saved, setSaved] = useState(false);
+	const [linkedTaskIds, setLinkedTaskIds] = useState<string[]>([]);
+	const [taskSectionKey, setTaskSectionKey] = useState(0);
 
 	const [activePreset, setActivePreset] = useState<Preset | null>(null);
 	const [commitStartDate, setCommitStartDate] = useState(getYesterday());
@@ -101,7 +105,7 @@ export function StandupForm() {
 				workCompleted,
 				workPlanned,
 				blockers: blockers || "None",
-				taskIds: [],
+				taskIds: linkedTaskIds,
 				commits: selectedCommitObjects,
 				repoFullName: selectedRepo.full_name,
 			},
@@ -113,6 +117,8 @@ export function StandupForm() {
 						setWorkPlanned("");
 						setBlockers("");
 						setSelectedCommits(new Set());
+						setLinkedTaskIds([]);
+						setTaskSectionKey(k => k + 1);
 						setSaved(false);
 					}, 2000);
 				},
@@ -144,7 +150,15 @@ export function StandupForm() {
 				</span>
 			</div>
 
-			<form onSubmit={handleSubmit} className="space-y-6">
+			<form
+				onSubmit={handleSubmit}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+						e.preventDefault();
+					}
+				}}
+				className="space-y-6"
+			>
 				<Card className="p-4 bg-surface-overlay border-border">
 					<DateRangePresets
 						startDate={commitStartDate}
@@ -178,6 +192,18 @@ export function StandupForm() {
 					onBlockersChange={setBlockers}
 				/>
 
+
+				{/* Task Linking */}
+				<TaskLinkingSection
+					key={taskSectionKey}
+					standup={{
+						commits: commits,
+						repoFullName: selectedRepo.full_name,
+					}}
+					onTasksChange={setLinkedTaskIds}
+				/>
+
+				{/* Submit */}
 				<Button
 					type="submit"
 					disabled={isCreating || saved}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../store";
-import { GitHubService } from "../services/github";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 export function AuthCallback() {
 	const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function AuthCallback() {
 			}
 
 			try {
-				const response = await fetch("/api/auth/callback", {
+				const response = await fetchWithTimeout("/api/auth/callback", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ code }),
@@ -33,9 +33,7 @@ export function AuthCallback() {
 					throw new Error("Failed to exchange code for token");
 				}
 
-				const { access_token } = await response.json();
-				const github = new GitHubService(access_token);
-				const user = await github.getUser();
+				const { access_token, user } = await response.json();
 				setAccessToken(access_token);
 				setUser(user);
 				await new Promise(resolve => setTimeout(resolve, 100));
