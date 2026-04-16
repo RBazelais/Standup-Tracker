@@ -343,12 +343,21 @@ test.describe("Task Linking - Edit Flow", () => {
 		await expect(page.getByText("No linked issues yet")).toBeVisible();
 	});
 
+	// Fresh navigation helper — clears in-memory React Query cache so useState in StandupEditForm initializes from the new mock, not stale cached data.
+	async function freshNavigateToEdit(page: import("@playwright/test").Page) {
+		await page.goto("/");
+		await page.evaluate((auth) => {
+			localStorage.setItem("standup-storage", JSON.stringify(auth));
+		}, MOCK_AUTH);
+		await page.goto(`/standup/${STANDUP_ID}/edit`);
+	}
+
 	test("pre-existing linked tasks are pre-populated in the edit form", async ({ page }) => {
 		await page.route(`**/api/standups/${STANDUP_ID}`, (route) =>
 			route.fulfill({ json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] } })
 		);
 
-		await page.goto(`/standup/${STANDUP_ID}/edit`);
+		await freshNavigateToEdit(page);
 		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
 
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
@@ -399,7 +408,7 @@ test.describe("Task Linking - Edit Flow", () => {
 			});
 		});
 
-		await page.goto(`/standup/${STANDUP_ID}/edit`);
+		await freshNavigateToEdit(page);
 		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 
@@ -429,7 +438,7 @@ test.describe("Task Linking - Edit Flow", () => {
 			});
 		});
 
-		await page.goto(`/standup/${STANDUP_ID}/edit`);
+		await freshNavigateToEdit(page);
 		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 
