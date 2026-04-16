@@ -264,7 +264,7 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 						) : (
 							<span className="font-mono text-sm text-muted-foreground">{externalId}</span>
 						)}
-						{task.storyPoints && (
+						{task.storyPoints != null && task.storyPoints > 0 && (
 							<Badge variant="outline">{task.storyPoints} pts</Badge>
 						)}
 						{task.rolloverCount && task.rolloverCount > 0 && (
