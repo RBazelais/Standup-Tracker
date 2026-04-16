@@ -118,4 +118,53 @@ test.describe("Task Linking", () => {
 		// Dialog should stay open while search is in flight / after results arrive
 		await expect(page.getByRole("dialog")).toBeVisible();
 	});
+
+	test("searching returns results and linking a task adds it to the list", async ({
+		page,
+	}) => {
+		const MOCK_TASK = {
+			id: "task-1",
+			title: "Fix authentication bug",
+			status: "in_progress",
+			externalId: "#42",
+			externalSource: "github",
+			externalLinks: [
+				{
+					externalId: "#42",
+					externalUrl:
+						"https://github.com/testuser/test-repo/issues/42",
+				},
+			],
+		};
+
+		// Override the tasks mock to differentiate search vs resolve actions
+		await page.route("**/api/tasks**", async (route) => {
+			const body = route.request().postDataJSON();
+			if (body?.action === "search") {
+				return route.fulfill({ json: { tasks: [MOCK_TASK] } });
+			}
+			if (body?.action === "resolve") {
+				return route.fulfill({ json: { task: MOCK_TASK } });
+			}
+			return route.fulfill({ json: [] });
+		});
+
+		// Open picker and search
+		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
+		await page.getByRole("button", { name: /^search$/i }).click();
+
+		// Search result should appear
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
+
+		// Click the result to link it
+		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
+
+		// Dialog closes after linking
+		await expect(page.getByRole("dialog")).not.toBeVisible();
+
+		// Task appears in the linked list
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
+		await expect(page.getByText("#42")).toBeVisible();
+	});
 });
