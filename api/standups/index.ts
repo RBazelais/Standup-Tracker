@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, getTableColumns } from "drizzle-orm";
 import { fetchLinkedTasks } from "./_helpers.js";
 
 const db = drizzle(sql);
