@@ -98,6 +98,31 @@ describe('toSlack', () => {
 		expect(result).not.toContain('#42');
 	});
 
+	it('includes a commits section when commits are present', () => {
+		const input: FormatterInput = {
+			standup: {
+				...baseStandup,
+				commits: [
+					{
+						sha: 'abc1234def',
+						commit: { message: 'feat: add export formatters\n\nLonger body', author: { name: 'testuser' } },
+					},
+				],
+			},
+		};
+		const result = toSlack(input);
+
+		expect(result).toContain('💾 *Commits*');
+		expect(result).toContain('• `abc1234` feat: add export formatters');
+		expect(result).not.toContain('Longer body');
+	});
+
+	it('omits commits section when commits array is empty', () => {
+		const result = toSlack({ standup: baseStandup });
+
+		expect(result).not.toContain('💾 *Commits*');
+	});
+
 	it('normalizes existing bullets to bullet points', () => {
 		const input: FormatterInput = {
 			standup: {

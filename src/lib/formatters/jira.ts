@@ -39,6 +39,16 @@ export function toJira({ standup, includeLinks = true }: FormatterInput): string
 	lines.push('*Blockers*');
 	lines.push(standup.blockers?.trim() || 'None');
 
+	if (standup.commits?.length > 0) {
+		lines.push('');
+		lines.push('*Commits*');
+		standup.commits.forEach(commit => {
+			const sha = commit.sha.substring(0, 7);
+			const message = commit.commit.message.split('\n')[0];
+			lines.push(`* {{${sha}}} ${message}`);
+		});
+	}
+
 	if (includeLinks && linkedTasks.length > 0) {
 		lines.push('');
 		const issueLinks = linkedTasks

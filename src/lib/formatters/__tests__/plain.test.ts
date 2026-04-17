@@ -127,4 +127,34 @@ describe('toPlainText', () => {
 
 		expect(result).not.toContain('Linked Issues');
 	});
+
+	it('includes a commits section when commits are present', () => {
+		const input: FormatterInput = {
+			standup: {
+				...baseStandup,
+				commits: [
+					{
+						sha: 'abc1234def',
+						commit: { message: 'feat: add export formatters\n\nLonger body', author: { name: 'testuser' } },
+					},
+					{
+						sha: 'bcd5678efg',
+						commit: { message: 'fix: correct date handling', author: { name: 'testuser' } },
+					},
+				],
+			},
+		};
+		const result = toPlainText(input);
+
+		expect(result).toContain('Commits:');
+		expect(result).toContain('- abc1234: feat: add export formatters');
+		expect(result).toContain('- bcd5678: fix: correct date handling');
+		expect(result).not.toContain('Longer body');
+	});
+
+	it('omits commits section when commits array is empty', () => {
+		const result = toPlainText({ standup: baseStandup });
+
+		expect(result).not.toContain('Commits:');
+	});
 });
