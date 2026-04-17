@@ -399,14 +399,21 @@ test.describe("Task Linking - Edit Flow", () => {
 	});
 
 	test("removing a pre-existing linked task and saving clears it from the detail view", async ({ page }) => {
+		// Track whether save has completed so the GET after navigation reflects
+		// the updated state — without this the detail view refetch would return
+		// the old linkedTasks and "Linked Issues" would still appear
+		let saved = false;
 		await page.route(`**/api/standups/${STANDUP_ID}`, async (route) => {
 			if (route.request().method() === "PUT") {
+				saved = true;
 				return route.fulfill({
 					json: { ...MOCK_STANDUP, linkedTasks: [] },
 				});
 			}
 			return route.fulfill({
-				json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] },
+				json: saved
+					? { ...MOCK_STANDUP, linkedTasks: [] }
+					: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] },
 			});
 		});
 
