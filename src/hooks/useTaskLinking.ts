@@ -74,14 +74,16 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 			return handleApiResponse<DetectTasksResponse>(response);
 		},
 		onSuccess: (data) => {
+			const resolved = data?.resolved ?? [];
+			const autoLinked = data?.autoLinked ?? [];
 			setState(prev => ({
 				...prev,
-				detected: data.resolved,
-				showSuggestions: data.resolved.length > 0,
+				detected: resolved,
+				showSuggestions: resolved.length > 0,
 				// Auto-select explicit references
 				selected: [
 					...prev.selected,
-					...data.autoLinked.filter(
+					...autoLinked.filter(
 						(t: Task) => !prev.selected.some(s => s.id === t.id)
 					),
 				],

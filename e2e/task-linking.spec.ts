@@ -315,14 +315,17 @@ test.describe("Task Linking - Edit Flow", () => {
 		await page.route("**/api/milestones**", (route) =>
 			route.fulfill({ json: [] })
 		);
+		// Return correct shape for detect/search/resolve actions — {} not [] avoids
+		// crashing detectMutation.onSuccess which reads data.resolved
 		await page.route("**/api/tasks**", (route) =>
-			route.fulfill({ json: [] })
+			route.fulfill({ json: { tasks: [], resolved: [], autoLinked: [] } })
+		);
+		// Broad pattern registered first so the specific handler below wins (LIFO)
+		await page.route("**/api/standups**", (route) =>
+			route.fulfill({ json: [MOCK_STANDUP] })
 		);
 		await page.route(`**/api/standups/${STANDUP_ID}`, (route) =>
 			route.fulfill({ json: MOCK_STANDUP })
-		);
-		await page.route("**/api/standups**", (route) =>
-			route.fulfill({ json: [MOCK_STANDUP] })
 		);
 
 		await page.goto("/");
