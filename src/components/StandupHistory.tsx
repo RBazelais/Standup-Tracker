@@ -3,6 +3,7 @@ import { useStandups } from "../hooks/useStandups";
 import { Card } from "@/components/ui/card";
 import { Loader2, Calendar, GitCommit, AlertCircle } from "lucide-react";
 import { StandupSourceChips } from "./StandupSourceChips";
+import { CopyButtons } from "./CopyButtons";
 import { format, parseISO } from "date-fns";
 
 export function StandupHistory() {
@@ -198,13 +199,18 @@ export function StandupHistory() {
                                     </div>
                                 )}
 
-                            <div className="mt-3 pt-3 border-t border-border">
+                            <div
+                                className="mt-3 pt-3 border-t border-border flex items-center justify-between"
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                            >
                                 <p
                                     className="text-xs text-foreground-muted"
                                     aria-hidden="true"
                                 >
                                     Click to view full details →
                                 </p>
+                                <CopyButtons standup={standup} />
                             </div>
                         </Card>
                     );

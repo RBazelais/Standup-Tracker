@@ -186,6 +186,48 @@ test.describe("Dashboard - Standup History", () => {
 		await expect(page.getByText("#42")).toBeVisible();
 	});
 
+	test("shows a copy button on each standup card", async ({ page }) => {
+		await page.route("**/api/standups**", (route) =>
+			route.fulfill({ json: [MOCK_STANDUP] })
+		);
+
+		await navigateToDashboard(page);
+
+		await expect(
+			page.getByRole("heading", { name: /standup note history/i })
+		).toBeVisible();
+
+		const card = page
+			.getByRole("listitem")
+			.filter({ hasText: "Thursday, April 16, 2026" });
+		await expect(card.getByRole("button", { name: /copy/i })).toBeVisible();
+	});
+
+	test("copying from a card does not navigate away from the dashboard", async ({ page, context }) => {
+		await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+		await page.route("**/api/standups**", (route) =>
+			route.fulfill({ json: [MOCK_STANDUP] })
+		);
+
+		await navigateToDashboard(page);
+
+		await expect(
+			page.getByRole("heading", { name: /standup note history/i })
+		).toBeVisible();
+
+		const card = page
+			.getByRole("listitem")
+			.filter({ hasText: "Thursday, April 16, 2026" });
+		await card.getByRole("button", { name: /copy/i }).click();
+		await page.getByRole("menuitem", { name: /plain text/i }).click();
+
+		await expect(page).toHaveURL(/\/dashboard/);
+
+		const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+		expect(clipboard).toContain("Standup -");
+		expect(clipboard).toContain("Shipped the task linking feature");
+	});
+
 	test("clicking a standup card navigates to its detail view", async ({ page }) => {
 		await page.route("**/api/standups**", (route) =>
 			route.fulfill({ json: [MOCK_STANDUP] })
