@@ -1,5 +1,37 @@
 import { test, expect } from "@playwright/test";
 
+const STANDUP_ID = "c7e3a1b2-0000-4000-8000-000000000001";
+
+const MOCK_STANDUP = {
+	id: STANDUP_ID,
+	date: "2026-04-16",
+	workCompleted: "Did some work",
+	workPlanned: "Do more work",
+	blockers: "None",
+	commits: [
+		{
+			sha: "abc1234",
+			commit: { message: "fix: something", author: { name: "testuser", date: "2026-04-16T10:00:00Z" } },
+		},
+	],
+	repoFullName: "testuser/test-repo",
+	linkedTasks: [],
+};
+
+const MOCK_TASK = {
+	id: "task-1",
+	title: "Fix authentication bug",
+	status: "in_progress",
+	externalId: "#42",
+	externalSource: "github",
+	externalLinks: [
+		{
+			externalId: "#42",
+			externalUrl: "https://github.com/testuser/test-repo/issues/42",
+		},
+	],
+};
+
 const MOCK_AUTH = {
 	state: {
 		accessToken: "gho_fake_test_token",
@@ -272,5 +304,236 @@ test.describe("Task Linking", () => {
 		// Task appears in the linked list
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 		await expect(page.getByText("#42")).toBeVisible();
+	});
+});
+
+test.describe("Task Linking - Edit Flow", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.route("https://api.github.com/**", (route) =>
+			route.fulfill({ json: [] })
+		);
+		await page.route("**/api/milestones**", (route) =>
+			route.fulfill({ json: [] })
+		);
+		// Return correct shape for detect/search/resolve actions — {} not [] avoids
+		// crashing detectMutation.onSuccess which reads data.resolved
+		await page.route("**/api/tasks**", (route) =>
+			route.fulfill({ json: { tasks: [], resolved: [], autoLinked: [] } })
+		);
+		// Broad pattern registered first so the specific handler below wins (LIFO)
+		await page.route("**/api/standups**", (route) =>
+			route.fulfill({ json: [MOCK_STANDUP] })
+		);
+		await page.route(`**/api/standups/${STANDUP_ID}`, (route) =>
+			route.fulfill({ json: MOCK_STANDUP })
+		);
+
+		await page.goto("/");
+		await page.evaluate((auth) => {
+			localStorage.setItem("standup-storage", JSON.stringify(auth));
+		}, MOCK_AUTH);
+
+		await page.goto(`/standup/${STANDUP_ID}/edit`);
+		await expect(
+			page.getByRole("button", { name: /link issue/i })
+		).toBeVisible();
+	});
+
+	test("edit form shows task linking section", async ({ page }) => {
+		await expect(
+			page.locator("h3").filter({ hasText: "Linked Issues" })
+		).toBeVisible();
+		await expect(page.getByText("No linked issues yet")).toBeVisible();
+	});
+
+	// Fresh navigation helper — page.goto() creates a new JS execution context, so React Query's in-memory cache starts empty and useState in StandupEditForm initializes from the freshly fetched mock, not stale data from beforeEach.
+	async function freshNavigateToEdit(page: import("@playwright/test").Page) {
+		await page.evaluate((auth) => {
+			localStorage.setItem("standup-storage", JSON.stringify(auth));
+		}, MOCK_AUTH);
+		await page.goto(`/standup/${STANDUP_ID}/edit`);
+	}
+
+	test("pre-existing linked tasks are pre-populated in the edit form", async ({ page }) => {
+		await page.route(`**/api/standups/${STANDUP_ID}`, (route) =>
+			route.fulfill({ json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] } })
+		);
+
+		await freshNavigateToEdit(page);
+		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
+
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
+		await expect(page.getByText("#42")).toBeVisible();
+	});
+
+	test("linking an issue and saving shows a success toast", async ({ page }) => {
+		await page.route("**/api/tasks**", async (route) => {
+			const body = route.request().postDataJSON();
+			if (body?.action === "search") {
+				return route.fulfill({ json: { tasks: [MOCK_TASK] } });
+			}
+			if (body?.action === "resolve") {
+				return route.fulfill({ json: { task: MOCK_TASK } });
+			}
+			return route.fulfill({ json: [] });
+		});
+		await page.route(`**/api/standups/${STANDUP_ID}`, async (route) => {
+			if (route.request().method() === "PUT") {
+				return route.fulfill({
+					json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] },
+				});
+			}
+			return route.fulfill({ json: MOCK_STANDUP });
+		});
+
+		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
+		await page.getByRole("button", { name: /^search$/i }).click();
+		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
+		await expect(page.getByRole("dialog")).not.toBeVisible();
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
+
+		await page.getByRole("button", { name: /save changes/i }).click();
+
+		await expect(page.getByText(/standup updated/i)).toBeVisible();
+	});
+
+	test("removing a pre-existing linked task and saving clears it from the detail view", async ({ page }) => {
+		// Track whether save has completed so the GET after navigation reflects
+		// the updated state — without this the detail view refetch would return
+		// the old linkedTasks and "Linked Issues" would still appear
+		let saved = false;
+		await page.route(`**/api/standups/${STANDUP_ID}`, async (route) => {
+			if (route.request().method() === "PUT") {
+				saved = true;
+				return route.fulfill({
+					json: { ...MOCK_STANDUP, linkedTasks: [] },
+				});
+			}
+			return route.fulfill({
+				json: saved
+					? { ...MOCK_STANDUP, linkedTasks: [] }
+					: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] },
+			});
+		});
+
+		await freshNavigateToEdit(page);
+		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
+
+		await page.getByText("Fix authentication bug").hover();
+		await page.getByRole("button", { name: /remove linked issue/i }).click();
+		await expect(page.getByText("Fix authentication bug")).not.toBeVisible();
+		await expect(page.getByText("No linked issues yet")).toBeVisible();
+
+		await page.getByRole("button", { name: /save changes/i }).click();
+		await expect(page.getByText(/standup updated/i)).toBeVisible();
+
+		await page.waitForURL(`**/standup/${STANDUP_ID}`);
+		await expect(
+			page.locator("section").filter({ hasText: "Linked Issues" })
+		).not.toBeVisible();
+	});
+
+	test("saving with no link changes preserves existing linked tasks", async ({ page }) => {
+		await page.route(`**/api/standups/${STANDUP_ID}`, async (route) => {
+			if (route.request().method() === "PUT") {
+				return route.fulfill({
+					json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] },
+				});
+			}
+			return route.fulfill({
+				json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] },
+			});
+		});
+
+		await freshNavigateToEdit(page);
+		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
+
+		await page.getByRole("button", { name: /save changes/i }).click();
+		await expect(page.getByText(/standup updated/i)).toBeVisible();
+
+		await page.waitForURL(`**/standup/${STANDUP_ID}`);
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
+	});
+
+	test("cancelling edit does not persist a newly linked task", async ({ page }) => {
+		await page.route("**/api/tasks**", async (route) => {
+			const body = route.request().postDataJSON();
+			if (body?.action === "search") {
+				return route.fulfill({ json: { tasks: [MOCK_TASK] } });
+			}
+			if (body?.action === "resolve") {
+				return route.fulfill({ json: { task: MOCK_TASK } });
+			}
+			return route.fulfill({ json: [] });
+		});
+
+		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
+		await page.getByRole("button", { name: /^search$/i }).click();
+		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
+
+		await page.getByRole("button", { name: /cancel/i }).click();
+
+		await page.waitForURL(`**/standup/${STANDUP_ID}`);
+		await expect(
+			page.locator("section").filter({ hasText: "Linked Issues" })
+		).not.toBeVisible();
+	});
+
+	test("save failure shows an error toast and keeps user on the edit form", async ({ page }) => {
+		await page.route(`**/api/standups/${STANDUP_ID}`, async (route) => {
+			if (route.request().method() === "PUT") {
+				return route.fulfill({
+					status: 500,
+					json: { error: "Internal server error" },
+				});
+			}
+			return route.fulfill({ json: MOCK_STANDUP });
+		});
+
+		await page.getByRole("button", { name: /save changes/i }).click();
+
+		await expect(page.getByText(/internal server error/i)).toBeVisible();
+		await expect(page).toHaveURL(new RegExp(`/standup/${STANDUP_ID}/edit`));
+	});
+
+	test("linked issue appears on the detail view after saving", async ({ page }) => {
+		await page.route("**/api/tasks**", async (route) => {
+			const body = route.request().postDataJSON();
+			if (body?.action === "search") {
+				return route.fulfill({ json: { tasks: [MOCK_TASK] } });
+			}
+			if (body?.action === "resolve") {
+				return route.fulfill({ json: { task: MOCK_TASK } });
+			}
+			return route.fulfill({ json: [] });
+		});
+		await page.route(`**/api/standups/${STANDUP_ID}`, async (route) => {
+			if (route.request().method() === "PUT") {
+				return route.fulfill({
+					json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] },
+				});
+			}
+			return route.fulfill({
+				json: { ...MOCK_STANDUP, linkedTasks: [MOCK_TASK] },
+			});
+		});
+
+		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
+		await page.getByRole("button", { name: /^search$/i }).click();
+		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
+		await page.getByRole("button", { name: /save changes/i }).click();
+
+		await page.waitForURL(`**/standup/${STANDUP_ID}`);
+
+		await expect(
+			page.locator("section").filter({ hasText: "Linked Issues" })
+		).toBeVisible();
+		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 	});
 });

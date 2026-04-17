@@ -4,7 +4,7 @@ import {
 	groupCommitsByDay,
 	buildAutoPopulateText,
 } from "./commitUtils";
-import type { GitHubCommit } from "../types";
+import type { GitHubCommit } from "@/types";
 
 function makeCommit(sha: string, date: string, message = "fix: something"): GitHubCommit {
 	return {

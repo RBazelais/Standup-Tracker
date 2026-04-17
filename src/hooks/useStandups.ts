@@ -3,7 +3,7 @@ import { standupsApi } from "../services/api";
 import { useStore } from "../store";
 import { toast } from "sonner";
 import { getErrorMessage } from "../lib/errors";
-import type { Standup, CreateStandupInput } from "../types";
+import type { Standup, CreateStandupInput, UpdateStandupInput } from "@/types";
 
 export function useStandups() {
 	const user = useStore((state) => state.user);
@@ -69,7 +69,7 @@ export function useStandups() {
 			updates,
 		}: {
 			id: string;
-			updates: Partial<Standup>;
+			updates: UpdateStandupInput;
 		}) => standupsApi.update(id, updates),
 
 		onMutate: async ({ id, updates }) => {
@@ -97,7 +97,7 @@ export function useStandups() {
 					context.previousStandups,
 				);
 			}
-			toast.error(getErrorMessage(err));
+			toast.error(`Failed to save standup — ${err instanceof Error ? err.message : "Unknown error"}`);
 		},
 
 		onSuccess: (_data, { id }) => {

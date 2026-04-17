@@ -1,6 +1,6 @@
 import { GitBranch } from "lucide-react";
 import { Github } from "lucide-react";
-import type { GitHubCommit } from "../types";
+import type { GitHubCommit } from "@/types";
 
 interface StandupSourceChipsProps {
 	repoFullName?: string;

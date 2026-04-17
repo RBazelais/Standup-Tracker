@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "../store";
 import { localDateToUTCStart, localDateToUTCEnd } from "../utils/dateUtils";
-import type { GitHubCommit } from "../types";
+import type { GitHubCommit } from "@/types";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { handleApiResponse } from "../lib/errors";
 
 export function useCommits(since?: string, until?: string) {
 	const { selectedRepo, selectedBranch, accessToken } = useStore();
@@ -40,16 +41,13 @@ export function useCommits(since?: string, until?: string) {
 				15000,
 			);
 
-			if (!response.ok) {
-				// 409 = empty repo (no commits), treat as empty array
-				if (response.status === 409) {
-					setCommits([]);
-					return;
-				}
-				throw new Error("Failed to fetch commits");
+			// 409 = empty repo (no commits), treat as empty array
+			if (response.status === 409) {
+				setCommits([]);
+				return;
 			}
 
-			const data = await response.json();
+			const data = await handleApiResponse<GitHubCommit[]>(response);
 			setCommits(data);
 		} catch (error) {
 			console.error("Error fetching commits:", error);

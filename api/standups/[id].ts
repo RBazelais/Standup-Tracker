@@ -1,11 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { standups } from "../../drizzle/schema.js";
+import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { updateStandupSchema, validateBody } from "../../drizzle/validation.js";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
+import { fetchLinkedTasks } from "./_helpers.js";
 
 const db = drizzle(sql);
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const { id } = req.query;
@@ -14,51 +17,76 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		return res.status(400).json({ error: "Standup ID is required" });
 	}
 
-	// GET: Fetch single standup
+	// GET: Fetch single standup enriched with linked tasks
 	if (req.method === "GET") {
 		try {
-			const standup = await db
+			const standupRows = await db
 				.select()
 				.from(standups)
 				.where(eq(standups.id, id))
 				.limit(1);
 
-			if (standup.length === 0) {
+			if (standupRows.length === 0) {
 				return res.status(404).json({ error: "Standup not found" });
 			}
 
-			return res.status(200).json(standup[0]);
+			const standup = standupRows[0];
+			const linkedTasks = await fetchLinkedTasks(id);
+
+			return res.status(200).json({ ...standup, linkedTasks });
 		} catch (error) {
 			console.error("Failed to fetch standup:", error);
 			return res.status(500).json({ error: "Failed to fetch standup" });
 		}
 	}
 
-	// PUT: Update standup
+	// PUT: Update standup fields and replace linked tasks if taskIds provided
 	if (req.method === "PUT") {
-		// Validate request body
 		const validation = validateBody(updateStandupSchema, req.body);
 		if (!validation.success) {
 			return res.status(400).json({ error: validation.error });
 		}
 
 		try {
-			const updates = {
-				...validation.data,
-				updatedAt: new Date(),
-			};
+			const { taskIds, ...fields } = validation.data;
 
-			const updatedStandup = await db
+			const updatedRows = await db
 				.update(standups)
-				.set(updates)
+				.set({ ...fields, updatedAt: new Date() })
 				.where(eq(standups.id, id))
 				.returning();
 
-			if (updatedStandup.length === 0) {
+			if (updatedRows.length === 0) {
 				return res.status(404).json({ error: "Standup not found" });
 			}
 
-			return res.status(200).json(updatedStandup[0]);
+			// Replace linked tasks if taskIds was explicitly provided
+			if (taskIds !== undefined) {
+				await db.delete(standupTasks).where(eq(standupTasks.standupId, id));
+
+				const validTaskIds = taskIds.filter(tid => UUID_RE.test(tid));
+				if (validTaskIds.length > 0) {
+					const existingTasks = await db
+						.select({ id: tasks.id })
+						.from(tasks)
+						.where(inArray(tasks.id, validTaskIds));
+
+					const existingIds = existingTasks.map(t => t.id);
+					if (existingIds.length > 0) {
+						await db.insert(standupTasks).values(
+							existingIds.map(taskId => ({
+								standupId: id,
+								taskId,
+							}))
+						);
+					}
+				}
+			}
+
+			// Return updated standup with current linked tasks
+			const linkedTasks = await fetchLinkedTasks(id);
+
+			return res.status(200).json({ ...updatedRows[0], linkedTasks });
 		} catch (error) {
 			console.error("Failed to update standup:", error);
 			return res.status(500).json({ error: "Failed to update standup" });

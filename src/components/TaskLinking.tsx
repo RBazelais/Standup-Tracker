@@ -28,9 +28,10 @@ import type { Task, Standup } from '@/types';
 interface TaskLinkingSectionProps {
 	standup: Partial<Standup>;
 	onTasksChange: (taskIds: string[]) => void;
+	initialSelected?: Task[];
 }
 
-export function TaskLinkingSection({ standup, onTasksChange }: TaskLinkingSectionProps) {
+export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: TaskLinkingSectionProps) {
 	const {
 		detected,
 		selected,
@@ -53,7 +54,7 @@ export function TaskLinkingSection({ standup, onTasksChange }: TaskLinkingSectio
 		openPicker,
 		closePicker,
 		totalPoints,
-	} = useTaskLinking({ standup });
+	} = useTaskLinking({ standup, initialSelected });
 
 	// Update parent when selected tasks change
 	useEffect(() => {
@@ -74,6 +75,7 @@ export function TaskLinkingSection({ standup, onTasksChange }: TaskLinkingSectio
 					)}
 				</h3>
 				<Button
+					type="button"
 					variant="ghost"
 					size="sm"
 					onClick={openPicker}
@@ -166,6 +168,7 @@ function TaskSuggestionsBanner({
 				</div>
 				<div className="flex items-center gap-2">
 					<Button
+						type="button"
 						variant="ghost"
 						size="sm"
 						onClick={onConfirmAll}
@@ -175,6 +178,7 @@ function TaskSuggestionsBanner({
 						Link All
 					</Button>
 					<Button
+						type="button"
 						variant="ghost"
 						size="sm"
 						onClick={onDismissAll}
@@ -205,6 +209,7 @@ function TaskSuggestionsBanner({
 						</div>
 						<div className="flex items-center gap-1 shrink-0">
 							<Button
+								type="button"
 								variant="ghost"
 								size="sm"
 								onClick={() => onConfirm(task)}
@@ -214,6 +219,7 @@ function TaskSuggestionsBanner({
 								<Check className="h-4 w-4 text-green-600" />
 							</Button>
 							<Button
+								type="button"
 								variant="ghost"
 								size="sm"
 								onClick={() => onDismiss(task.id)}
@@ -243,10 +249,8 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 	const externalUrl = externalLink?.externalUrl || task.externalUrl;
 
 	return (
-		<div className="flex items-center justify-between bg-muted/50 rounded-lg p-3 group">
+		<div className="flex items-center justify-between bg-surface-raised border border-border rounded-md p-3 shadow-sm group">
 			<div className="flex items-center gap-3 min-w-0">
-				<TaskStatusBadge status={task.status} />
-				
 				<div className="min-w-0">
 					<div className="flex items-center gap-2">
 						{externalUrl ? (
@@ -263,10 +267,10 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 						) : (
 							<span className="font-mono text-sm text-muted-foreground">{externalId}</span>
 						)}
-						{task.storyPoints && (
+						{task.storyPoints != null && task.storyPoints > 0 && (
 							<Badge variant="outline">{task.storyPoints} pts</Badge>
 						)}
-						{task.rolloverCount && task.rolloverCount > 0 && (
+						{task.rolloverCount != null && task.rolloverCount > 0 && (
 							<Badge variant="destructive" className="text-xs">
 								{task.rolloverCount}x rollover
 							</Badge>
@@ -277,6 +281,7 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 			</div>
 
 			<Button
+				type="button"
 				variant="ghost"
 				size="sm"
 				onClick={onRemove}

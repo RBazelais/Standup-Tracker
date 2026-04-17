@@ -38,7 +38,7 @@ export function Dashboard() {
 						<RepoSelector />
 					</section>
 
-					{selectedRepo && (
+					{user && selectedRepo && (
 						<>
 							<section aria-labelledby="standup-form-heading">
 							<h2 id="standup-form-heading" className="text-sm font-medium text-foreground-muted mb-2">

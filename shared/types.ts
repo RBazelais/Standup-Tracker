@@ -55,15 +55,24 @@ export interface Standup {
     workCompleted: string;
     workPlanned: string;
     blockers: string;
-    taskIds: string[];
     commits: GitHubCommit[];
     snapshotSprintId?: string;
     snapshotMilestoneId?: string;
     repoFullName?: string;
-    linkedTasks?: Task[]; // Populated by API when taskIds is non-empty
+    linkedTasks?: Task[]; // Populated by API via standup_tasks junction table
     createdAt: Date;
     updatedAt?: Date;
 }
+
+// Input type for creating a standup — taskIds are sent to the API and written to the standup_tasks junction table, not stored on the standup row itself.
+export type CreateStandupInput = Omit<Standup, 'id' | 'createdAt' | 'updatedAt' | 'linkedTasks'> & {
+    taskIds?: string[];
+};
+
+// Input type for updating a standup — all fields optional, taskIds replaces linked tasks.
+export type UpdateStandupInput = Partial<Omit<Standup, 'id' | 'createdAt' | 'updatedAt' | 'linkedTasks'>> & {
+    taskIds?: string[];
+};
 
 // Milestone - long-term goals (renamed from Goal)
 export interface Milestone {
@@ -178,17 +187,6 @@ export interface Integration {
 }
 
 export type ExportFormat = 'compact' | 'detailed' | 'slack' | 'jira';
-
-// Legacy Goal type (deprecated, use Milestone instead)
-/** @deprecated Use Milestone instead */
-export interface Goal {
-    id: string;
-    title: string;
-    description: string;
-    targetDate?: string; // YYYY-MM-DD calendar date, not a timestamp
-    createdAt: Date;
-    completedAt?: Date;
-}
 
 export interface AppState {
     user: GitHubUser | null;

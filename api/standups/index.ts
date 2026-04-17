@@ -3,7 +3,8 @@ import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
-import { eq, desc, inArray, getTableColumns } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
+import { fetchLinkedTasks } from "./_helpers.js";
 
 const db = drizzle(sql);
 
@@ -85,18 +86,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				})
 				.returning();
 
-			// Link tasks via junction table — filter to valid UUIDs only
+			// Link tasks via junction table — verify tasks exist before inserting
+			// to avoid foreign key violations from stale or invalid IDs
 			const validTaskIds = taskIds.filter(id => UUID_RE.test(id));
 			if (validTaskIds.length > 0) {
-				await db.insert(standupTasks).values(
-					validTaskIds.map(taskId => ({
-						standupId: newStandup.id,
-						taskId,
-					}))
-				);
+				const existingTasks = await db
+					.select({ id: tasks.id })
+					.from(tasks)
+					.where(inArray(tasks.id, validTaskIds));
+
+				const existingIds = existingTasks.map(t => t.id);
+				if (existingIds.length > 0) {
+					await db.insert(standupTasks).values(
+						existingIds.map(taskId => ({
+							standupId: newStandup.id,
+							taskId,
+						}))
+					);
+				}
 			}
 
-			return res.status(201).json({ ...newStandup, linkedTasks: [] });
+			const linkedTasks = await fetchLinkedTasks(newStandup.id);
+
+			return res.status(201).json({ ...newStandup, linkedTasks });
 		} catch (error) {
 			console.error("Failed to create standup:", error);
 			return res.status(500).json({

@@ -1,5 +1,5 @@
 import { sql } from '@vercel/postgres';
-import type { ExternalTaskCache, Task, ExternalSource } from '../../src/types';
+import type { ExternalTaskCache, Task, ExternalSource } from '../../shared/types';
 
 /**
  * Shared database client for Vercel serverless functions
