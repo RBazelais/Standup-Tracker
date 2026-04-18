@@ -1,4 +1,5 @@
 import type { FormatterInput } from './types';
+import { formatDate } from './utils';
 
 /**
  * GitHub/Notion markdown format
@@ -65,15 +66,6 @@ export function toMarkdown({ standup, includeLinks = true }: FormatterInput): st
 	}
 
 	return lines.join('\n');
-}
-
-function formatDate(dateStr: string): string {
-	const date = new Date(dateStr + 'T00:00:00');
-	return date.toLocaleDateString('en-US', {
-		month: 'long',
-		day: 'numeric',
-		year: 'numeric',
-	});
 }
 
 function formatSection(content: string): string {

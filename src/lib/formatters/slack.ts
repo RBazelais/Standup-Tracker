@@ -1,4 +1,5 @@
 import type { FormatterInput } from './types';
+import { formatDate } from './utils';
 
 /**
  * Slack mrkdwn format - bold with *, emoji-friendly
@@ -48,30 +49,25 @@ export function toSlack({ standup, includeLinks = true }: FormatterInput): strin
 	}
 
 	if (includeLinks && linkedTasks.length > 0) {
-		lines.push('');
 		const issueLinks = linkedTasks
 			.map(task => {
 				const link = task.externalLinks?.[0];
-				if (!link) return null;
-				return link.externalUrl
-					? `<${link.externalUrl}|${link.externalId}>`
-					: link.externalId;
+				if (link) {
+					return link.externalUrl
+						? `<${link.externalUrl}|${link.externalId}>`
+						: link.externalId;
+				}
+				return task.externalId ?? null;
 			})
 			.filter(Boolean)
 			.join(', ');
-		lines.push(`🔗 ${issueLinks}`);
+		if (issueLinks) {
+			lines.push('');
+			lines.push(`🔗 ${issueLinks}`);
+		}
 	}
 
 	return lines.join('\n');
-}
-
-function formatDate(dateStr: string): string {
-	const date = new Date(dateStr + 'T00:00:00');
-	return date.toLocaleDateString('en-US', {
-		month: 'long',
-		day: 'numeric',
-		year: 'numeric',
-	});
 }
 
 function formatSection(content: string): string {

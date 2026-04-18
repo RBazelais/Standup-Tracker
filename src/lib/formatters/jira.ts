@@ -1,4 +1,5 @@
 import type { FormatterInput } from './types';
+import { formatDate } from './utils';
 
 /**
  * Jira wiki markup format
@@ -65,15 +66,6 @@ export function toJira({ standup, includeLinks = true }: FormatterInput): string
 	}
 
 	return lines.join('\n');
-}
-
-function formatDate(dateStr: string): string {
-	const date = new Date(dateStr + 'T00:00:00');
-	return date.toLocaleDateString('en-US', {
-		month: 'long',
-		day: 'numeric',
-		year: 'numeric',
-	});
 }
 
 function formatSection(content: string): string {
