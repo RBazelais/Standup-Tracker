@@ -110,7 +110,7 @@ test.describe("Export - Copy Dropdown", () => {
 		await page.route(`**/api/standups/${STANDUP_ID}`, (route) =>
 			route.fulfill({ json: MOCK_STANDUP })
 		);
-
+		
 		await page.goto("/");
 		await page.evaluate((auth) => {
 			localStorage.setItem("standup-storage", JSON.stringify(auth));
@@ -156,6 +156,7 @@ test.describe("Export - Copy Dropdown", () => {
 	test("copies plain text content to the clipboard", async ({ page }) => {
 		await page.getByRole("button", { name: /copy/i }).click();
 		await page.getByRole("menuitem", { name: /plain text/i }).click();
+		await expect(page.getByText(/copied as plain text/i)).toBeVisible();
 
 		const clipboard = await page.evaluate(() =>
 			navigator.clipboard.readText()
@@ -169,6 +170,7 @@ test.describe("Export - Copy Dropdown", () => {
 	test("copies Slack-formatted content to the clipboard", async ({ page }) => {
 		await page.getByRole("button", { name: /copy/i }).click();
 		await page.getByRole("menuitem", { name: /slack/i }).click();
+		await expect(page.getByText(/copied as slack/i)).toBeVisible();
 
 		const clipboard = await page.evaluate(() =>
 			navigator.clipboard.readText()
@@ -181,6 +183,7 @@ test.describe("Export - Copy Dropdown", () => {
 	test("copies Jira-formatted content to the clipboard", async ({ page }) => {
 		await page.getByRole("button", { name: /copy/i }).click();
 		await page.getByRole("menuitem", { name: /jira/i }).click();
+		await expect(page.getByText(/copied as jira/i)).toBeVisible();
 
 		const clipboard = await page.evaluate(() =>
 			navigator.clipboard.readText()
@@ -193,6 +196,7 @@ test.describe("Export - Copy Dropdown", () => {
 	test("copies Markdown-formatted content to the clipboard", async ({ page }) => {
 		await page.getByRole("button", { name: /copy/i }).click();
 		await page.getByRole("menuitem", { name: /markdown/i }).click();
+		await expect(page.getByText(/copied as markdown/i)).toBeVisible();
 
 		const clipboard = await page.evaluate(() =>
 			navigator.clipboard.readText()
@@ -205,6 +209,7 @@ test.describe("Export - Copy Dropdown", () => {
 	test("includes commit SHAs in plain text clipboard output", async ({ page }) => {
 		await page.getByRole("button", { name: /copy/i }).click();
 		await page.getByRole("menuitem", { name: /plain text/i }).click();
+		await expect(page.getByText(/copied as plain text/i)).toBeVisible();
 
 		const clipboard = await page.evaluate(() => navigator.clipboard.readText());
 
@@ -242,7 +247,7 @@ test.describe("Export - Copy Dropdown (with linked tasks)", () => {
 		await page.route(`**/api/standups/${STANDUP_WITH_TASKS_ID}`, (route) =>
 			route.fulfill({ json: MOCK_STANDUP_WITH_TASKS })
 		);
-
+		
 		await page.goto("/");
 		await page.evaluate((auth) => {
 			localStorage.setItem("standup-storage", JSON.stringify(auth));
@@ -257,6 +262,7 @@ test.describe("Export - Copy Dropdown (with linked tasks)", () => {
 	test("includes linked issue IDs in plain text clipboard output", async ({ page }) => {
 		await page.getByRole("button", { name: /copy/i }).click();
 		await page.getByRole("menuitem", { name: /plain text/i }).click();
+		await expect(page.getByText(/copied as plain text/i)).toBeVisible();
 
 		const clipboard = await page.evaluate(() => navigator.clipboard.readText());
 
@@ -266,6 +272,7 @@ test.describe("Export - Copy Dropdown (with linked tasks)", () => {
 	test("includes Slack-formatted issue links in clipboard output", async ({ page }) => {
 		await page.getByRole("button", { name: /copy/i }).click();
 		await page.getByRole("menuitem", { name: /slack/i }).click();
+		await expect(page.getByText(/copied as slack/i)).toBeVisible();
 
 		const clipboard = await page.evaluate(() => navigator.clipboard.readText());
 
@@ -277,6 +284,7 @@ test.describe("Export - Copy Dropdown (with linked tasks)", () => {
 	test("includes Markdown-formatted issue links in clipboard output", async ({ page }) => {
 		await page.getByRole("button", { name: /copy/i }).click();
 		await page.getByRole("menuitem", { name: /markdown/i }).click();
+		await expect(page.getByText(/copied as markdown/i)).toBeVisible();
 
 		const clipboard = await page.evaluate(() => navigator.clipboard.readText());
 
