@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/accordion";
 import { Loader2, ArrowLeft, GitCommit, Edit, Trash2, ExternalLink, GitBranch } from "lucide-react";
 import { StandupSourceChips } from "./StandupSourceChips";
+import { CopyButtons } from "./CopyButtons";
 import { format, parseISO } from "date-fns";
 import ReactMarkdown from "react-markdown";
 
@@ -124,6 +125,8 @@ export function StandupDetail() {
 							<Edit className="h-4 w-4 mr-2" aria-hidden="true" />
 							Edit
 						</Button>
+
+						<CopyButtons standup={standup} />
 
 						<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
 							<AlertDialogTrigger asChild>
