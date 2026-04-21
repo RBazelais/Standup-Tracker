@@ -7,23 +7,54 @@ import type { ExternalTaskCache, Task, ExternalSource } from '../../shared/types
 export const db = {
 	// INTEGRATIONS
 	integrations: {
-		async findOne(query: { userId: string; source: 'github' }) {
+		async findOne(query: { userId: string; source: string }) {
 			const { rows } = await sql`
-				SELECT access_token as "accessToken"
+				SELECT
+					access_token as "accessToken",
+					refresh_token as "refreshToken",
+					token_expires_at as "tokenExpiresAt",
+					metadata,
+					account_name as "accountName"
 				FROM integrations
 				WHERE user_id = ${query.userId} AND source = ${query.source}
 				LIMIT 1
 			`;
-			return (rows[0] as { accessToken: string } | undefined) || null;
+			return (rows[0] as {
+				accessToken: string;
+				refreshToken: string | null;
+				tokenExpiresAt: Date | null;
+				metadata: Record<string, unknown> | null;
+				accountName: string | null;
+			} | undefined) || null;
 		},
 
-		async upsert(payload: { userId: string; source: string; accessToken: string; accountName?: string }) {
+		async upsert(payload: {
+			userId: string;
+			source: string;
+			accessToken: string;
+			refreshToken?: string;
+			tokenExpiresAt?: Date;
+			metadata?: Record<string, unknown>;
+			accountName?: string;
+		}) {
 			const now = new Date().toISOString();
+			const tokenExpiresAt = payload.tokenExpiresAt?.toISOString() || null;
 			await sql`
-				INSERT INTO integrations (user_id, source, access_token, account_name, connected_at, updated_at)
-				VALUES (${payload.userId}, ${payload.source}, ${payload.accessToken}, ${payload.accountName || null}, ${now}, ${now})
+				INSERT INTO integrations (
+					user_id, source, access_token, refresh_token,
+					token_expires_at, metadata, account_name, connected_at, updated_at
+				)
+				VALUES (
+					${payload.userId}, ${payload.source}, ${payload.accessToken},
+					${payload.refreshToken || null}, ${tokenExpiresAt},
+					${payload.metadata ? JSON.stringify(payload.metadata) : null},
+					${payload.accountName || null}, ${now}, ${now}
+				)
 				ON CONFLICT (user_id, source) DO UPDATE SET
 					access_token = EXCLUDED.access_token,
+					refresh_token = EXCLUDED.refresh_token,
+					token_expires_at = EXCLUDED.token_expires_at,
+					metadata = EXCLUDED.metadata,
 					account_name = EXCLUDED.account_name,
 					updated_at = EXCLUDED.updated_at
 			`;
