@@ -30,6 +30,54 @@ I chose to build OAuth flows manually instead. Owning the implementation means u
 
 The `state` parameter is a random value generated before the redirect, stored in the session, and verified when the callback arrives. It prevents CSRF attacks where a third party tricks the app into completing an OAuth flow it did not initiate. Always validate it before doing anything else in the callback.
 
+## How the cookie bridges two stateless serverless functions
+
+Vercel serverless functions are one-shot. Every request is a fresh execution with no shared memory between them. That creates a problem: the redirect initiator runs in one invocation and the callback runs in a completely separate one. There is no session to pass information between them.
+
+The solution is a short-lived HttpOnly cookie set at redirect time.
+
+### Step 1 — Frontend navigates to the redirect initiator
+
+When the user clicks "Connect Jira" the frontend navigates the browser to:
+
+```http
+/api/auth/jira?userId=12345678
+```
+
+It knows the `userId` because it is already in the Zustand store from the GitHub login.
+
+### Step 2 — Redirect initiator sets the cookie
+
+`api/auth/jira.ts` generates a random state nonce, encodes both the nonce and the userId together into a cookie, then redirects to Atlassian:
+
+```http
+jira_oauth_state=%7B%22state%22%3A%22deadbeef-1234...%22%2C%22userId%22%3A%2212345678%22%7D
+HttpOnly; SameSite=Lax; Path=/; Max-Age=600
+```
+
+The browser holds this cookie automatically. `Max-Age=600` means it expires after 10 minutes, which is long enough for the user to approve on Atlassian's consent screen but short enough to limit exposure if something goes wrong.
+
+### Step 3 — User approves, Atlassian redirects back
+
+Atlassian sends the browser to:
+
+```http
+/api/auth/jira/callback?code=AUTH_CODE_ABC&state=deadbeef-1234-...
+```
+
+### Step 4 — Callback reads the cookie
+
+This is a brand new serverless invocation with no memory of Step 2. But the browser automatically attaches the cookie it is holding. The callback:
+
+1. Reads `state` from the query param and `{ state, userId }` from the cookie
+2. Compares them. If they do not match, something tampered with the request and it is rejected (CSRF protection)
+3. Uses `userId` from the cookie to know which integrations row to upsert
+4. Exchanges the code for tokens, fetches the `cloudId`, stores everything
+5. Clears the cookie with `Max-Age=0` since it is single-use
+6. Redirects to `/settings?jira=connected`
+
+The cookie is what carries `userId` across the gap between the two stateless functions. Without it, the callback would have no way to know who just connected.
+
 ## Required Atlassian app scopes
 
 - `read:jira-work` reads issues, sprints, boards
@@ -70,7 +118,7 @@ Three-legged (3LO) refers to the three parties involved:
 
 The "legs" are the three handshakes between them:
 
-```
+```text
 Leg 1: User → Atlassian     "I authorize StandupTracker to read my Jira data"
 Leg 2: Atlassian → Our App  "Here is a one-time code proving the user said yes"
 Leg 3: Our App → Atlassian  "Exchange this code for a real access token"
@@ -98,7 +146,7 @@ Without it, after 1 hour the access token expires and the user has to go through
 
 The OAuth flow is a classic state machine. Each state has exactly one thing that can happen next, and errors from any step should land in the same error state.
 
-```
+```text
 idle → redirecting → waiting_for_callback → exchanging_tokens → fetching_cloud_id → storing → connected
                                                                                               ↓
                                                                                            error (from any state)

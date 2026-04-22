@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const redirectUri = `${appUrl}/api/auth/jira/callback`;
 	const state = crypto.randomUUID();
 
-	// Store state nonce + userId in a short-lived cookie so the stateless
+	// Store state once + userId in a short-lived cookie so the stateless
 	// callback handler can validate CSRF and know which user to update.
 	const cookieValue = encodeURIComponent(JSON.stringify({ state, userId }));
 	res.setHeader(
