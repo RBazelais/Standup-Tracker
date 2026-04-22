@@ -33,9 +33,10 @@ export function Header() {
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<button
-									className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+									className="flex items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
 									aria-label="Open user menu"
 								>
+									<span className="text-sm text-foreground-muted" aria-hidden="true">{user?.login}</span>
 									<img
 										src={user?.avatar_url}
 										alt=""

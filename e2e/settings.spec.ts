@@ -44,9 +44,10 @@ test.describe('Settings page', () => {
 
 		await navigateToSettings(page);
 
-		await expect(page.getByText('GitHub')).toBeVisible();
-		await expect(page.getByText('testuser')).toBeVisible();
-		await expect(page.getByText('Connected').first()).toBeVisible();
+		const integrationsSection = page.getByRole('region', { name: /integrations/i });
+		await expect(integrationsSection.getByText('GitHub')).toBeVisible();
+		await expect(integrationsSection.getByText('testuser')).toBeVisible();
+		await expect(integrationsSection.getByText('Connected').first()).toBeVisible();
 	});
 
 	test('shows Connect button when Jira is not connected', async ({ page }) => {
