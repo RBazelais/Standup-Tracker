@@ -33,6 +33,13 @@ export function Header() {
 									/>
 									<span className="text-sm text-foreground-muted" aria-label={`Logged in as ${user?.name}`}>{user?.name}</span>
 								</div>
+								<Link
+									to="/settings"
+									className="text-sm text-foreground-muted hover:text-foreground transition-colors"
+									aria-label="Settings"
+								>
+									Settings
+								</Link>
 								<Button
 									variant="outline"
 									size="sm"
