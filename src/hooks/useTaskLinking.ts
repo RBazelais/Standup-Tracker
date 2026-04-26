@@ -1,8 +1,6 @@
-// src/hooks/use-task-linking.ts
-
-import { useState, useCallback, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import type { Task, Standup } from '@/types';
+import { useState, useCallback, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import type { Task, Standup } from "@/types";
 import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 import { handleApiResponse } from '../lib/errors';
 import { useStore } from '../store';
@@ -61,7 +59,7 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
 		retry: false,
 		mutationFn: async (commits) => {
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -106,7 +104,7 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
 		mutationFn: async (query: string) => {
 			resolveMutation.reset();
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -170,7 +168,7 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 	const resolveMutation = useMutation<ResolveTaskResponse, Error, Task>({
 		retry: false,
 		mutationFn: async (task: Task) => {
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

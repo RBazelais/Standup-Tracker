@@ -1,27 +1,25 @@
-// src/components/standup/task-linking.tsx
-
-import { useEffect, useState } from 'react';
-import { 
-	Plus, 
-	X, 
-	Check, 
-	Search, 
+import { useEffect, useState } from "react";
+import {
+	Plus,
+	X,
+	Check,
+	Search,
 	ExternalLink,
 	GitBranch,
 	AlertCircle,
 	Loader2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { useTaskLinking } from '@/hooks/useTaskLinking';
-import type { Task, Standup } from '@/types';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { useTaskLinking } from "@/hooks/useTaskLinking";
+import type { Task, Standup } from "@/types";
 
 // MAIN COMPONENT
 
@@ -323,7 +321,7 @@ function IssuePickerDialog({
 	onSelect,
 	selectedIds,
 }: IssuePickerDialogProps) {
-	const [query, setQuery] = useState('');
+	const [query, setQuery] = useState("");
 
 	const handleSearch = () => {
 		if (query.trim()) {
@@ -350,7 +348,7 @@ function IssuePickerDialog({
 								placeholder="Search issues by number or title..."
 								value={query}
 								onChange={(e) => setQuery(e.target.value)}
-								onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+								onKeyDown={(e) => e.key === "Enter" && handleSearch()}
 								className="pl-9"
 							/>
 						</div>

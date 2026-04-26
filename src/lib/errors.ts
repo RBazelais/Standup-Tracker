@@ -27,9 +27,9 @@ export class ApiError extends Error {
 			case 500:
 				return "Something went wrong. Please try again.";
 			case 502:
-                return "Server connection failed. Please try again."
+				return "Server connection failed. Please try again.";
 			case 503:
-                return "Service is temporarily down for maintenance."
+				return "Service is temporarily down for maintenance.";
 			case 504:
 				return "Service temporarily unavailable. Please try again.";
 			default:

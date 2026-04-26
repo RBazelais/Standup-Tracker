@@ -13,6 +13,8 @@ export default defineConfig({
     include: [
       'src/**/*.test.{ts,tsx,js,mjs,cjs}',
       'src/**/__tests__/**/*.{ts,tsx,js}',
+      'api/**/*.test.{ts,js}',
+      'api/**/__tests__/**/*.{ts,js}',
       'shared/**/*.test.{ts,js}',
       'drizzle/**/*.test.{ts,js}',
     ],
