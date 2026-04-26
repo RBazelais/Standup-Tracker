@@ -9,9 +9,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 	const { code, state, error } = req.query as Record<string, string>;
 
-	// User denied access on the Atlassian consent screen
 	if (error) {
-		return res.redirect(302, '/settings?jira=denied');
+		const destination = error === 'access_denied' ? '/settings?jira=denied' : '/settings?jira=error';
+		return res.redirect(302, destination);
 	}
 
 	if (!code || !state) {
@@ -41,6 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const clientSecret = process.env.JIRA_CLIENT_SECRET!;
 	const appUrl = process.env.VITE_APP_URL || 'http://localhost:3000';
 	const redirectUri = `${appUrl}/api/auth/jira/callback`;
+	const secure = appUrl.startsWith('https') ? '; Secure' : '';
 
 	try {
 		const tokens = await exchangeCodeForTokens({ code, clientId, clientSecret, redirectUri });
@@ -63,8 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			accountName: siteName,
 		});
 
-		// Clear the cookie — it was single-use
-		res.setHeader('Set-Cookie', 'jira_oauth_state=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
+		res.setHeader('Set-Cookie', `jira_oauth_state=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`);
 
 		return res.redirect(302, '/settings?jira=connected');
 	} catch (err) {

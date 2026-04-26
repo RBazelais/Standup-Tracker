@@ -19,13 +19,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const appUrl = process.env.VITE_APP_URL || 'http://localhost:3000';
 	const redirectUri = `${appUrl}/api/auth/jira/callback`;
 	const state = crypto.randomUUID();
+	const secure = appUrl.startsWith('https') ? '; Secure' : '';
 
-	// Store state once + userId in a short-lived cookie so the stateless
-	// callback handler can validate CSRF and know which user to update.
 	const cookieValue = encodeURIComponent(JSON.stringify({ state, userId }));
 	res.setHeader(
 		'Set-Cookie',
-		`jira_oauth_state=${cookieValue}; HttpOnly; SameSite=Lax; Path=/; Max-Age=600`,
+		`jira_oauth_state=${cookieValue}; HttpOnly; SameSite=Lax; Path=/; Max-Age=600${secure}`,
 	);
 
 	const authUrl = buildAuthUrl({ clientId, redirectUri, state });

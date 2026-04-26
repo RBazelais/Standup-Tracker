@@ -87,12 +87,17 @@ test.describe('Settings page', () => {
 	});
 
 	test('switches to Connect button after disconnecting Jira', async ({ page }) => {
-		await page.route('**/api/integrations**', (route) =>
-			route.fulfill({ json: { connected: true, accountName: 'mysite' } })
-		);
-		await page.route('**/api/integrations**', (route) =>
-			route.fulfill({ status: 200, json: { disconnected: true } })
-		);
+		const jira = { connected: true, accountName: 'mysite' as string | null };
+
+		await page.route('**/api/integrations**', async (route) => {
+			if (route.request().method() === 'DELETE') {
+				jira.connected = false;
+				jira.accountName = null;
+				await route.fulfill({ status: 200, json: { disconnected: true } });
+				return;
+			}
+			await route.fulfill({ json: jira });
+		});
 
 		await navigateToSettings(page);
 		await page.getByRole('button', { name: /disconnect/i }).click();

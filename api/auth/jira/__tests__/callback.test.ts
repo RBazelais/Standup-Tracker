@@ -8,7 +8,7 @@ vi.mock('../../../../src/lib/jira/jiraOAuth', () => ({
 	getAccessibleResources: vi.fn(),
 }));
 
-vi.mock('../../../lib/db', () => ({
+vi.mock('../../../../shared/db', () => ({
 	db: {
 		integrations: {
 			upsert: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock('../../../lib/db', () => ({
 }));
 
 import { exchangeCodeForTokens, getAccessibleResources } from '../../../../src/lib/jira/jiraOAuth';
-import { db } from '../../../lib/db';
+import { db } from '../../../../shared/db';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -45,15 +45,19 @@ function createMockReq(overrides: {
 
 function createMockRes() {
 	const res = {
-		_status: 200,
+		_status: 200 as number,
 		_headers: {} as Record<string, string>,
 		_redirectArgs: null as [number, string] | null,
 		_jsonData: null as unknown,
+		status: vi.fn(),
+		json: vi.fn(),
+		redirect: vi.fn(),
+		setHeader: vi.fn(),
 	};
-	res.status = vi.fn().mockImplementation((code: number) => { res._status = code; return res; });
-	res.json = vi.fn().mockImplementation((data: unknown) => { res._jsonData = data; return res; });
-	res.redirect = vi.fn().mockImplementation((code: number, url: string) => { res._redirectArgs = [code, url]; return res; });
-	res.setHeader = vi.fn().mockImplementation((name: string, value: string) => { res._headers[name] = value; return res; });
+	res.status.mockImplementation((code: number) => { res._status = code; return res; });
+	res.json.mockImplementation((data: unknown) => { res._jsonData = data; return res; });
+	res.redirect.mockImplementation((code: number, url: string) => { res._redirectArgs = [code, url]; return res; });
+	res.setHeader.mockImplementation((name: string, value: string) => { res._headers[name] = value; return res; });
 	return res;
 }
 
