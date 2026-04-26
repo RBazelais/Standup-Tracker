@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { standupTasks, tasks, taskExternalLinks } from "../../drizzle/schema.js";
+import { standupTasks, tasks, taskExternalLinks } from "../drizzle/schema.js";
 import { eq, inArray, getTableColumns } from "drizzle-orm";
 
 const db = drizzle(sql);
