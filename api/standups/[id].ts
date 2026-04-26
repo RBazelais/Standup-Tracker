@@ -4,7 +4,7 @@ import { sql } from "@vercel/postgres";
 import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { updateStandupSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, inArray } from "drizzle-orm";
-import { fetchLinkedTasks } from "./_helpers.js";
+import { fetchLinkedTasks } from "../lib/standups-helpers.js";
 
 const db = drizzle(sql);
 
