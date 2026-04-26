@@ -48,7 +48,7 @@ export function Settings() {
 
 		const fetchStatus = async () => {
 			try {
-				const res = await fetch(`/api/integrations/status?userId=${user.id}&source=jira`);
+				const res = await fetch(`/api/integrations?userId=${user.id}&source=jira`);
 				const data = await res.json();
 				setJiraStatus(data.connected ? 'connected' : 'disconnected');
 				setJiraSiteName(data.accountName);
@@ -67,7 +67,7 @@ export function Settings() {
 	const handleDisconnectJira = async () => {
 		setJiraStatus('loading');
 		try {
-			await fetch(`/api/integrations/disconnect?userId=${user?.id}&source=jira`, { method: 'DELETE' });
+			await fetch(`/api/integrations?userId=${user?.id}&source=jira`, { method: 'DELETE' });
 			setJiraStatus('disconnected');
 			setJiraSiteName(null);
 		} catch {

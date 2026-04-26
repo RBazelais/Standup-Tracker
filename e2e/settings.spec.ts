@@ -28,7 +28,7 @@ test.describe('Settings page', () => {
 	// Integrations section 
 
 	test('shows the Settings heading', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: false, accountName: null } })
 		);
 
@@ -38,7 +38,7 @@ test.describe('Settings page', () => {
 	});
 
 	test('shows GitHub account as connected with the correct login', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: false, accountName: null } })
 		);
 
@@ -51,7 +51,7 @@ test.describe('Settings page', () => {
 	});
 
 	test('shows Connect button when Jira is not connected', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: false, accountName: null } })
 		);
 
@@ -63,7 +63,7 @@ test.describe('Settings page', () => {
 	});
 
 	test('shows Connected status and site name when Jira is connected', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: true, accountName: 'mysite' } })
 		);
 
@@ -77,7 +77,7 @@ test.describe('Settings page', () => {
 	// Disconnect 
 
 	test('shows a Disconnect button when Jira is connected', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: true, accountName: 'mysite' } })
 		);
 
@@ -87,10 +87,10 @@ test.describe('Settings page', () => {
 	});
 
 	test('switches to Connect button after disconnecting Jira', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: true, accountName: 'mysite' } })
 		);
-		await page.route('**/api/integrations/disconnect**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ status: 200, json: { disconnected: true } })
 		);
 
@@ -103,7 +103,7 @@ test.describe('Settings page', () => {
 	// OAuth redirect-back toasts 
 
 	test('shows a success toast when returning from a successful Jira connection', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: true, accountName: 'mysite' } })
 		);
 
@@ -113,7 +113,7 @@ test.describe('Settings page', () => {
 	});
 
 	test('shows an info toast when the user cancels the Jira connection', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: false, accountName: null } })
 		);
 
@@ -123,7 +123,7 @@ test.describe('Settings page', () => {
 	});
 
 	test('shows an error toast when the Jira connection fails', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: false, accountName: null } })
 		);
 
@@ -133,7 +133,7 @@ test.describe('Settings page', () => {
 	});
 
 	test('clears the jira query param from the URL after showing the toast', async ({ page }) => {
-		await page.route('**/api/integrations/status**', (route) =>
+		await page.route('**/api/integrations**', (route) =>
 			route.fulfill({ json: { connected: true, accountName: 'mysite' } })
 		);
 

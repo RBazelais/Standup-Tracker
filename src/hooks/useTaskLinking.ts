@@ -59,7 +59,7 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
 		retry: false,
 		mutationFn: async (commits) => {
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -104,7 +104,7 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
 		mutationFn: async (query: string) => {
 			resolveMutation.reset();
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -168,7 +168,7 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 	const resolveMutation = useMutation<ResolveTaskResponse, Error, Task>({
 		retry: false,
 		mutationFn: async (task: Task) => {
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

@@ -1,19 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// ── Module mocks ──────────────────────────────────────────────────────────────
+// Module mocks 
 
 vi.mock('../../lib/db', () => ({
 	db: {
 		integrations: {
 			findOne: vi.fn(),
+			delete: vi.fn(),
 		},
 	},
 }));
 
 import { db } from '../../lib/db';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Helpers 
 
 function createMockReq(overrides: {
 	method?: string;
@@ -36,9 +37,9 @@ function createMockRes() {
 	return res;
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// Tests 
 
-describe('GET /api/integrations/status', () => {
+describe('GET /api/integrations', () => {
 	beforeEach(() => {
 		vi.mocked(db.integrations.findOne).mockResolvedValue(null);
 	});
@@ -47,18 +48,8 @@ describe('GET /api/integrations/status', () => {
 		vi.clearAllMocks();
 	});
 
-	it('returns 405 for non-GET requests', async () => {
-		const { default: handler } = await import('../status.js');
-		const req = createMockReq({ method: 'POST' });
-		const res = createMockRes();
-
-		await handler(req, res as unknown as VercelResponse);
-
-		expect(res.status).toHaveBeenCalledWith(405);
-	});
-
 	it('returns 400 when userId is missing', async () => {
-		const { default: handler } = await import('../status.js');
+		const { default: handler } = await import('../index.js');
 		const req = createMockReq({ query: { source: 'jira' } });
 		const res = createMockRes();
 
@@ -68,7 +59,7 @@ describe('GET /api/integrations/status', () => {
 	});
 
 	it('returns 400 when source is missing', async () => {
-		const { default: handler } = await import('../status.js');
+		const { default: handler } = await import('../index.js');
 		const req = createMockReq({ query: { userId: 'user-123' } });
 		const res = createMockRes();
 
@@ -79,7 +70,7 @@ describe('GET /api/integrations/status', () => {
 
 	it('returns connected:false and accountName:null when no integration exists', async () => {
 		vi.mocked(db.integrations.findOne).mockResolvedValue(null);
-		const { default: handler } = await import('../status.js');
+		const { default: handler } = await import('../index.js');
 		const req = createMockReq({ query: { userId: 'user-123', source: 'jira' } });
 		const res = createMockRes();
 
@@ -97,7 +88,7 @@ describe('GET /api/integrations/status', () => {
 			metadata: { cloudId: 'cloud-1', siteName: 'mysite' },
 			accountName: 'mysite',
 		});
-		const { default: handler } = await import('../status.js');
+		const { default: handler } = await import('../index.js');
 		const req = createMockReq({ query: { userId: 'user-123', source: 'jira' } });
 		const res = createMockRes();
 
@@ -108,12 +99,70 @@ describe('GET /api/integrations/status', () => {
 	});
 
 	it('queries the db with the correct userId and source', async () => {
-		const { default: handler } = await import('../status.js');
+		const { default: handler } = await import('../index.js');
 		const req = createMockReq({ query: { userId: 'user-456', source: 'jira' } });
 		const res = createMockRes();
 
 		await handler(req, res as unknown as VercelResponse);
 
 		expect(db.integrations.findOne).toHaveBeenCalledWith({ userId: 'user-456', source: 'jira' });
+	});
+});
+
+describe('DELETE /api/integrations', () => {
+	beforeEach(() => {
+		vi.mocked(db.integrations.delete).mockResolvedValue(undefined);
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('returns 400 when userId is missing', async () => {
+		const { default: handler } = await import('../index.js');
+		const req = createMockReq({ method: 'DELETE', query: { source: 'jira' } });
+		const res = createMockRes();
+
+		await handler(req, res as unknown as VercelResponse);
+
+		expect(res.status).toHaveBeenCalledWith(400);
+	});
+
+	it('returns 400 when source is missing', async () => {
+		const { default: handler } = await import('../index.js');
+		const req = createMockReq({ method: 'DELETE', query: { userId: 'user-123' } });
+		const res = createMockRes();
+
+		await handler(req, res as unknown as VercelResponse);
+
+		expect(res.status).toHaveBeenCalledWith(400);
+	});
+
+	it('deletes the integration and returns 200', async () => {
+		const { default: handler } = await import('../index.js');
+		const req = createMockReq({ method: 'DELETE', query: { userId: 'user-123', source: 'jira' } });
+		const res = createMockRes();
+
+		await handler(req, res as unknown as VercelResponse);
+
+		expect(db.integrations.delete).toHaveBeenCalledWith({ userId: 'user-123', source: 'jira' });
+		expect(res.status).toHaveBeenCalledWith(200);
+		expect(res.json).toHaveBeenCalledWith({ disconnected: true });
+	});
+});
+
+describe('unsupported methods', () => {
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('returns 405 for POST requests', async () => {
+		const { default: handler } = await import('../index.js');
+		const req = createMockReq({ method: 'POST', query: { userId: 'user-123', source: 'jira' } });
+		const res = createMockRes();
+
+		await handler(req, res as unknown as VercelResponse);
+
+		expect(res.status).toHaveBeenCalledWith(405);
 	});
 });
