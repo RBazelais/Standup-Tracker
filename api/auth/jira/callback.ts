@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { exchangeCodeForTokens, getAccessibleResources } from '../../../src/lib/jira/jiraOAuth.js';
-import { db } from '../../lib/db.js';
+import { db } from '../../../shared/db.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	if (req.method !== 'GET') {

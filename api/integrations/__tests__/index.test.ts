@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Module mocks 
 
-vi.mock('../../lib/db', () => ({
+vi.mock('../../../shared/db', () => ({
 	db: {
 		integrations: {
 			findOne: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('../../lib/db', () => ({
 	},
 }));
 
-import { db } from '../../lib/db';
+import { db } from '../../../shared/db';
 
 // Helpers 
 
@@ -29,11 +29,13 @@ function createMockReq(overrides: {
 
 function createMockRes() {
 	const res = {
-		_status: 200,
+		_status: 200 as number,
 		_jsonData: null as unknown,
+		status: vi.fn(),
+		json: vi.fn(),
 	};
-	res.status = vi.fn().mockImplementation((code: number) => { res._status = code; return res; });
-	res.json = vi.fn().mockImplementation((data: unknown) => { res._jsonData = data; return res; });
+	res.status.mockImplementation((code: number) => { res._status = code; return res; });
+	res.json.mockImplementation((data: unknown) => { res._jsonData = data; return res; });
 	return res;
 }
 
