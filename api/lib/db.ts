@@ -28,6 +28,13 @@ export const db = {
 			} | undefined) || null;
 		},
 
+		async delete(query: { userId: string; source: string }) {
+			await sql`
+				DELETE FROM integrations
+				WHERE user_id = ${query.userId} AND source = ${query.source}
+			`;
+		},
+
 		async upsert(payload: {
 			userId: string;
 			source: string;

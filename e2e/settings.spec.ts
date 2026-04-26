@@ -25,7 +25,7 @@ async function navigateToSettings(page: import('@playwright/test').Page, path = 
 }
 
 test.describe('Settings page', () => {
-	// ── Integrations section ─────────────────────────────────────────────────────
+	// Integrations section 
 
 	test('shows the Settings heading', async ({ page }) => {
 		await page.route('**/api/integrations/status**', (route) =>
@@ -74,7 +74,33 @@ test.describe('Settings page', () => {
 		await expect(page.getByText('Connected').nth(1)).toBeVisible();
 	});
 
-	// ── OAuth redirect-back toasts ───────────────────────────────────────────────
+	// Disconnect 
+
+	test('shows a Disconnect button when Jira is connected', async ({ page }) => {
+		await page.route('**/api/integrations/status**', (route) =>
+			route.fulfill({ json: { connected: true, accountName: 'mysite' } })
+		);
+
+		await navigateToSettings(page);
+
+		await expect(page.getByRole('button', { name: /disconnect/i })).toBeVisible();
+	});
+
+	test('switches to Connect button after disconnecting Jira', async ({ page }) => {
+		await page.route('**/api/integrations/status**', (route) =>
+			route.fulfill({ json: { connected: true, accountName: 'mysite' } })
+		);
+		await page.route('**/api/integrations/disconnect**', (route) =>
+			route.fulfill({ status: 200, json: { disconnected: true } })
+		);
+
+		await navigateToSettings(page);
+		await page.getByRole('button', { name: /disconnect/i }).click();
+
+		await expect(page.getByRole('button', { name: /^connect$/i })).toBeVisible();
+	});
+
+	// OAuth redirect-back toasts 
 
 	test('shows a success toast when returning from a successful Jira connection', async ({ page }) => {
 		await page.route('**/api/integrations/status**', (route) =>

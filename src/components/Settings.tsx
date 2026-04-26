@@ -64,6 +64,17 @@ export function Settings() {
 		window.location.href = `/api/auth/jira?userId=${user?.id}`;
 	};
 
+	const handleDisconnectJira = async () => {
+		setJiraStatus('loading');
+		try {
+			await fetch(`/api/integrations/disconnect?userId=${user?.id}&source=jira`, { method: 'DELETE' });
+			setJiraStatus('disconnected');
+			setJiraSiteName(null);
+		} catch {
+			setJiraStatus('error');
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-surface">
 			<main className="container mx-auto px-6 py-8 max-w-4xl">
@@ -108,7 +119,12 @@ export function Settings() {
 								<div>
 									{jiraStatus === 'loading' && null}
 									{jiraStatus === 'connected' && (
-										<span className="text-xs font-medium text-green-400">Connected</span>
+										<div className="flex items-center gap-3">
+											<span className="text-xs font-medium text-green-400">Connected</span>
+											<Button size="sm" variant="outline" onClick={handleDisconnectJira}>
+												Disconnect
+											</Button>
+										</div>
 									)}
 									{jiraStatus === 'disconnected' && (
 										<Button size="sm" onClick={handleConnectJira}>
