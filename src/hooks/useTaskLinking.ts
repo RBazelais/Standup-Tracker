@@ -1,8 +1,6 @@
-// src/hooks/use-task-linking.ts
-
-import { useState, useCallback, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import type { Task, Standup } from '@/types';
+import { useState, useCallback, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import type { Task, Standup } from "@/types";
 import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 import { handleApiResponse } from '../lib/errors';
 import { useStore } from '../store';

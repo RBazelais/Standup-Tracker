@@ -135,7 +135,6 @@ async function handleResolve(req: VercelRequest, res: VercelResponse, userId: st
 			return res.status(404).json({ error: `Could not resolve issue ${externalId}` });
 		}
 
-		console.log(`[tasks/actions/resolve] Resolved ${externalId} → task ${task.id}`);
 		return res.status(200).json({ task });
 	} catch (error) {
 		console.error("Task resolve error:", error);

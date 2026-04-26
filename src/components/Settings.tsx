@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { useStore } from '../store';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { useStore } from "../store";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-type JiraStatus = 'loading' | 'connected' | 'disconnected' | 'error';
+type JiraStatus = "loading" | "connected" | "disconnected" | "error";
 
 const GitHubIcon = ({ className }: { className?: string }) => (
 	<svg role="img" aria-label="GitHub" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className={className} fill="currentColor">
@@ -20,7 +20,7 @@ const JiraIcon = ({ className }: { className?: string }) => (
 
 export function Settings() {
 	const { user } = useStore();
-	const [jiraStatus, setJiraStatus] = useState<JiraStatus>('loading');
+	const [jiraStatus, setJiraStatus] = useState<JiraStatus>("loading");
 	const [jiraSiteName, setJiraSiteName] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -46,13 +46,18 @@ export function Settings() {
 	useEffect(() => {
 		if (!user?.id) return;
 
-		fetch(`/api/integrations/status?userId=${user.id}&source=jira`)
-			.then(r => r.json())
-			.then(data => {
+		const fetchStatus = async () => {
+			try {
+				const res = await fetch(`/api/integrations/status?userId=${user.id}&source=jira`);
+				const data = await res.json();
 				setJiraStatus(data.connected ? 'connected' : 'disconnected');
 				setJiraSiteName(data.accountName);
-			})
-			.catch(() => setJiraStatus('error'));
+			} catch {
+				setJiraStatus('error');
+			}
+		};
+
+		fetchStatus();
 	}, [user?.id]);
 
 	const handleConnectJira = () => {

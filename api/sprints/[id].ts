@@ -30,7 +30,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json(sprint[0]);
 		} catch (error) {
 			console.error("Failed to fetch sprint:", error);
-			return res.status(500).json({ error: "Failed to fetch sprint" });
+			return res.status(500).json({
+				error: "Failed to fetch sprint",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
@@ -61,7 +64,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json(updatedSprint[0]);
 		} catch (error) {
 			console.error("Failed to update sprint:", error);
-			return res.status(500).json({ error: "Failed to update sprint" });
+			return res.status(500).json({
+				error: "Failed to update sprint",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
@@ -72,7 +78,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json({ success: true });
 		} catch (error) {
 			console.error("Failed to delete sprint:", error);
-			return res.status(500).json({ error: "Failed to delete sprint" });
+			return res.status(500).json({
+				error: "Failed to delete sprint",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 

@@ -36,7 +36,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json({ ...standup, linkedTasks });
 		} catch (error) {
 			console.error("Failed to fetch standup:", error);
-			return res.status(500).json({ error: "Failed to fetch standup" });
+			return res.status(500).json({
+				error: "Failed to fetch standup",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
@@ -89,7 +92,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json({ ...updatedRows[0], linkedTasks });
 		} catch (error) {
 			console.error("Failed to update standup:", error);
-			return res.status(500).json({ error: "Failed to update standup" });
+			return res.status(500).json({
+				error: "Failed to update standup",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
@@ -100,7 +106,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json({ success: true });
 		} catch (error) {
 			console.error("Failed to delete standup:", error);
-			return res.status(500).json({ error: "Failed to delete standup" });
+			return res.status(500).json({
+				error: "Failed to delete standup",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
