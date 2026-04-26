@@ -4,7 +4,7 @@ import { sql } from "@vercel/postgres";
 import { tasks } from "../../drizzle/schema.js";
 import { createTaskSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, desc } from "drizzle-orm";
-import { db as integrationDb } from "../lib/db.js";
+import { db as integrationDb } from "../../shared/db.js";
 import { createTaskLinkingService } from "../../shared/task-linking-service.js";
 
 const db = drizzle(sql);
