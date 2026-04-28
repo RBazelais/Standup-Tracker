@@ -37,6 +37,10 @@ migrate-schema.mjs
 playwright-report/
 test-results/
 
+# Local build checks and utility scripts
+dist-check/
+scripts/
+
 # Local study notes
 notes/
 drizzle/migrations/meta/_journal.json
