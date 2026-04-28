@@ -111,7 +111,6 @@
 
 	--radius: 0.5rem;
 	--background: var(--surface-base);
-	--foreground: var(--foreground);
 	--card: var(--surface-raised);
 	--card-foreground: var(--foreground);
 	--popover: var(--surface-raised);
