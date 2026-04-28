@@ -25,6 +25,7 @@ export function StandupForm() {
 	const [blockers, setBlockers] = useState("");
 	const [saved, setSaved] = useState(false);
 	const [linkedTaskIds, setLinkedTaskIds] = useState<string[]>([]);
+	const [errors, setErrors] = useState<{ workCompleted?: string; workPlanned?: string }>({});
 	const [taskSectionKey, setTaskSectionKey] = useState(0);
 
 	const [activePreset, setActivePreset] = useState<Preset | null>(null);
@@ -94,6 +95,16 @@ export function StandupForm() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!selectedRepo) return;
+
+		const newErrors = {
+			workCompleted: !workCompleted.trim() ? 'This field is required' : undefined,
+			workPlanned: !workPlanned.trim() ? 'This field is required' : undefined,
+		};
+		if (newErrors.workCompleted || newErrors.workPlanned) {
+			setErrors(newErrors);
+			return;
+		}
+		setErrors({});
 
 		const selectedCommitObjects = commits
 			.filter((c) => selectedCommits.has(c.sha))
@@ -187,9 +198,10 @@ export function StandupForm() {
 					workCompleted={workCompleted}
 					workPlanned={workPlanned}
 					blockers={blockers}
-					onWorkCompletedChange={setWorkCompleted}
-					onWorkPlannedChange={setWorkPlanned}
+					onWorkCompletedChange={(v) => { setWorkCompleted(v); if (errors.workCompleted) setErrors((p) => ({ ...p, workCompleted: undefined })); }}
+					onWorkPlannedChange={(v) => { setWorkPlanned(v); if (errors.workPlanned) setErrors((p) => ({ ...p, workPlanned: undefined })); }}
 					onBlockersChange={setBlockers}
+					errors={errors}
 				/>
 
 
@@ -204,6 +216,9 @@ export function StandupForm() {
 				/>
 
 				{/* Submit */}
+				<div role="status" aria-live="polite" className="sr-only">
+					{isCreating ? 'Saving...' : saved ? 'Saved!' : ''}
+				</div>
 				<Button
 					type="submit"
 					disabled={isCreating || saved}
