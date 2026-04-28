@@ -31,11 +31,11 @@ export function StandupEdit() {
 	if (isLoading) {
 		return (
 			<div className="min-h-screen bg-surface-base">
-				<main className="container mx-auto px-6 py-8 max-w-4xl">
+				<div className="container mx-auto px-6 py-8 max-w-4xl">
 					<div className="flex items-center justify-center py-20">
 						<Loader2 className="h-8 w-8 animate-spin text-accent" />
 					</div>
-				</main>
+				</div>
 			</div>
 		);
 	}
@@ -43,7 +43,7 @@ export function StandupEdit() {
 	if (error || !standup) {
 		return (
 			<div className="min-h-screen bg-surface-base">
-				<main className="container mx-auto px-6 py-8 max-w-4xl">
+				<div className="container mx-auto px-6 py-8 max-w-4xl">
 					<Card className="p-8 bg-surface-raised border-border text-center">
 							<h2 className="text-2xl font-bold text-foreground mb-4">
 								Standup Not Found
@@ -60,7 +60,7 @@ export function StandupEdit() {
 							</Button>
 						</Link>
 					</Card>
-				</main>
+				</div>
 			</div>
 		);
 	}
@@ -125,7 +125,7 @@ function StandupEditForm({
 
 	return (
 		<div className="min-h-screen bg-surface-base">
-			<main className="container mx-auto px-6 py-8 max-w-4xl">
+			<div className="container mx-auto px-6 py-8 max-w-4xl">
 				{/* Breadcrumb */}
 				<div className="mb-6">
 					<Link to={`/standup/${id}`}>
@@ -245,7 +245,7 @@ function StandupEditForm({
 						</div>
 					</form>
 				</Card>
-			</main>
+			</div>
 		</div>
 	);
 }

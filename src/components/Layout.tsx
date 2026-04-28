@@ -12,9 +12,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				Skip to main content
 			</a>
 			<Header />
-			<div id="main-content" className="flex-1">
+			<main id="main-content" className="flex-1">
 				{children}
-			</div>
+			</main>
 			<Footer />
 		</div>
 	);
