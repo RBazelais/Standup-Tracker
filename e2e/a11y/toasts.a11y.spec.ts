@@ -13,9 +13,12 @@ import {
  * loaded. If you inject the region dynamically at the same moment as the
  * content, the announcement never fires.
  *
- * Sonner renders its <ol> container immediately on mount (via <Toaster> in
- * App.tsx), so the region is present before any toast fires. These tests
- * verify that contract and that the ARIA semantics are correct.
+ * In Sonner v2 the live region is a <section aria-live="polite"> that renders
+ * immediately on mount. The <ol data-sonner-toaster> inside it is lazy — it
+ * only appears when there are active toasts. That is fine: screen readers watch
+ * the <section> from page load, so injecting the <ol> later still triggers the
+ * announcement. These tests verify that contract and that the ARIA semantics
+ * are correct.
  */
 
 test.describe('Toast live regions – accessibility', () => {
@@ -26,19 +29,20 @@ test.describe('Toast live regions – accessibility', () => {
 		await page.waitForLoadState('networkidle');
 	});
 
-	test('toast container exists in DOM before any toast fires', async ({ page }) => {
-		const toaster = page.locator('[data-sonner-toaster]');
-		await expect(toaster).toBeAttached();
+	test('live region container exists in DOM before any toast fires', async ({ page }) => {
+		// Sonner v2 renders <section aria-live="polite"> immediately on mount.
+		// The <ol data-sonner-toaster> inside it is lazy (only present when toasts are active).
+		const liveRegion = page.locator('section[aria-live="polite"]');
+		await expect(liveRegion).toBeAttached();
 	});
 
-	test('toast container has an accessible label', async ({ page }) => {
-		const toaster = page.locator('[data-sonner-toaster]');
-		const ariaLabel = await toaster.getAttribute('aria-label');
+	test('live region container has an accessible label', async ({ page }) => {
+		const liveRegion = page.locator('section[aria-live="polite"]');
+		const ariaLabel = await liveRegion.getAttribute('aria-label');
 		expect(ariaLabel).toBeTruthy();
 	});
 
 	test('success toast uses role="status" for a polite announcement', async ({ page }) => {
-		// Trigger a copy action which fires a success toast
 		await page.route('**/api/standups**', (route) =>
 			route.fulfill({
 				json: [
@@ -58,10 +62,9 @@ test.describe('Toast live regions – accessibility', () => {
 		await page.reload();
 		await page.waitForLoadState('networkidle');
 
-		// Use copy dropdown to fire a success toast
 		const copyDropdown = page.getByRole('button', { name: /copy/i }).first();
 		if (await copyDropdown.count() === 0) {
-			test.skip(); // No standup to copy from
+			test.skip();
 			return;
 		}
 
@@ -69,13 +72,11 @@ test.describe('Toast live regions – accessibility', () => {
 		const copyOption = page.getByRole('menuitem').first();
 		await copyOption.click();
 
-		// Sonner success toasts render with role="status"
 		const successToast = page.locator('[data-sonner-toast][role="status"]');
 		await expect(successToast).toBeAttached({ timeout: 3000 });
 	});
 
 	test('submission error toast uses role="alert" for an assertive announcement', async ({ page }) => {
-		// Force a network error on standup creation
 		await page.route('**/api/standups**', (route) => {
 			if (route.request().method() === 'POST') {
 				return route.fulfill({ status: 500, json: { error: 'Server error' } });
@@ -87,7 +88,6 @@ test.describe('Toast live regions – accessibility', () => {
 		await page.getByLabel('Planned').fill('More work');
 		await page.getByRole('button', { name: /save standup/i }).click();
 
-		// Sonner error toasts render with role="alert"
 		const errorToast = page.locator('[data-sonner-toast][role="alert"]');
 		await expect(errorToast).toBeAttached({ timeout: 3000 });
 	});
