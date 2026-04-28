@@ -31,8 +31,14 @@ export function LandingPage() {
 
 	return (
 		<div className="dark">
+			<a
+				href="#main-content"
+				className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-accent focus:text-white focus:top-2 focus:left-2 focus:rounded-md"
+			>
+				Skip to main content
+			</a>
 			<div className="min-h-screen transition-colors bg-surface">
-				<main className="px-6 min-h-screen flex flex-col items-center justify-center py-20" role="main" aria-label="StandUp Tracker landing page">
+				<main id="main-content" tabIndex={-1} className="px-6 min-h-screen flex flex-col items-center justify-center py-20" role="main" aria-label="StandUp Tracker landing page">
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
