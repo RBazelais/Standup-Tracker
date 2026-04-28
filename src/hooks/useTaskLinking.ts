@@ -1,13 +1,9 @@
-// src/hooks/use-task-linking.ts
-
-import { useState, useCallback, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import type { Task, Standup } from '@/types';
-import { fetchWithTimeout } from '../lib/fetchWithTimeout';
-import { handleApiResponse } from '../lib/errors';
-import { useStore } from '../store';
-
-/* Hook for task detection and linking in standup form */
+import { useReducer, useCallback, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import type { Task, Standup } from "@/types";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { handleApiResponse } from "../lib/errors";
+import { useStore } from "../store";
 
 interface UseTaskLinkingOptions {
 	standup: Partial<Standup>;
@@ -21,16 +17,81 @@ interface DetectedTask extends Task {
 }
 
 interface TaskLinkingState {
-	// Detection results
 	detected: DetectedTask[];
-	isDetecting: boolean;
-	
-	// Selected tasks (user confirmed)
 	selected: Task[];
-	
-	// UI state
 	showSuggestions: boolean;
 	showPicker: boolean;
+}
+
+type Action =
+	| { type: 'DETECT_SUCCESS'; resolved: DetectedTask[]; autoLinked: Task[] }
+	| { type: 'CONFIRM_TASK'; task: Task }
+	| { type: 'CONFIRM_ALL' }
+	| { type: 'DISMISS_TASK'; taskId: string }
+	| { type: 'DISMISS_ALL' }
+	| { type: 'REMOVE_SELECTED'; taskId: string }
+	| { type: 'OPEN_PICKER' }
+	| { type: 'CLOSE_PICKER' }
+	| { type: 'RESOLVE_SUCCESS'; task: Task };
+
+function reducer(state: TaskLinkingState, action: Action): TaskLinkingState {
+	switch (action.type) {
+		case 'DETECT_SUCCESS': {
+			const { resolved, autoLinked } = action;
+			return {
+				...state,
+				detected: resolved,
+				showSuggestions: resolved.length > 0,
+				selected: [
+					...state.selected,
+					...autoLinked.filter(t => !state.selected.some(s => s.id === t.id)),
+				],
+			};
+		}
+		case 'CONFIRM_TASK': {
+			const remaining = state.detected.filter(t => t.id !== action.task.id);
+			return {
+				...state,
+				selected: state.selected.some(t => t.id === action.task.id)
+					? state.selected
+					: [...state.selected, action.task],
+				detected: remaining,
+				showSuggestions: remaining.length > 0,
+			};
+		}
+		case 'CONFIRM_ALL':
+			return {
+				...state,
+				selected: [
+					...state.selected,
+					...state.detected.filter(d => !state.selected.some(s => s.id === d.id)),
+				],
+				detected: [],
+				showSuggestions: false,
+			};
+		case 'DISMISS_TASK': {
+			const remaining = state.detected.filter(t => t.id !== action.taskId);
+			return { ...state, detected: remaining, showSuggestions: remaining.length > 0 };
+		}
+		case 'DISMISS_ALL':
+			return { ...state, detected: [], showSuggestions: false };
+		case 'REMOVE_SELECTED':
+			return { ...state, selected: state.selected.filter(t => t.id !== action.taskId) };
+		case 'OPEN_PICKER':
+			return { ...state, showPicker: true };
+		case 'CLOSE_PICKER':
+			return { ...state, showPicker: false };
+		case 'RESOLVE_SUCCESS':
+			return {
+				...state,
+				selected: state.selected.some(t => t.id === action.task.id)
+					? state.selected
+					: [...state.selected, action.task],
+				showPicker: false,
+			};
+		default:
+			return state;
+	}
 }
 
 interface DetectTasksResponse {
@@ -49,15 +110,13 @@ interface ResolveTaskResponse {
 
 export function useTaskLinking({ standup, enabled = true, initialSelected = [] }: UseTaskLinkingOptions) {
 	const user = useStore((state) => state.user)!;
-	const [state, setState] = useState<TaskLinkingState>({
+	const [state, dispatch] = useReducer(reducer, {
 		detected: [],
-		isDetecting: false,
 		selected: initialSelected,
 		showSuggestions: false,
 		showPicker: false,
 	});
 
-	// Auto-detect tasks from commits
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
 		retry: false,
 		mutationFn: async (commits) => {
@@ -70,38 +129,24 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 					repoFullName: standup.repoFullName,
 				}),
 			});
-			
 			return handleApiResponse<DetectTasksResponse>(response);
 		},
 		onSuccess: (data) => {
-			const resolved = data?.resolved ?? [];
-			const autoLinked = data?.autoLinked ?? [];
-			setState(prev => ({
-				...prev,
-				detected: resolved,
-				showSuggestions: resolved.length > 0,
-				// Auto-select explicit references
-				selected: [
-					...prev.selected,
-					...autoLinked.filter(
-						(t: Task) => !prev.selected.some(s => s.id === t.id)
-					),
-				],
-			}));
+			dispatch({
+				type: 'DETECT_SUCCESS',
+				resolved: data?.resolved ?? [],
+				autoLinked: data?.autoLinked ?? [],
+			});
 		},
 	});
 
 	const detectMutate = detectMutation.mutate;
 
-	// Trigger detection when commits change
 	useEffect(() => {
 		if (enabled && standup.commits?.length && standup.repoFullName) {
 			detectMutate(standup.commits);
 		}
 	}, [standup.commits, enabled, detectMutate, standup.repoFullName]);
-
-
-	// Search for tasks manually
 
 	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
 		mutationFn: async (query: string) => {
@@ -120,53 +165,6 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		},
 	});
 
-	// Actions
-	const confirmTask = useCallback((task: Task) => {
-		setState(prev => ({
-			...prev,
-			selected: prev.selected.some(t => t.id === task.id)
-				? prev.selected
-				: [...prev.selected, task],
-			detected: prev.detected.filter(t => t.id !== task.id),
-			showSuggestions: prev.detected.filter(t => t.id !== task.id).length > 0,
-		}));
-	}, []);
-
-	const confirmAll = useCallback(() => {
-		setState(prev => ({
-			...prev,
-			selected: [
-				...prev.selected,
-				...prev.detected.filter(d => !prev.selected.some(s => s.id === d.id)),
-			],
-			detected: [],
-			showSuggestions: false,
-		}));
-	}, []);
-
-	const dismissTask = useCallback((taskId: string) => {
-		setState(prev => ({
-			...prev,
-			detected: prev.detected.filter(t => t.id !== taskId),
-			showSuggestions: prev.detected.filter(t => t.id !== taskId).length > 0,
-		}));
-	}, []);
-
-	const dismissAll = useCallback(() => {
-		setState(prev => ({
-			...prev,
-			detected: [],
-			showSuggestions: false,
-		}));
-	}, []);
-
-	const removeSelected = useCallback((taskId: string) => {
-		setState(prev => ({
-			...prev,
-			selected: prev.selected.filter(t => t.id !== taskId),
-		}));
-	}, []);
-
 	const resolveMutation = useMutation<ResolveTaskResponse, Error, Task>({
 		retry: false,
 		mutationFn: async (task: Task) => {
@@ -183,63 +181,68 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 			return handleApiResponse<ResolveTaskResponse>(response);
 		},
 		onSuccess: (data) => {
-			setState(prev => ({
-				...prev,
-				selected: prev.selected.some(t => t.id === data.task.id)
-					? prev.selected
-					: [...prev.selected, data.task],
-				showPicker: false,
-			}));
+			dispatch({ type: 'RESOLVE_SUCCESS', task: data.task });
 		},
 	});
 
-	const addFromSearch = resolveMutation.mutate;
+	const confirmTask = useCallback((task: Task) => {
+		dispatch({ type: 'CONFIRM_TASK', task });
+	}, []);
+
+	const confirmAll = useCallback(() => {
+		dispatch({ type: 'CONFIRM_ALL' });
+	}, []);
+
+	const dismissTask = useCallback((taskId: string) => {
+		dispatch({ type: 'DISMISS_TASK', taskId });
+	}, []);
+
+	const dismissAll = useCallback(() => {
+		dispatch({ type: 'DISMISS_ALL' });
+	}, []);
+
+	const removeSelected = useCallback((taskId: string) => {
+		dispatch({ type: 'REMOVE_SELECTED', taskId });
+	}, []);
 
 	const openPicker = useCallback(() => {
-		setState(prev => ({ ...prev, showPicker: true }));
+		dispatch({ type: 'OPEN_PICKER' });
 	}, []);
 
 	const closePicker = useCallback(() => {
-		setState(prev => ({ ...prev, showPicker: false }));
+		dispatch({ type: 'CLOSE_PICKER' });
 	}, []);
 
-	// Computed values
 	const totalPoints = state.selected.reduce(
 		(sum, task) => sum + (task.storyPoints || 0),
 		0
 	);
 
-
 	return {
-		// State
 		detected: state.detected,
 		selected: state.selected,
 		isDetecting: detectMutation.isPending,
 		showSuggestions: state.showSuggestions,
 		showPicker: state.showPicker,
-		
-		// Search
+
 		searchResults: searchMutation.data?.tasks || [],
 		isSearching: searchMutation.isPending,
 		searchError: searchMutation.error?.message || null,
 		search: searchMutation.mutate,
 
-		// Resolve (persisting a search result as a real task)
 		isResolving: resolveMutation.isPending,
 		resolveError: resolveMutation.error?.message || null,
 		resolvingTaskId: resolveMutation.variables?.externalId || null,
 
-		// Actions
 		confirmTask,
 		confirmAll,
 		dismissTask,
 		dismissAll,
 		removeSelected,
-		addFromSearch,
+		addFromSearch: resolveMutation.mutate,
 		openPicker,
 		closePicker,
-		
-		// Computed
+
 		totalPoints,
 	};
 }
