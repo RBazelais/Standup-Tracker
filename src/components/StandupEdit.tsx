@@ -97,6 +97,7 @@ function StandupEditForm({
 	const [linkedTaskIds, setLinkedTaskIds] = useState<string[]>(
 		() => initialData.linkedTasks?.map((t) => t.id) ?? []
 	);
+	const [errors, setErrors] = useState<{ workCompleted?: boolean; workPlanned?: boolean }>({});
 
 	const handleCancel = () => {
 		navigate(`/standup/${id}`);
@@ -104,6 +105,13 @@ function StandupEditForm({
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		const newErrors = {
+			workCompleted: !workCompleted.trim(),
+			workPlanned: !workPlanned.trim(),
+		};
+		setErrors(newErrors);
+		if (newErrors.workCompleted || newErrors.workPlanned) return;
 
 		updateStandup(
 			{
@@ -158,12 +166,13 @@ function StandupEditForm({
 							<Textarea
 								id="workCompleted"
 								value={workCompleted}
-								onChange={(e) =>
-									setWorkCompleted(e.target.value)
-								}
+								onChange={(e) => {
+									setWorkCompleted(e.target.value);
+									if (errors.workCompleted) setErrors((prev) => ({ ...prev, workCompleted: false }));
+								}}
 								placeholder="What did you work on?"
 								className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[120px]"
-								required
+								aria-invalid={errors.workCompleted ? 'true' : undefined}
 							/>
 						</div>
 
@@ -178,10 +187,13 @@ function StandupEditForm({
 							<Textarea
 								id="workPlanned"
 								value={workPlanned}
-								onChange={(e) => setWorkPlanned(e.target.value)}
+								onChange={(e) => {
+									setWorkPlanned(e.target.value);
+									if (errors.workPlanned) setErrors((prev) => ({ ...prev, workPlanned: false }));
+								}}
 								placeholder="What will you work on next?"
 								className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[120px]"
-								required
+								aria-invalid={errors.workPlanned ? 'true' : undefined}
 							/>
 						</div>
 
