@@ -1,9 +1,9 @@
 import { useReducer, useCallback, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { Task, Standup } from "@/types";
-import { fetchWithTimeout } from '../lib/fetchWithTimeout';
-import { handleApiResponse } from '../lib/errors';
-import { useStore } from '../store';
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { handleApiResponse } from "../lib/errors";
+import { useStore } from "../store";
 
 interface UseTaskLinkingOptions {
 	standup: Partial<Standup>;
@@ -89,6 +89,8 @@ function reducer(state: TaskLinkingState, action: Action): TaskLinkingState {
 					: [...state.selected, action.task],
 				showPicker: false,
 			};
+		default:
+			return state;
 	}
 }
 
