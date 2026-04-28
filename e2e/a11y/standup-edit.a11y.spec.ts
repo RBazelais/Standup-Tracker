@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import {
 	loginAs,
-	MOCK_AUTH,
+	MOCK_AUTH_WITH_REPO,
 	MOCK_STANDUP,
 	mockStandardRoutes,
 	runAxe,
@@ -14,16 +14,23 @@ const EDIT_URL = `/standup/${MOCK_STANDUP.id}/edit`;
 test.describe('Standup edit – accessibility', () => {
 	test.beforeEach(async ({ page }) => {
 		await mockStandardRoutes(page);
-		await page.route(`**/api/standups/${MOCK_STANDUP.id}**`, (route) =>
-			route.fulfill({ json: MOCK_STANDUP })
-		);
-		await page.route('**/api/standups**', (route) => {
+		// General standups list — registered first so the specific-ID mock below wins (Playwright LIFO)
+		await page.route('**/api/standups**', async (route) => {
 			if (route.request().method() === 'PUT' || route.request().method() === 'PATCH') {
+				// Delay long enough for the "Saving..." button state to be visible
+				await new Promise((r) => setTimeout(r, 300));
 				return route.fulfill({ json: { ...MOCK_STANDUP, workCompleted: 'Updated' } });
 			}
 			return route.fulfill({ json: [MOCK_STANDUP] });
 		});
-		await loginAs(page, MOCK_AUTH);
+		// Specific standup GET — registered last so it is evaluated first (Playwright LIFO)
+		await page.route(`**/api/standups/${MOCK_STANDUP.id}**`, (route) => {
+			if (route.request().method() === 'GET') {
+				return route.fulfill({ json: MOCK_STANDUP });
+			}
+			return route.fallback();
+		});
+		await loginAs(page, MOCK_AUTH_WITH_REPO);
 		await page.goto(EDIT_URL);
 		await page.waitForLoadState('networkidle');
 	});
@@ -45,13 +52,13 @@ test.describe('Standup edit – accessibility', () => {
 
 	test('fields are pre-populated and screen readers can read their values', async ({ page }) => {
 		// Verifies the edit view loads existing data into the inputs, not empty fields
-		await expect(page.getByLabel('Completed')).toHaveValue(MOCK_STANDUP.workCompleted);
-		await expect(page.getByLabel('Planned')).toHaveValue(MOCK_STANDUP.workPlanned);
+		await expect(page.getByLabel('What you worked on')).toHaveValue(MOCK_STANDUP.workCompleted);
+		await expect(page.getByLabel("What you'll work on next")).toHaveValue(MOCK_STANDUP.workPlanned);
 	});
 
 	test('text areas are reachable by Tab in reading order', async ({ page }) => {
-		const completed = page.getByLabel('Completed');
-		const planned = page.getByLabel('Planned');
+		const completed = page.getByLabel('What you worked on');
+		const planned = page.getByLabel("What you'll work on next");
 		const blockers = page.getByLabel('Blockers');
 
 		await completed.focus();
@@ -65,8 +72,8 @@ test.describe('Standup edit – accessibility', () => {
 	});
 
 	test('Shift+Tab moves backwards through text areas', async ({ page }) => {
-		const completed = page.getByLabel('Completed');
-		const planned = page.getByLabel('Planned');
+		const completed = page.getByLabel('What you worked on');
+		const planned = page.getByLabel("What you'll work on next");
 
 		await planned.focus();
 		await page.keyboard.press('Shift+Tab');
@@ -85,15 +92,15 @@ test.describe('Standup edit – accessibility', () => {
 	});
 
 	test('required fields expose aria-invalid when cleared and submitted', async ({ page }) => {
-		await page.getByLabel('Completed').clear();
-		await page.getByLabel('Planned').clear();
+		await page.getByLabel('What you worked on').clear();
+		await page.getByLabel("What you'll work on next").clear();
 
 		const save = page.getByRole('button', { name: /save|update/i });
 		await save.focus();
 		await page.keyboard.press('Space');
 
-		await expect(page.getByLabel('Completed')).toHaveAttribute('aria-invalid', 'true');
-		await expect(page.getByLabel('Planned')).toHaveAttribute('aria-invalid', 'true');
+		await expect(page.getByLabel('What you worked on')).toHaveAttribute('aria-invalid', 'true');
+		await expect(page.getByLabel("What you'll work on next")).toHaveAttribute('aria-invalid', 'true');
 	});
 
 	test('cancel or back button is keyboard reachable', async ({ page }) => {
