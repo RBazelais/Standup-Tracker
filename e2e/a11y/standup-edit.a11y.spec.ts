@@ -98,7 +98,7 @@ test.describe('Standup edit – accessibility', () => {
 
 	test('cancel or back button is keyboard reachable', async ({ page }) => {
 		const cancel = page.getByRole('link', { name: /cancel|back/i })
-			.or(page.getByRole('button', { name: /cancel|back/i }));
+			.or(page.getByRole('button', { name: /cancel|back/i })).first();
 		await cancel.focus();
 		await expect(cancel).toBeFocused();
 	});

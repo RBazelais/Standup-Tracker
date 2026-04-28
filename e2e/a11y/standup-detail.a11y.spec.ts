@@ -44,28 +44,28 @@ test.describe('Standup detail – accessibility', () => {
 
 	test('back button is reachable by Tab and activatable', async ({ page }) => {
 		const backBtn = page.getByRole('link', { name: /back/i })
-			.or(page.getByRole('button', { name: /back/i }));
+			.or(page.getByRole('button', { name: /back/i })).first();
 		await backBtn.focus();
 		await expect(backBtn).toBeFocused();
 	});
 
 	test('edit button is reachable by Tab and activatable', async ({ page }) => {
 		const editBtn = page.getByRole('link', { name: /edit/i })
-			.or(page.getByRole('button', { name: /edit/i }));
+			.or(page.getByRole('button', { name: /edit/i })).first();
 		await editBtn.focus();
 		await expect(editBtn).toBeFocused();
 	});
 
 	test('linked issue external link is keyboard reachable', async ({ page }) => {
-		const issueLink = page.getByRole('link', { name: /#42/i });
+		// Aria-label is "View {task.title} on GitHub" — the icon-only link gets its name from aria-label
+		const issueLink = page.getByRole('link', { name: /view fix authentication bug on github/i });
 		await expect(issueLink).toBeVisible();
 		await issueLink.focus();
 		await expect(issueLink).toBeFocused();
 	});
 
 	test('detail view has a main landmark', async ({ page }) => {
-		const main = page.locator('main, [role="main"], #main-content');
-		await expect(main).toBeVisible();
+		await expect(page.locator('main').first()).toBeVisible();
 	});
 
 	test('sections have accessible labels', async ({ page }) => {
