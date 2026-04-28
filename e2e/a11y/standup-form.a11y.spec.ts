@@ -177,6 +177,7 @@ test.describe('Standup form – accessibility', () => {
 		const wasChecked = await checkbox.isChecked();
 		await checkbox.focus();
 		await page.keyboard.press('Space');
-		await expect(checkbox).toHaveJSProperty('checked', !wasChecked);
+		// Radix Checkbox is a <button role="checkbox"> — checked state lives in aria-checked
+		await expect(checkbox).toHaveAttribute('aria-checked', String(!wasChecked));
 	});
 });
