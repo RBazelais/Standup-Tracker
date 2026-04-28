@@ -289,13 +289,66 @@ These changes address the following WCAG criteria:
 - **4.1.2 Name, Role, Value** (Level A) - All elements properly identified
 - **4.1.3 Status Messages** (Level AA) - Live regions for status updates
 
+## Testing Strategy
+
+### Philosophy
+
+WCAG compliance is the floor, not the ceiling. A product can pass every automated check and still be unusable by a screen reader user. Disabled people know what they need; their feedback takes priority over any checklist.
+
+We test in two layers. Automated tools (axe) catch structural problems fast: missing labels, bad contrast, broken ARIA roles. They catch roughly 25 to 40 percent of real issues. The remaining 60 to 75 percent are behavioral: does focus land in the right place? Are errors announced? Can a keyboard user complete the task without a mouse? Those require explicit tests.
+
+### Test Organization
+
+Tests live in `e2e/a11y/` and are organized by component surface, not by WCAG criterion. This makes it easier to find tests when you change a component, and it makes failures obvious: a broken test in `standup-form.a11y.spec.ts` points directly at the form.
+
+| File | Surface |
+| --- | --- |
+| `landing.a11y.spec.ts` | Landing page |
+| `dashboard.a11y.spec.ts` | Dashboard layout, skip link, route focus |
+| `standup-form.a11y.spec.ts` | Standup creation form |
+| `standup-history.a11y.spec.ts` | History card list |
+| `standup-detail.a11y.spec.ts` | Standup detail view |
+| `task-picker.a11y.spec.ts` | Task linking dialog |
+| `toasts.a11y.spec.ts` | Toast live regions |
+
+### Priority Order
+
+We apply an 80/20 approach. The issues that affect the most people most severely come first.
+
+1. **Focus management** (affects all keyboard and screen reader users): dialog open/close, route transitions, error states
+2. **Form error announcements** (affects all screen reader users on form pages): `aria-invalid`, `aria-describedby`, live regions on submit
+3. **Skip links** (affects all keyboard users on every page): must be the first Tab stop and must actually move focus
+4. **Live regions** (affects screen reader users on async operations): toasts, submission state, loading states
+5. **Structural semantics** (affects screen reader navigation): landmarks, heading hierarchy, list roles
+
+### What Automated Tools Miss
+
+Axe cannot test whether:
+- Focus lands in a modal when it opens
+- Focus returns to the trigger when a modal closes
+- The Tab key is trapped inside a dialog
+- An error message is actually linked to its input via `aria-describedby`
+- A toast fires after its container exists (live region pre-existence rule)
+- A route transition moves focus to the new content area
+
+Every item in this list has a manual test in the suite above.
+
+### Running the Suite
+
+```bash
+# All a11y tests in headed Chromium
+npx playwright test e2e/a11y/ --project=chromium
+
+# Single surface
+npx playwright test e2e/a11y/standup-form.a11y.spec.ts --project=chromium
+```
+
 ## Next Steps
 
-1. **Manual Testing**: Test with actual VoiceOver users
-2. **Automated Testing**: Run axe DevTools or WAVE
-3. **User Feedback**: Gather feedback from users with disabilities
-4. **Documentation**: Update user documentation with accessibility features
-5. **Maintenance**: Regular accessibility audits
+1. **Manual Testing**: Test with actual screen reader users on VoiceOver and NVDA
+2. **User Feedback**: Gather feedback from disabled users; treat it as higher priority than automated results
+3. **Automated Testing**: Run axe DevTools or WAVE for spot-checking outside the test suite
+4. **Maintenance**: Run the a11y suite on every PR; regressions in focus management are as critical as functional regressions
 
 ## Resources
 
