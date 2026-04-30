@@ -16,6 +16,7 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
+	DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +38,6 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 		selected,
 		isDetecting,
 		showSuggestions,
-		showPicker,
 		searchResults,
 		isSearching,
 		searchError,
@@ -51,10 +51,10 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 		dismissAll,
 		removeSelected,
 		addFromSearch,
-		openPicker,
-		closePicker,
 		totalPoints,
 	} = useTaskLinking({ standup, initialSelected });
+
+	const [pickerOpen, setPickerOpen] = useState(false);
 
 	// Update parent when selected tasks change
 	useEffect(() => {
@@ -62,6 +62,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 	}, [selected, onTasksChange]);
 
 	return (
+		<Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
 		<div className="space-y-4">
 			{/* Section Header */}
 			<div className="flex items-center justify-between">
@@ -74,16 +75,17 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 						</Badge>
 					)}
 				</h3>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					onClick={openPicker}
-					className="gap-1"
-				>
-					<Plus className="h-4 w-4" />
-					Link Issue
-				</Button>
+				<DialogTrigger asChild>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="gap-1"
+					>
+						<Plus className="h-4 w-4" />
+						Link Issue
+					</Button>
+				</DialogTrigger>
 			</div>
 
 			{/* Detection Loading State */}
@@ -124,8 +126,6 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 
 			{/* Issue Picker Modal */}
 			<IssuePickerDialog
-				open={showPicker}
-				onOpenChange={closePicker}
 				searchResults={searchResults}
 				isSearching={isSearching}
 				searchError={searchError}
@@ -133,10 +133,11 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 				resolveError={resolveError}
 				resolvingTaskId={resolvingTaskId}
 				onSearch={search}
-				onSelect={addFromSearch}
+				onSelect={(task) => addFromSearch(task, { onSuccess: () => setPickerOpen(false) })}
 				selectedIds={selected.map(t => t.id)}
 			/>
 		</div>
+		</Dialog>
 	);
 }
 
@@ -297,8 +298,6 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 // ISSUE PICKER DIALOG
 
 interface IssuePickerDialogProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
 	searchResults: Task[];
 	isSearching: boolean;
 	searchError: string | null;
@@ -311,8 +310,6 @@ interface IssuePickerDialogProps {
 }
 
 function IssuePickerDialog({
-	open,
-	onOpenChange,
 	searchResults,
 	isSearching,
 	searchError,
@@ -332,8 +329,7 @@ function IssuePickerDialog({
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent
+		<DialogContent
 				className="sm:max-w-lg"
 				onKeyDown={(e) => e.stopPropagation()}
 			>
@@ -417,8 +413,7 @@ function IssuePickerDialog({
 						})}
 					</div>
 				</div>
-			</DialogContent>
-		</Dialog>
+		</DialogContent>
 	);
 }
 

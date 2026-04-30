@@ -20,7 +20,6 @@ interface TaskLinkingState {
 	detected: DetectedTask[];
 	selected: Task[];
 	showSuggestions: boolean;
-	showPicker: boolean;
 }
 
 type Action =
@@ -30,8 +29,6 @@ type Action =
 	| { type: 'DISMISS_TASK'; taskId: string }
 	| { type: 'DISMISS_ALL' }
 	| { type: 'REMOVE_SELECTED'; taskId: string }
-	| { type: 'OPEN_PICKER' }
-	| { type: 'CLOSE_PICKER' }
 	| { type: 'RESOLVE_SUCCESS'; task: Task };
 
 function reducer(state: TaskLinkingState, action: Action): TaskLinkingState {
@@ -77,17 +74,12 @@ function reducer(state: TaskLinkingState, action: Action): TaskLinkingState {
 			return { ...state, detected: [], showSuggestions: false };
 		case 'REMOVE_SELECTED':
 			return { ...state, selected: state.selected.filter(t => t.id !== action.taskId) };
-		case 'OPEN_PICKER':
-			return { ...state, showPicker: true };
-		case 'CLOSE_PICKER':
-			return { ...state, showPicker: false };
 		case 'RESOLVE_SUCCESS':
 			return {
 				...state,
 				selected: state.selected.some(t => t.id === action.task.id)
 					? state.selected
 					: [...state.selected, action.task],
-				showPicker: false,
 			};
 		default:
 			return state;
@@ -114,7 +106,6 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		detected: [],
 		selected: initialSelected,
 		showSuggestions: false,
-		showPicker: false,
 	});
 
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
@@ -205,14 +196,6 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		dispatch({ type: 'REMOVE_SELECTED', taskId });
 	}, []);
 
-	const openPicker = useCallback(() => {
-		dispatch({ type: 'OPEN_PICKER' });
-	}, []);
-
-	const closePicker = useCallback(() => {
-		dispatch({ type: 'CLOSE_PICKER' });
-	}, []);
-
 	const totalPoints = state.selected.reduce(
 		(sum, task) => sum + (task.storyPoints || 0),
 		0
@@ -223,7 +206,6 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		selected: state.selected,
 		isDetecting: detectMutation.isPending,
 		showSuggestions: state.showSuggestions,
-		showPicker: state.showPicker,
 
 		searchResults: searchMutation.data?.tasks || [],
 		isSearching: searchMutation.isPending,
@@ -240,8 +222,6 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		dismissAll,
 		removeSelected,
 		addFromSearch: resolveMutation.mutate,
-		openPicker,
-		closePicker,
 
 		totalPoints,
 	};
