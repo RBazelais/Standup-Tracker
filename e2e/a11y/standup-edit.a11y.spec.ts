@@ -42,12 +42,19 @@ test.describe('Standup edit – accessibility', () => {
 	});
 
 	test('focus lands in the main content area on route arrival', async ({ page }) => {
-		const focusIsInMain = await page.evaluate(() => {
+		// Start at standup detail (full page load is the starting point, not the thing being tested)
+		await page.goto(`/standup/${MOCK_STANDUP.id}`);
+		await page.waitForLoadState('networkidle');
+
+		// SPA-navigate to edit by clicking the Edit button
+		await page.getByRole('button', { name: 'Edit standup note' }).click();
+		await page.waitForURL(EDIT_URL);
+
+		await page.waitForFunction(() => {
 			const main = document.getElementById('main-content');
 			const focused = document.activeElement;
 			return main ? main.contains(focused) || focused === main : false;
 		});
-		expect(focusIsInMain).toBe(true);
 	});
 
 	test('fields are pre-populated and screen readers can read their values', async ({ page }) => {

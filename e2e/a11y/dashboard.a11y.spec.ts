@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import {
 	loginAs,
 	MOCK_AUTH_WITH_REPO,
+	MOCK_STANDUP,
 	MOCK_STANDUPS,
 	mockStandardRoutes,
 	runAxe,
@@ -52,18 +53,25 @@ test.describe('Dashboard – accessibility', () => {
 	});
 
 	test('navigating to dashboard lands focus in the main content area', async ({ page }) => {
-		// Navigate away then back to simulate SPA route transition
-		await page.goto('/');
-		await loginAs(page, MOCK_AUTH_WITH_REPO);
-		await page.goto('/dashboard');
+		// Specific standup mock so detail page loads (registered after beforeEach general mock, wins LIFO)
+		await page.route(`**/api/standups/${MOCK_STANDUP.id}**`, (route) =>
+			route.fulfill({ json: MOCK_STANDUP })
+		);
+
+		// Use a full page load as the starting point (same pattern as standup-edit route-arrival test)
+		await page.goto(`/standup/${MOCK_STANDUP.id}`);
 		await page.waitForLoadState('networkidle');
 
-		const focusIsInMain = await page.evaluate(() => {
+		// SPA-navigate to dashboard via the header logo link
+		await page.getByRole('link', { name: 'StandUp Tracker Home' }).click();
+		await page.waitForURL('/dashboard');
+
+		// Wait for focus to land in main-content rather than checking immediately after networkidle,
+		// since React effects run asynchronously after the render and can lose the race with networkidle.
+		await page.waitForFunction(() => {
 			const main = document.getElementById('main-content');
 			const focused = document.activeElement;
 			return main ? main.contains(focused) || focused === main : false;
 		});
-
-		expect(focusIsInMain).toBe(true);
 	});
 });
