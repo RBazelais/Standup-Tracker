@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import {
 	loginAs,
-	MOCK_AUTH,
-	MOCK_STANDUP,
+	MOCK_AUTH_WITH_REPO,
+	MOCK_STANDUPS,
 	mockStandardRoutes,
 	runAxe,
 	criticalViolations,
@@ -13,9 +13,9 @@ test.describe('Dashboard – accessibility', () => {
 	test.beforeEach(async ({ page }) => {
 		await mockStandardRoutes(page);
 		await page.route('**/api/standups**', (route) =>
-			route.fulfill({ json: [MOCK_STANDUP] })
+			route.fulfill({ json: MOCK_STANDUPS })
 		);
-		await loginAs(page, MOCK_AUTH);
+		await loginAs(page, MOCK_AUTH_WITH_REPO);
 		await page.goto('/dashboard');
 		await page.waitForLoadState('networkidle');
 	});
@@ -54,7 +54,7 @@ test.describe('Dashboard – accessibility', () => {
 	test('navigating to dashboard lands focus in the main content area', async ({ page }) => {
 		// Navigate away then back to simulate SPA route transition
 		await page.goto('/');
-		await loginAs(page, MOCK_AUTH);
+		await loginAs(page, MOCK_AUTH_WITH_REPO);
 		await page.goto('/dashboard');
 		await page.waitForLoadState('networkidle');
 
