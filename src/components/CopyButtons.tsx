@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Copy, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ interface CopyButtonsProps {
 
 export function CopyButtons({ standup }: CopyButtonsProps) {
 	const [fallbackText, setFallbackText] = useState<string | null>(null);
+	const triggerRef = useRef<HTMLButtonElement>(null);
 
 	const handleCopy = async (format: FormatType) => {
 		const text = formatters[format]({ standup });
@@ -49,6 +50,7 @@ export function CopyButtons({ standup }: CopyButtonsProps) {
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button
+						ref={triggerRef}
 						type="button"
 						variant="outline"
 						size="sm"
@@ -69,7 +71,7 @@ export function CopyButtons({ standup }: CopyButtonsProps) {
 			</DropdownMenu>
 
 			<Dialog open={fallbackText !== null} onOpenChange={(open) => !open && setFallbackText(null)}>
-				<DialogContent>
+				<DialogContent onCloseAutoFocus={(e) => { e.preventDefault(); triggerRef.current?.focus(); }}>
 					<DialogHeader>
 						<DialogTitle>Copy to clipboard</DialogTitle>
 						<DialogDescription>
