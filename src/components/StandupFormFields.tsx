@@ -8,6 +8,7 @@ interface StandupFormFieldsProps {
 	onWorkCompletedChange: (value: string) => void;
 	onWorkPlannedChange: (value: string) => void;
 	onBlockersChange: (value: string) => void;
+	errors?: { workCompleted?: string; workPlanned?: string };
 }
 
 export function StandupFormFields({
@@ -17,6 +18,7 @@ export function StandupFormFields({
 	onWorkCompletedChange,
 	onWorkPlannedChange,
 	onBlockersChange,
+	errors = {},
 }: StandupFormFieldsProps) {
 	return (
 		<>
@@ -30,8 +32,14 @@ export function StandupFormFields({
 					onChange={(e) => onWorkCompletedChange(e.target.value)}
 					placeholder="What did you work on during this period?"
 					className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[100px] focus:bg-surface-raised"
-					required
+					aria-invalid={errors.workCompleted ? 'true' : undefined}
+					aria-describedby={errors.workCompleted ? 'workCompleted-error' : undefined}
 				/>
+				{errors.workCompleted && (
+					<p id="workCompleted-error" className="text-sm text-red-500">
+						{errors.workCompleted}
+					</p>
+				)}
 			</div>
 
 			<div className="space-y-2">
@@ -44,8 +52,14 @@ export function StandupFormFields({
 					onChange={(e) => onWorkPlannedChange(e.target.value)}
 					placeholder="What will you work on next?"
 					className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[100px] focus:bg-surface-raised"
-					required
+					aria-invalid={errors.workPlanned ? 'true' : undefined}
+					aria-describedby={errors.workPlanned ? 'workPlanned-error' : undefined}
 				/>
+				{errors.workPlanned && (
+					<p id="workPlanned-error" className="text-sm text-red-500">
+						{errors.workPlanned}
+					</p>
+				)}
 			</div>
 
 			<div className="space-y-2">

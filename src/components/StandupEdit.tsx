@@ -31,11 +31,11 @@ export function StandupEdit() {
 	if (isLoading) {
 		return (
 			<div className="min-h-screen bg-surface-base">
-				<main className="container mx-auto px-6 py-8 max-w-4xl">
+				<div className="container mx-auto px-6 py-8 max-w-4xl">
 					<div className="flex items-center justify-center py-20">
 						<Loader2 className="h-8 w-8 animate-spin text-accent" />
 					</div>
-				</main>
+				</div>
 			</div>
 		);
 	}
@@ -43,7 +43,7 @@ export function StandupEdit() {
 	if (error || !standup) {
 		return (
 			<div className="min-h-screen bg-surface-base">
-				<main className="container mx-auto px-6 py-8 max-w-4xl">
+				<div className="container mx-auto px-6 py-8 max-w-4xl">
 					<Card className="p-8 bg-surface-raised border-border text-center">
 							<h2 className="text-2xl font-bold text-foreground mb-4">
 								Standup Not Found
@@ -60,7 +60,7 @@ export function StandupEdit() {
 							</Button>
 						</Link>
 					</Card>
-				</main>
+				</div>
 			</div>
 		);
 	}
@@ -97,6 +97,7 @@ function StandupEditForm({
 	const [linkedTaskIds, setLinkedTaskIds] = useState<string[]>(
 		() => initialData.linkedTasks?.map((t) => t.id) ?? []
 	);
+	const [errors, setErrors] = useState<{ workCompleted?: boolean; workPlanned?: boolean }>({});
 
 	const handleCancel = () => {
 		navigate(`/standup/${id}`);
@@ -104,6 +105,13 @@ function StandupEditForm({
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		const newErrors = {
+			workCompleted: !workCompleted.trim(),
+			workPlanned: !workPlanned.trim(),
+		};
+		setErrors(newErrors);
+		if (newErrors.workCompleted || newErrors.workPlanned) return;
 
 		updateStandup(
 			{
@@ -125,7 +133,7 @@ function StandupEditForm({
 
 	return (
 		<div className="min-h-screen bg-surface-base">
-			<main className="container mx-auto px-6 py-8 max-w-4xl">
+			<div className="container mx-auto px-6 py-8 max-w-4xl">
 				{/* Breadcrumb */}
 				<div className="mb-6">
 					<Link to={`/standup/${id}`}>
@@ -158,13 +166,20 @@ function StandupEditForm({
 							<Textarea
 								id="workCompleted"
 								value={workCompleted}
-								onChange={(e) =>
-									setWorkCompleted(e.target.value)
-								}
+								onChange={(e) => {
+									setWorkCompleted(e.target.value);
+									if (errors.workCompleted) setErrors((prev) => ({ ...prev, workCompleted: false }));
+								}}
 								placeholder="What did you work on?"
 								className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[120px]"
-								required
+								aria-invalid={errors.workCompleted ? 'true' : undefined}
+								aria-describedby={errors.workCompleted ? 'workCompleted-error' : undefined}
 							/>
+							{errors.workCompleted && (
+								<p id="workCompleted-error" className="text-sm text-red-500">
+									This field is required.
+								</p>
+							)}
 						</div>
 
 						{/* Work Planned */}
@@ -178,11 +193,20 @@ function StandupEditForm({
 							<Textarea
 								id="workPlanned"
 								value={workPlanned}
-								onChange={(e) => setWorkPlanned(e.target.value)}
+								onChange={(e) => {
+									setWorkPlanned(e.target.value);
+									if (errors.workPlanned) setErrors((prev) => ({ ...prev, workPlanned: false }));
+								}}
 								placeholder="What will you work on next?"
 								className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[120px]"
-								required
+								aria-invalid={errors.workPlanned ? 'true' : undefined}
+								aria-describedby={errors.workPlanned ? 'workPlanned-error' : undefined}
 							/>
+							{errors.workPlanned && (
+								<p id="workPlanned-error" className="text-sm text-red-500">
+									This field is required.
+								</p>
+							)}
 						</div>
 
 						{/* Blockers */}
@@ -245,7 +269,7 @@ function StandupEditForm({
 						</div>
 					</form>
 				</Card>
-			</main>
+			</div>
 		</div>
 	);
 }

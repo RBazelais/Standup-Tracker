@@ -134,7 +134,7 @@ test.describe("Task Linking", () => {
 		await expect(page.getByRole("dialog")).toBeVisible();
 
 		await page.keyboard.press("Escape");
-		await expect(page.getByRole("dialog")).not.toBeVisible();
+		await expect(page.getByRole("dialog")).not.toBeAttached();
 	});
 
 	test("typing in search input and clicking Search keeps dialog open", async ({
@@ -183,7 +183,7 @@ test.describe("Task Linking", () => {
 		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
 		await page.getByRole("button", { name: /^search$/i }).click();
 		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
-		await expect(page.getByRole("dialog")).not.toBeVisible();
+		await expect(page.getByRole("dialog")).not.toBeAttached();
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 
 		// Hover the card to reveal the remove button, then remove
@@ -299,7 +299,7 @@ test.describe("Task Linking", () => {
 		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
 
 		// Dialog closes after linking
-		await expect(page.getByRole("dialog")).not.toBeVisible();
+		await expect(page.getByRole("dialog")).not.toBeAttached();
 
 		// Task appears in the linked list
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
@@ -390,12 +390,12 @@ test.describe("Task Linking - Edit Flow", () => {
 		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
 		await page.getByRole("button", { name: /^search$/i }).click();
 		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
-		await expect(page.getByRole("dialog")).not.toBeVisible();
+		await expect(page.getByRole("dialog")).not.toBeAttached();
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 
 		await page.getByRole("button", { name: /save changes/i }).click();
 
-		await expect(page.getByText(/standup updated/i)).toBeVisible();
+		await expect(page.locator('[data-title]', { hasText: /standup updated/i })).toBeVisible();
 	});
 
 	test("removing a pre-existing linked task and saving clears it from the detail view", async ({ page }) => {
@@ -427,7 +427,7 @@ test.describe("Task Linking - Edit Flow", () => {
 		await expect(page.getByText("No linked issues yet")).toBeVisible();
 
 		await page.getByRole("button", { name: /save changes/i }).click();
-		await expect(page.getByText(/standup updated/i)).toBeVisible();
+		await expect(page.locator('[data-title]', { hasText: /standup updated/i })).toBeVisible();
 
 		await page.waitForURL(`**/standup/${STANDUP_ID}`);
 		await expect(
@@ -452,7 +452,7 @@ test.describe("Task Linking - Edit Flow", () => {
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 
 		await page.getByRole("button", { name: /save changes/i }).click();
-		await expect(page.getByText(/standup updated/i)).toBeVisible();
+		await expect(page.locator('[data-title]', { hasText: /standup updated/i })).toBeVisible();
 
 		await page.waitForURL(`**/standup/${STANDUP_ID}`);
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
@@ -497,7 +497,7 @@ test.describe("Task Linking - Edit Flow", () => {
 
 		await page.getByRole("button", { name: /save changes/i }).click();
 
-		await expect(page.getByText(/internal server error/i)).toBeVisible();
+		await expect(page.locator('[data-title]', { hasText: /internal server error/i })).toBeVisible();
 		await expect(page).toHaveURL(new RegExp(`/standup/${STANDUP_ID}/edit`));
 	});
 

@@ -64,12 +64,12 @@ export function StandupDetail() {
 	if (isLoading) {
 		return (
 			<div className="min-h-screen bg-surface-base">
-				<main className="container mx-auto px-6 py-8 max-w-4xl">
+				<div className="container mx-auto px-6 py-8 max-w-4xl">
 						<div className="flex items-center justify-center py-20" role="status" aria-live="polite">
 							<Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden="true" />
 							<span className="sr-only">Loading standup note...</span>
 					</div>
-				</main>
+				</div>
 			</div>
 		);
 	}
@@ -77,7 +77,7 @@ export function StandupDetail() {
 	if (error || !standup) {
 		return (
 			<div className="min-h-screen bg-surface-base">
-				<main className="container mx-auto px-6 py-8 max-w-4xl">
+				<div className="container mx-auto px-6 py-8 max-w-4xl">
 					<Card className="p-8 bg-surface-raised border-border text-center" role="alert">
 						<h2 className="text-2xl font-bold text-foreground mb-4">
 							Standup Not Found
@@ -92,14 +92,14 @@ export function StandupDetail() {
 							</Button>
 						</Link>
 					</Card>
-				</main>
+				</div>
 			</div>
 		);
 	}
 
 	return (
 		<div className="min-h-screen bg-surface-base">
-			<main className="container mx-auto px-6 py-8 max-w-4xl">
+			<div className="container mx-auto px-6 py-8 max-w-4xl">
 				{/* Breadcrumb and Actions */}
 				<nav className="mb-6 flex items-center justify-between" aria-label="Standup navigation">
 					<Link to="/dashboard">
@@ -344,7 +344,7 @@ export function StandupDetail() {
 						</div>
 					</Card>
 				</article>
-			</main>
+			</div>
 		</div>
 	);
 }

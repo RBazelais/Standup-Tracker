@@ -18,6 +18,8 @@ const GitHubIcon = ({ className }: { className?: string }) => (
 );
 
 export function LandingPage() {
+	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 	const handleGitHubLogin = () => {
 		const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
 		// Normalize VITE_APP_URL to avoid accidental double-slashes in redirect URIs
@@ -31,10 +33,16 @@ export function LandingPage() {
 
 	return (
 		<div className="dark">
+			<a
+				href="#main-content"
+				className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-accent focus:text-white focus:top-2 focus:left-2 focus:rounded-md"
+			>
+				Skip to main content
+			</a>
 			<div className="min-h-screen transition-colors bg-surface">
-				<main className="px-6 min-h-screen flex flex-col items-center justify-center py-20" role="main" aria-label="StandUp Tracker landing page">
+				<main id="main-content" tabIndex={-1} className="px-6 min-h-screen flex flex-col items-center justify-center py-20" role="main" aria-label="StandUp Tracker landing page">
 					<motion.div
-						initial={{ opacity: 0, y: 20 }}
+						initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.6 }}
 						className="text-center max-w-4xl w-full"
@@ -51,7 +59,7 @@ export function LandingPage() {
 						</p>
 
 						<motion.div
-							initial={{ opacity: 0, y: 10 }}
+							initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.3, duration: 0.6 }}
 							className="mb-16"
@@ -71,7 +79,7 @@ export function LandingPage() {
 							</p>
 						</motion.div>
 						<motion.section
-							initial={{ opacity: 0, y: 30 }}
+							initial={prefersReducedMotion ? false : { opacity: 0, y: 30 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.5, duration: 0.6 }}
 							className="grid md:grid-cols-3 gap-4 mb-16 max-w-6xl mx-auto"
@@ -98,7 +106,7 @@ export function LandingPage() {
 							/>
 						</motion.section>
 						<motion.section
-							initial={{ opacity: 0, y: 30 }}
+							initial={prefersReducedMotion ? false : { opacity: 0, y: 30 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.7, duration: 0.6 }}
 							aria-labelledby="preview-heading"
