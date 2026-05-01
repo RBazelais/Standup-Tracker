@@ -173,7 +173,13 @@ function StandupEditForm({
 								placeholder="What did you work on?"
 								className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[120px]"
 								aria-invalid={errors.workCompleted ? 'true' : undefined}
+								aria-describedby={errors.workCompleted ? 'workCompleted-error' : undefined}
 							/>
+							{errors.workCompleted && (
+								<p id="workCompleted-error" className="text-sm text-red-500">
+									This field is required.
+								</p>
+							)}
 						</div>
 
 						{/* Work Planned */}
@@ -194,7 +200,13 @@ function StandupEditForm({
 								placeholder="What will you work on next?"
 								className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[120px]"
 								aria-invalid={errors.workPlanned ? 'true' : undefined}
+								aria-describedby={errors.workPlanned ? 'workPlanned-error' : undefined}
 							/>
+							{errors.workPlanned && (
+								<p id="workPlanned-error" className="text-sm text-red-500">
+									This field is required.
+								</p>
+							)}
 						</div>
 
 						{/* Blockers */}
