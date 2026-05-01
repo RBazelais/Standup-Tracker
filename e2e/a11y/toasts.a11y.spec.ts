@@ -72,8 +72,8 @@ test.describe('Toast live regions – accessibility', () => {
 		const copyOption = page.getByRole('menuitem').first();
 		await copyOption.click();
 
-		const successToast = page.locator('[data-sonner-toast][role="status"]');
-		await expect(successToast).toBeAttached({ timeout: 3000 });
+		const successAnnouncer = page.locator('#toast-announcer-polite');
+		await expect(successAnnouncer).not.toHaveText('', { timeout: 3000 });
 	});
 
 	test('submission error toast uses role="alert" for an assertive announcement', async ({ page }) => {
@@ -88,7 +88,7 @@ test.describe('Toast live regions – accessibility', () => {
 		await page.getByLabel('Planned').fill('More work');
 		await page.getByRole('button', { name: /save standup/i }).click();
 
-		const errorToast = page.locator('[data-sonner-toast][role="alert"]');
-		await expect(errorToast).toBeAttached({ timeout: 3000 });
+		const errorAnnouncer = page.locator('#toast-announcer-assertive');
+		await expect(errorAnnouncer).not.toHaveText('', { timeout: 3000 });
 	});
 });
