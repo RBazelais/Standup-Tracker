@@ -113,20 +113,23 @@ async function handleSearch(req: VercelRequest, res: VercelResponse, userId: str
 	if (!query || typeof query !== "string") {
 		return res.status(400).json({ error: "query is required" });
 	}
-	if (!source || source !== "github") {
-		return res.status(400).json({ error: "source must be 'github'" });
+	if (!source || (source !== "github" && source !== "jira")) {
+		return res.status(400).json({ error: "source must be 'github' or 'jira'" });
 	}
-	if (!repoFullName || typeof repoFullName !== "string") {
-		return res.status(400).json({ error: "repoFullName is required" });
+	if (source === "github" && (!repoFullName || typeof repoFullName !== "string")) {
+		return res.status(400).json({ error: "repoFullName is required for GitHub source" });
 	}
 
 	try {
 		const service = createTaskLinkingService(integrationDb);
-		const adapterReady = await service.initializeAdapters(userId, repoFullName);
+		await service.initializeAdapters(userId, repoFullName || "");
 
-		if (!adapterReady) {
-			console.warn(`[tasks/search] No GitHub integration found for userId=${userId}`);
-			return res.status(401).json({ error: "GitHub integration not connected. Please sign out and sign back in." });
+		if (!service.isAdapterReady(source)) {
+			const msg = source === "jira"
+				? "Jira integration not connected. Go to Settings to connect."
+				: "GitHub integration not connected. Please sign out and sign back in.";
+			console.warn(`[tasks/search] ${source} adapter not ready for userId=${userId}`);
+			return res.status(401).json({ error: msg });
 		}
 
 		const result = await service.searchTasks(query, source, {
@@ -151,20 +154,23 @@ async function handleResolve(req: VercelRequest, res: VercelResponse, userId: st
 	if (!externalId || typeof externalId !== "string") {
 		return res.status(400).json({ error: "externalId is required" });
 	}
-	if (!source || source !== "github") {
-		return res.status(400).json({ error: "source must be 'github'" });
+	if (!source || (source !== "github" && source !== "jira")) {
+		return res.status(400).json({ error: "source must be 'github' or 'jira'" });
 	}
-	if (!repoFullName || typeof repoFullName !== "string") {
-		return res.status(400).json({ error: "repoFullName is required" });
+	if (source === "github" && (!repoFullName || typeof repoFullName !== "string")) {
+		return res.status(400).json({ error: "repoFullName is required for GitHub source" });
 	}
 
 	try {
 		const service = createTaskLinkingService(integrationDb);
-		const adapterReady = await service.initializeAdapters(userId, repoFullName);
+		await service.initializeAdapters(userId, repoFullName || "");
 
-		if (!adapterReady) {
-			console.warn(`[tasks/resolve] No GitHub integration found for userId=${userId}`);
-			return res.status(401).json({ error: "GitHub integration not connected. Please sign out and sign back in." });
+		if (!service.isAdapterReady(source)) {
+			const msg = source === "jira"
+				? "Jira integration not connected. Go to Settings to connect."
+				: "GitHub integration not connected. Please sign out and sign back in.";
+			console.warn(`[tasks/resolve] ${source} adapter not ready for userId=${userId}`);
+			return res.status(401).json({ error: msg });
 		}
 
 		const task = await service.resolveExternalTask(externalId, source, userId);
