@@ -99,7 +99,7 @@ export class JiraAdapter {
 			maxResults: String(options.limit ?? 20),
 		});
 
-		const res = await this.client.fetch(`/search?${params}`);
+		const res = await this.client.fetch(`/search/jql?${params}`);
 		if (!res.ok) {
 			const text = await res.text();
 			throw new Error(`Jira search failed (${res.status}): ${text}`);

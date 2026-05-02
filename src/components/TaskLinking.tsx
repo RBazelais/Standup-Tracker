@@ -74,7 +74,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 			<div className="flex items-center justify-between">
 				<h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
 					<GitBranch className="h-4 w-4" />
-					Linked Issues
+					Linked Tasks
 					{totalPoints > 0 && (
 						<Badge variant="secondary" className="ml-2">
 							{totalPoints} pts
@@ -89,7 +89,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 					className="gap-1"
 				>
 					<Plus className="h-4 w-4" />
-					Link Issue
+					Link Task
 				</Button>
 			</div>
 
@@ -125,7 +125,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 				</div>
 			) : (
 				<div className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-lg">
-					No linked issues yet
+					No linked tasks yet
 				</div>
 			)}
 
@@ -363,7 +363,7 @@ function IssuePickerDialog({
 				onKeyDown={(e) => e.stopPropagation()}
 			>
 				<DialogHeader>
-					<DialogTitle>Link Issue</DialogTitle>
+					<DialogTitle>Link Task</DialogTitle>
 				</DialogHeader>
 
 				<div className="space-y-4">
