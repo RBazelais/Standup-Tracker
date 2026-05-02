@@ -21,11 +21,15 @@ function createMockRes() {
 		_headers: {} as Record<string, string>,
 		_redirectArgs: null as [number, string] | null,
 		_jsonData: null as unknown,
+		status: vi.fn(),
+		json: vi.fn(),
+		redirect: vi.fn(),
+		setHeader: vi.fn(),
 	};
-	res.status = vi.fn().mockImplementation((code: number) => { res._status = code; return res; });
-	res.json = vi.fn().mockImplementation((data: unknown) => { res._jsonData = data; return res; });
-	res.redirect = vi.fn().mockImplementation((code: number, url: string) => { res._redirectArgs = [code, url]; return res; });
-	res.setHeader = vi.fn().mockImplementation((name: string, value: string) => { res._headers[name] = value; return res; });
+	res.status.mockImplementation((code: number) => { res._status = code; return res; });
+	res.json.mockImplementation((data: unknown) => { res._jsonData = data; return res; });
+	res.redirect.mockImplementation((code: number, url: string) => { res._redirectArgs = [code, url]; return res; });
+	res.setHeader.mockImplementation((name: string, value: string) => { res._headers[name] = value; return res; });
 	return res;
 }
 

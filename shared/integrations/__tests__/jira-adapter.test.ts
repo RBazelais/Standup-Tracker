@@ -8,6 +8,7 @@ const SITE_URL = 'https://my-team.atlassian.net';
 function makeClient(fetchImpl: (path: string) => Promise<Response>): JiraClient {
 	return {
 		cloudId: 'cloud-abc',
+		siteUrl: '',
 		fetch: vi.fn().mockImplementation(fetchImpl),
 	};
 }
