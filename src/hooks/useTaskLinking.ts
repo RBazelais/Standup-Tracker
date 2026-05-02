@@ -54,6 +54,7 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		showSuggestions: false,
 		showPicker: false,
 	});
+	const [source, setSourceState] = useState<'github' | 'jira'>('github');
 
 	// Auto-detect tasks from commits
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
@@ -101,22 +102,28 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 
 	// Search for tasks manually
 
-	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
-		mutationFn: async (query: string) => {
+	const searchMutation = useMutation<SearchTasksResponse, Error, { query: string; source: 'github' | 'jira' }>({
+		mutationFn: async ({ query, source: searchSource }) => {
 			resolveMutation.reset();
+			const body: Record<string, unknown> = { action: 'search', query, source: searchSource };
+			if (searchSource === 'github') body.repoFullName = standup.repoFullName;
 			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					action: 'search',
-					query,
-					source: 'github',
-					repoFullName: standup.repoFullName,
-				}),
+				body: JSON.stringify(body),
 			});
 			return handleApiResponse<SearchTasksResponse>(response);
 		},
 	});
+
+	const search = useCallback((query: string) => {
+		searchMutation.mutate({ query, source });
+	}, [searchMutation.mutate, source]);
+
+	const setSource = useCallback((newSource: 'github' | 'jira') => {
+		setSourceState(newSource);
+		searchMutation.reset();
+	}, [searchMutation.reset]);
 
 	// Actions
 	const confirmTask = useCallback((task: Task) => {
@@ -220,7 +227,9 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		searchResults: searchMutation.data?.tasks || [],
 		isSearching: searchMutation.isPending,
 		searchError: searchMutation.error?.message || null,
-		search: searchMutation.mutate,
+		search,
+		source,
+		setSource,
 
 		// Resolve (persisting a search result as a real task)
 		isResolving: resolveMutation.isPending,

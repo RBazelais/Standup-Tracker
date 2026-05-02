@@ -15,6 +15,13 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +47,8 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 		isSearching,
 		searchError,
 		search,
+		source,
+		setSource,
 		isResolving,
 		resolveError,
 		resolvingTaskId,
@@ -133,6 +142,8 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 				onSearch={search}
 				onSelect={addFromSearch}
 				selectedIds={selected.map(t => t.id)}
+				source={source}
+				onSourceChange={setSource}
 			/>
 		</div>
 	);
@@ -257,13 +268,16 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 								target="_blank"
 								rel="noopener noreferrer"
 								className="font-mono text-sm text-primary hover:underline flex items-center gap-1"
-								aria-label={`Open ${externalId} on GitHub (opens in new tab)`}
+								aria-label={`Open ${externalId} on ${task.externalSource === 'jira' ? 'Jira' : 'GitHub'} (opens in new tab)`}
 							>
 								{externalId}
 								<ExternalLink className="h-3 w-3" aria-hidden="true" />
 							</a>
 						) : (
 							<span className="font-mono text-sm text-muted-foreground">{externalId}</span>
+						)}
+						{task.externalSource && (
+							<span className="text-xs text-muted-foreground">{task.externalSource === 'jira' ? 'Jira' : 'GitHub'}</span>
 						)}
 						{task.storyPoints != null && task.storyPoints > 0 && (
 							<Badge variant="outline">{task.storyPoints} pts</Badge>
@@ -306,6 +320,8 @@ interface IssuePickerDialogProps {
 	onSearch: (query: string) => void;
 	onSelect: (task: Task) => void;
 	selectedIds: string[];
+	source: 'github' | 'jira';
+	onSourceChange: (source: 'github' | 'jira') => void;
 }
 
 function IssuePickerDialog({
@@ -320,6 +336,8 @@ function IssuePickerDialog({
 	onSearch,
 	onSelect,
 	selectedIds,
+	source,
+	onSourceChange,
 }: IssuePickerDialogProps) {
 	const [query, setQuery] = useState("");
 
@@ -329,6 +347,15 @@ function IssuePickerDialog({
 		}
 	};
 
+	const handleSourceChange = (newSource: 'github' | 'jira') => {
+		onSourceChange(newSource);
+		setQuery("");
+	};
+
+	const placeholder = source === 'jira'
+		? "Search by keyword..."
+		: "Search issues by number or title...";
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
@@ -336,16 +363,27 @@ function IssuePickerDialog({
 				onKeyDown={(e) => e.stopPropagation()}
 			>
 				<DialogHeader>
-					<DialogTitle>Link GitHub Issue</DialogTitle>
+					<DialogTitle>Link Issue</DialogTitle>
 				</DialogHeader>
 
 				<div className="space-y-4">
+					{/* Source select */}
+					<Select value={source} onValueChange={(v) => handleSourceChange(v as 'github' | 'jira')}>
+						<SelectTrigger className="w-32" aria-label="Issue source">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="github">GitHub</SelectItem>
+							<SelectItem value="jira">Jira</SelectItem>
+						</SelectContent>
+					</Select>
+
 					{/* Search Input */}
 					<div className="flex gap-2">
 						<div className="relative flex-1">
 							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 							<Input
-								placeholder="Search issues by number or title..."
+								placeholder={placeholder}
 								value={query}
 								onChange={(e) => setQuery(e.target.value)}
 								onKeyDown={(e) => e.key === "Enter" && handleSearch()}
