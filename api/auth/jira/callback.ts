@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(400).json({ error: 'No accessible Jira resources found' });
 		}
 
-		const { id: cloudId, name: siteName } = resources[0];
+		const { id: cloudId, name: siteName, url: siteUrl } = resources[0];
 		const tokenExpiresAt = new Date(Date.now() + tokens.expiresIn * 1000);
 
 		await db.integrations.upsert({
@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			accessToken: tokens.accessToken,
 			refreshToken: tokens.refreshToken,
 			tokenExpiresAt,
-			metadata: { cloudId, siteName },
+			metadata: { cloudId, siteName, siteUrl },
 			accountName: siteName,
 		});
 
