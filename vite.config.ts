@@ -3,8 +3,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+const isVercelPreview = process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_BRANCH_URL;
+
 export default defineConfig({
 	plugins: [react(), tailwindcss()],
+	define: isVercelPreview ? {
+		'import.meta.env.VITE_APP_URL': JSON.stringify(`https://${process.env.VERCEL_BRANCH_URL}`),
+	} : {},
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
