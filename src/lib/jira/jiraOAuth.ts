@@ -2,7 +2,7 @@ const ATLASSIAN_AUTH_URL = 'https://auth.atlassian.com/authorize';
 const ATLASSIAN_TOKEN_URL = 'https://auth.atlassian.com/oauth/token';
 const ATLASSIAN_RESOURCES_URL = 'https://api.atlassian.com/oauth/token/accessible-resources';
 
-const SCOPES = ['read:jira-work', 'read:jira-user', 'offline_access'];
+const SCOPES = ['read:jira-work', 'read:jira-user', 'write:jira-work', 'offline_access'];
 
 export interface BuildAuthUrlParams {
 	clientId: string;
