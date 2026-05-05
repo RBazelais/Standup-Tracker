@@ -57,9 +57,14 @@ export function useStandups() {
 			toast.error(getErrorMessage(err));
 		},
 
-		onSuccess: () => {
+		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["standups", user?.id] });
-			toast.success("Standup created!");
+			if (data.jiraCommentFailed) {
+				toast.success("Standup created!");
+				toast.warning("Jira comment failed to post. Try reconnecting Jira in Settings.");
+			} else {
+				toast.success("Standup created!");
+			}
 		},
 	});
 

@@ -5,6 +5,7 @@ import type {
 	TaskPriority,
 	ExternalTaskCache,
 	TaskExternalLink,
+	GitHubCommit,
 } from '../types.js';
 
 // TYPES
@@ -155,6 +156,61 @@ export class JiraAdapter {
 		};
 
 		return { task, cache, link };
+	}
+
+	async addComment(issueKey: string, adfBody: Record<string, unknown>): Promise<void> {
+		const res = await this.client.fetch(`/issue/${issueKey}/comment`, {
+			method: 'POST',
+			body: JSON.stringify({ body: adfBody }),
+		});
+		if (!res.ok) {
+			const text = await res.text();
+			throw new Error(`Jira addComment failed (${res.status}): ${text}`);
+		}
+	}
+
+	async postStandupComment(issueKey: string, opts: {
+		date: string;
+		workCompleted: string;
+		commits: GitHubCommit[];
+	}): Promise<void> {
+		const relevantCommits = opts.commits.filter(c =>
+			c.commit.message.toLowerCase().includes(issueKey.toLowerCase())
+		);
+
+		const content: Record<string, unknown>[] = [
+			{
+				type: 'heading',
+				attrs: { level: 3 },
+				content: [{ type: 'text', text: `Standup - ${opts.date}` }],
+			},
+			{
+				type: 'paragraph',
+				content: [{ type: 'text', text: opts.workCompleted || '(no notes)' }],
+			},
+		];
+
+		if (relevantCommits.length > 0) {
+			content.push({
+				type: 'paragraph',
+				content: [{ type: 'text', text: 'Related commits:', marks: [{ type: 'strong' }] }],
+			});
+			content.push({
+				type: 'bulletList',
+				content: relevantCommits.map(c => ({
+					type: 'listItem',
+					content: [{
+						type: 'paragraph',
+						content: [{
+							type: 'text',
+							text: `${c.sha.slice(0, 7)}: ${c.commit.message.split('\n')[0]}`,
+						}],
+					}],
+				})),
+			});
+		}
+
+		await this.addComment(issueKey, { version: 1, type: 'doc', content });
 	}
 
 	private mapStatus(status: JiraIssue['fields']['status']): TaskStatus {
