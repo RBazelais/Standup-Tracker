@@ -3,6 +3,7 @@ import { useStore } from "./store";
 import { LandingPage } from "./components/LandingPage";
 import { AuthCallback } from "./components/AuthCallback";
 import { Dashboard } from "./components/Dashboard";
+import { Settings } from "./components/Settings";
 import { StandupDetail } from "./components/StandupDetail";
 import { StandupEdit } from "./components/StandupEdit";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -32,6 +33,16 @@ function App() {
 						<ProtectedRoute>
 							<Layout>
 								<Dashboard />
+							</Layout>
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/settings"
+					element={
+						<ProtectedRoute>
+							<Layout>
+								<Settings />
 							</Layout>
 						</ProtectedRoute>
 					}

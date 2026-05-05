@@ -27,9 +27,9 @@ export class ApiError extends Error {
 			case 500:
 				return "Something went wrong. Please try again.";
 			case 502:
-                return "Server connection failed. Please try again."
+				return "Server connection failed. Please try again.";
 			case 503:
-                return "Service is temporarily down for maintenance."
+				return "Service is temporarily down for maintenance.";
 			case 504:
 				return "Service temporarily unavailable. Please try again.";
 			default:
@@ -72,6 +72,11 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
 
 // Map specific error messages to user-friendly versions
 function getUserFriendlyMessage(status: number, message: string): string {
+	// Jira auth errors take priority over generic 401 handling
+	if ((status === 401 || status === 403) && message.toLowerCase().includes('jira')) {
+		return 'Your Jira connection has expired. Go to Settings to reconnect.';
+	}
+
 	// Network/auth errors
 	if (status === 401) return "Your session expired. Please sign in again.";
 	if (status === 403) return "You can only access your own data.";

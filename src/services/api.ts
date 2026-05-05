@@ -17,13 +17,13 @@ export const standupsApi = {
 	create: async (
 		userId: string,
 		standup: CreateStandupInput,
-	): Promise<Standup> => {
+	): Promise<Standup & { jiraCommentFailed?: boolean }> => {
 		const response = await fetchWithTimeout(`/api/standups?userId=${userId}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(standup),
 		});
-		return handleApiResponse<Standup>(response);
+		return handleApiResponse<Standup & { jiraCommentFailed?: boolean }>(response);
 	},
 
 	update: async (id: string, updates: UpdateStandupInput): Promise<Standup> => {

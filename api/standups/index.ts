@@ -4,7 +4,11 @@ import { sql } from "@vercel/postgres";
 import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, desc, inArray, getTableColumns } from "drizzle-orm";
-import { fetchLinkedTasks } from "./_helpers.js";
+import { fetchLinkedTasks } from "../../shared/standups-helpers.js";
+import { db as sharedDb } from "../../shared/db.js";
+import { createJiraClient } from "../../shared/integrations/jira-client.js";
+import { createJiraAdapter } from "../../shared/integrations/jira-adapter.js";
+import type { GitHubCommit } from "../../shared/types.js";
 
 const db = drizzle(sql);
 
@@ -108,7 +112,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 			const linkedTasks = await fetchLinkedTasks(newStandup.id);
 
-			return res.status(201).json({ ...newStandup, linkedTasks });
+			// Post standup comment to Jira for any linked Jira tasks (best-effort)
+			const jiraLinks = linkedTasks.flatMap(task =>
+				task.externalLinks
+					.filter(link => link.source === 'jira')
+					.map(link => link.externalId)
+			);
+
+			let jiraCommentFailed = false;
+			if (jiraLinks.length > 0) {
+				try {
+					const jiraClient = await createJiraClient(userId, sharedDb);
+					if (jiraClient) {
+						const adapter = createJiraAdapter(jiraClient, jiraClient.siteUrl);
+						const results = await Promise.allSettled(
+							jiraLinks.map(issueKey =>
+								adapter.postStandupComment(issueKey, {
+									date: newStandup.date,
+									workCompleted: newStandup.workCompleted,
+									commits: newStandup.commits as GitHubCommit[],
+								})
+							)
+						);
+						jiraCommentFailed = results.some(r => r.status === 'rejected');
+						results.forEach((r, i) => {
+							if (r.status === 'rejected') {
+								console.error(`Failed to post Jira comment for ${jiraLinks[i]}:`, r.reason);
+							}
+						});
+					}
+				} catch (err) {
+					console.error('Failed to create Jira client for standup comment:', err);
+					jiraCommentFailed = true;
+				}
+			}
+
+			return res.status(201).json({ ...newStandup, linkedTasks, ...(jiraCommentFailed && { jiraCommentFailed: true }) });
 		} catch (error) {
 			console.error("Failed to create standup:", error);
 			return res.status(500).json({

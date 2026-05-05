@@ -1,4 +1,6 @@
 import { createGitHubAdapter, type GitHubAdapter, type GitHubIssue } from './integrations/github-adapter.js';
+import { createJiraAdapter, type JiraAdapter } from './integrations/jira-adapter.js';
+import { createJiraClient } from './integrations/jira-client.js';
 import type { Task, Standup, ExternalTaskCache, ExternalSource } from './types.js';
 
 interface DetectedTask {
@@ -20,7 +22,22 @@ interface LinkingResult {
 
 interface DatabaseClient {
 	integrations: {
-		findOne: (query: { userId: string; source: 'github' }) => Promise<{ accessToken: string } | null>;
+		findOne: (query: { userId: string; source: ExternalSource }) => Promise<{
+			accessToken: string;
+			refreshToken: string | null;
+			tokenExpiresAt: Date | null;
+			metadata: Record<string, unknown> | null;
+			accountName: string | null;
+		} | null>;
+		upsert: (payload: {
+			userId: string;
+			source: string;
+			accessToken: string;
+			refreshToken?: string;
+			tokenExpiresAt?: Date;
+			metadata?: Record<string, unknown>;
+			accountName?: string;
+		}) => Promise<void>;
 	};
 	externalTaskCache: {
 		findOne: (query: { externalId: string; source: ExternalSource }) => Promise<ExternalTaskCache | null>;
@@ -72,23 +89,29 @@ interface DatabaseClient {
 export class TaskLinkingService {
 	private db: DatabaseClient;
 	private githubAdapter: GitHubAdapter | null = null;
+	private jiraAdapter: JiraAdapter | null = null;
 
 	constructor(db: DatabaseClient) {
 		this.db = db;
 	}
 
 	async initializeAdapters(userId: string, repoFullName: string): Promise<boolean> {
-		const integration = await this.db.integrations.findOne({
-			userId,
-			source: 'github',
-		});
-
-		if (integration) {
-			this.githubAdapter = createGitHubAdapter(integration.accessToken, repoFullName);
-			return true;
+		const githubIntegration = await this.db.integrations.findOne({ userId, source: 'github' });
+		if (githubIntegration) {
+			this.githubAdapter = createGitHubAdapter(githubIntegration.accessToken, repoFullName);
 		}
 
-		return false;
+		const jiraClient = await createJiraClient(userId, {
+			integrations: {
+				findOne: (q) => this.db.integrations.findOne({ userId: q.userId, source: q.source as ExternalSource }),
+				upsert: (p) => this.db.integrations.upsert(p),
+			},
+		});
+		if (jiraClient) {
+			this.jiraAdapter = createJiraAdapter(jiraClient, jiraClient.siteUrl);
+		}
+
+		return !!(this.githubAdapter || this.jiraAdapter);
 	}
 
 	async detectAndResolveTasks(standup: Partial<Standup>, userId: string): Promise<LinkingResult> {
@@ -121,6 +144,28 @@ export class TaskLinkingService {
 			}
 		}
 
+		if (standup.commits?.length && this.jiraAdapter) {
+			const jiraKeyPattern = /\b([A-Z][A-Z0-9]+-\d+)\b/g;
+			const seen = new Set<string>();
+			for (const commit of standup.commits) {
+				if (!commit?.commit?.message) continue;
+				jiraKeyPattern.lastIndex = 0;
+				let match: RegExpExecArray | null;
+				while ((match = jiraKeyPattern.exec(commit.commit.message)) !== null) {
+					const key = match[1];
+					if (!seen.has(key)) {
+						seen.add(key);
+						result.detected.push({
+							externalId: key,
+							source: 'jira',
+							confidence: 'inferred',
+							raw: match[0],
+						});
+					}
+				}
+			}
+		}
+
 		for (const detected of result.detected) {
 			try {
 				const task = await this.resolveTask(detected, userId);
@@ -147,6 +192,14 @@ export class TaskLinkingService {
 		}
 
 		return result;
+	}
+
+	isAdapterReady(source: ExternalSource): boolean {
+		switch (source) {
+			case 'github': return this.githubAdapter !== null;
+			case 'jira': return this.jiraAdapter !== null;
+			default: return false;
+		}
 	}
 
 	determineConfidence(raw: string): 'explicit' | 'inferred' {
@@ -236,6 +289,51 @@ export class TaskLinkingService {
 			};
 		}
 
+		if (detected.source === 'jira' && this.jiraAdapter) {
+			const issue = await this.jiraAdapter.getIssue(detected.externalId);
+
+			if (!issue) {
+				throw new Error(`Jira issue ${detected.externalId} not found`);
+			}
+
+			const { task, cache, link } = this.jiraAdapter.normalizeToTask(issue);
+
+			await this.db.externalTaskCache.upsert({
+				...cache,
+				externalId: detected.externalId,
+				source: 'jira',
+			});
+
+			const existingTask = await this.db.tasks.findByExternalLink({
+				externalId: detected.externalId,
+				source: 'jira',
+			});
+
+			if (existingTask) {
+				await this.db.tasks.update(existingTask.id, { ...task, updatedAt: new Date() });
+				return { ...existingTask, ...task, externalLinks: existingTask.externalLinks || [link] };
+			}
+
+			const now = new Date();
+			const newTask = await this.db.tasks.create({
+				...task,
+				userId,
+				firstSprintId: null,
+				rolloverCount: 0,
+				totalSprintsTouched: 0,
+				createdAt: now,
+				updatedAt: now,
+			});
+
+			await this.db.taskExternalLinks.create({
+				taskId: newTask.id,
+				...link,
+				confidence: detected.confidence,
+			});
+
+			return { ...newTask, externalLinks: [{ ...link, taskId: newTask.id }] };
+		}
+
 		return null;
 	}
 
@@ -300,46 +398,61 @@ export class TaskLinkingService {
 			limit?: number;
 		} = {}
 	): Promise<Task[]> {
-		if (source !== 'github' || !this.githubAdapter) {
-			return [];
+		if (source === 'github' && this.githubAdapter) {
+			const adapter = this.githubAdapter;
+			const issues = await adapter.searchIssues({
+				query,
+				state: options.state || 'open',
+				milestone: options.milestone ? Number.parseInt(options.milestone, 10) : undefined,
+				limit: options.limit || 20,
+			});
+
+			const { owner, repo } = adapter.getRepositoryContext();
+			return issues.map(issue => {
+				const { task } = adapter.normalizeToTask(issue, owner, repo);
+				const now = new Date();
+				return {
+					id: `temp-${issue.number}`,
+					title: task.title || issue.title,
+					description: task.description || issue.body || '',
+					status: task.status || 'planned',
+					storyPoints: task.storyPoints,
+					priority: task.priority,
+					externalId: `#${issue.number}`,
+					externalSource: 'github',
+					externalUrl: issue.html_url,
+					externalLinks: [{ externalId: `#${issue.number}`, source: 'github', externalUrl: issue.html_url, confidence: 'explicit' }],
+					createdAt: now,
+					updatedAt: now,
+				} as Task;
+			});
 		}
 
-		const adapter = this.githubAdapter;
+		if (source === 'jira' && this.jiraAdapter) {
+			const adapter = this.jiraAdapter;
+			const issues = await adapter.searchIssues({ query, limit: options.limit || 20 });
 
-		const issues = await adapter.searchIssues({
-			query,
-			state: options.state || 'open',
-			milestone: options.milestone ? Number.parseInt(options.milestone, 10) : undefined,
-			limit: options.limit || 20,
-		});
+			return issues.map(issue => {
+				const { task } = adapter.normalizeToTask(issue);
+				const now = new Date();
+				return {
+					id: `temp-${issue.key}`,
+					title: task.title || issue.fields.summary,
+					description: task.description || '',
+					status: task.status || 'planned',
+					storyPoints: task.storyPoints,
+					priority: task.priority,
+					externalId: issue.key,
+					externalSource: 'jira',
+					externalUrl: task.externalUrl,
+					externalLinks: [{ externalId: issue.key, source: 'jira', externalUrl: task.externalUrl, confidence: 'explicit' }],
+					createdAt: now,
+					updatedAt: now,
+				} as Task;
+			});
+		}
 
-		const { owner, repo } = adapter.getRepositoryContext();
-		return issues.map(issue => {
-			const { task } = adapter.normalizeToTask(issue, owner, repo);
-			const now = new Date();
-			return {
-				// Temporary client-only identifier for unpersisted search results.
-				id: `temp-${issue.number}`,
-				title: task.title || issue.title,
-				description: task.description || issue.body || '',
-				status: task.status || 'planned',
-				storyPoints: task.storyPoints,
-				priority: task.priority,
-				externalId: `#${issue.number}`,
-				externalSource: 'github',
-				externalUrl: issue.html_url,
-				externalLinks: [
-					{
-						externalId: `#${issue.number}`,
-						source: 'github',
-						externalUrl: issue.html_url,
-						confidence: 'explicit',
-					},
-				],
-				createdAt: now,
-				updatedAt: now,
-			} as Task;
-		});
+		return [];
 	}
 
 	async linkTasksToStandup(standupId: string, taskIds: string[], snapshotSprintId?: string) {

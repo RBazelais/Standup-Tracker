@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { db } from "../lib/db.js";
+import { db } from "../../shared/db.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const clientId = process.env.GITHUB_CLIENT_ID || process.env.VITE_GITHUB_CLIENT_ID;

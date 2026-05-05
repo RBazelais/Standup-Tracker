@@ -30,7 +30,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json(task[0]);
 		} catch (error) {
 			console.error("Failed to fetch task:", error);
-			return res.status(500).json({ error: "Failed to fetch task" });
+			return res.status(500).json({
+				error: "Failed to fetch task",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
@@ -72,7 +75,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json(updatedTask[0]);
 		} catch (error) {
 			console.error("Failed to update task:", error);
-			return res.status(500).json({ error: "Failed to update task" });
+			return res.status(500).json({
+				error: "Failed to update task",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
@@ -83,7 +89,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			return res.status(200).json({ success: true });
 		} catch (error) {
 			console.error("Failed to delete task:", error);
-			return res.status(500).json({ error: "Failed to delete task" });
+			return res.status(500).json({
+				error: "Failed to delete task",
+				details: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 

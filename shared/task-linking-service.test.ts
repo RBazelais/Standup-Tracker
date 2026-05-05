@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { TaskLinkingService } from './task-linking-service';
 
 // Minimal stub — determineConfidence doesn't touch the db
-const stubDb = {} as Parameters<typeof TaskLinkingService.prototype.constructor>[0];
+const stubDb = {} as ConstructorParameters<typeof TaskLinkingService>[0];
 const service = new TaskLinkingService(stubDb);
 
 describe('TaskLinkingService.determineConfidence', () => {

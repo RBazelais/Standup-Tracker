@@ -83,6 +83,9 @@ export const integrations = pgTable("integrations", {
 	userId: text("user_id").notNull(),
 	source: text("source").notNull(), // 'github' | 'jira' | 'linear' | 'asana'
 	accessToken: text("access_token").notNull(),
+	refreshToken: text("refresh_token"),
+	tokenExpiresAt: timestamp("token_expires_at"),
+	metadata: jsonb("metadata"), // provider-specific e.g. { cloudId, siteName } for Jira
 	accountName: text("account_name"),
 	connectedAt: timestamp("connected_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),

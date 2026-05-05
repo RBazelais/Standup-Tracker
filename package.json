@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "vercel:dev": "sh -c 'set -a && . ./.env.local && set +a && vercel dev'",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

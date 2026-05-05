@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useEffect } from "react";
+import { useState, useReducer, useCallback, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { Task, Standup } from "@/types";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
@@ -107,11 +107,12 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		selected: initialSelected,
 		showSuggestions: false,
 	});
+	const [source, setSourceState] = useState<'github' | 'jira'>('github');
 
 	const detectMutation = useMutation<DetectTasksResponse, Error, NonNullable<Standup['commits']>>({
 		retry: false,
 		mutationFn: async (commits) => {
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -139,27 +140,33 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		}
 	}, [standup.commits, enabled, detectMutate, standup.repoFullName]);
 
-	const searchMutation = useMutation<SearchTasksResponse, Error, string>({
-		mutationFn: async (query: string) => {
+	const searchMutation = useMutation<SearchTasksResponse, Error, { query: string; source: 'github' | 'jira' }>({
+		mutationFn: async ({ query, source: searchSource }) => {
 			resolveMutation.reset();
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const body: Record<string, unknown> = { action: 'search', query, source: searchSource };
+			if (searchSource === 'github') body.repoFullName = standup.repoFullName;
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					action: 'search',
-					query,
-					source: 'github',
-					repoFullName: standup.repoFullName,
-				}),
+				body: JSON.stringify(body),
 			});
 			return handleApiResponse<SearchTasksResponse>(response);
 		},
 	});
 
+	const search = useCallback((query: string) => {
+		searchMutation.mutate({ query, source });
+	}, [searchMutation.mutate, source]);
+
+	const setSource = useCallback((newSource: 'github' | 'jira') => {
+		setSourceState(newSource);
+		searchMutation.reset();
+	}, [searchMutation.reset]);
+
 	const resolveMutation = useMutation<ResolveTaskResponse, Error, Task>({
 		retry: false,
 		mutationFn: async (task: Task) => {
-			const response = await fetchWithTimeout(`/api/tasks/actions?userId=${user.id}`, {
+			const response = await fetchWithTimeout(`/api/tasks?userId=${user.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -210,7 +217,9 @@ export function useTaskLinking({ standup, enabled = true, initialSelected = [] }
 		searchResults: searchMutation.data?.tasks || [],
 		isSearching: searchMutation.isPending,
 		searchError: searchMutation.error?.message || null,
-		search: searchMutation.mutate,
+		search,
+		source,
+		setSource,
 
 		isResolving: resolveMutation.isPending,
 		resolveError: resolveMutation.error?.message || null,

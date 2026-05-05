@@ -1,28 +1,33 @@
-// src/components/standup/task-linking.tsx
-
-import { useEffect, useState } from 'react';
-import { 
-	Plus, 
-	X, 
-	Check, 
-	Search, 
+import { useEffect, useState } from "react";
+import {
+	Plus,
+	X,
+	Check,
+	Search,
 	ExternalLink,
 	GitBranch,
 	AlertCircle,
 	Loader2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { useTaskLinking } from '@/hooks/useTaskLinking';
-import type { Task, Standup } from '@/types';
+} from "@/components/ui/dialog";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { useTaskLinking } from "@/hooks/useTaskLinking";
+import type { Task, Standup } from "@/types";
 
 // MAIN COMPONENT
 
@@ -42,6 +47,8 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 		isSearching,
 		searchError,
 		search,
+		source,
+		setSource,
 		isResolving,
 		resolveError,
 		resolvingTaskId,
@@ -68,7 +75,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 			<div className="flex items-center justify-between">
 				<h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
 					<GitBranch className="h-4 w-4" />
-					Linked Issues
+					Linked Tasks
 					{totalPoints > 0 && (
 						<Badge variant="secondary" className="ml-2">
 							{totalPoints} pts
@@ -83,7 +90,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 						className="gap-1"
 					>
 						<Plus className="h-4 w-4" />
-						Link Issue
+						Link Task
 					</Button>
 				</DialogTrigger>
 			</div>
@@ -120,7 +127,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 				</div>
 			) : (
 				<div className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-lg">
-					No linked issues yet
+					No linked tasks yet
 				</div>
 			)}
 
@@ -135,6 +142,8 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 				onSearch={search}
 				onSelect={(task) => addFromSearch(task, { onSuccess: () => setPickerOpen(false) })}
 				selectedIds={selected.map(t => t.id)}
+				source={source}
+				onSourceChange={setSource}
 			/>
 		</div>
 		</Dialog>
@@ -260,13 +269,16 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 								target="_blank"
 								rel="noopener noreferrer"
 								className="font-mono text-sm text-primary hover:underline flex items-center gap-1"
-								aria-label={`Open ${externalId} on GitHub (opens in new tab)`}
+								aria-label={`Open ${externalId} on ${task.externalSource === 'jira' ? 'Jira' : 'GitHub'} (opens in new tab)`}
 							>
 								{externalId}
 								<ExternalLink className="h-3 w-3" aria-hidden="true" />
 							</a>
 						) : (
 							<span className="font-mono text-sm text-muted-foreground">{externalId}</span>
+						)}
+						{task.externalSource && (
+							<span className="text-xs text-muted-foreground">{task.externalSource === 'jira' ? 'Jira' : 'GitHub'}</span>
 						)}
 						{task.storyPoints != null && task.storyPoints > 0 && (
 							<Badge variant="outline">{task.storyPoints} pts</Badge>
@@ -307,6 +319,8 @@ interface IssuePickerDialogProps {
 	onSearch: (query: string) => void;
 	onSelect: (task: Task) => void;
 	selectedIds: string[];
+	source: 'github' | 'jira';
+	onSourceChange: (source: 'github' | 'jira') => void;
 }
 
 function IssuePickerDialog({
@@ -319,8 +333,10 @@ function IssuePickerDialog({
 	onSearch,
 	onSelect,
 	selectedIds,
+	source,
+	onSourceChange,
 }: IssuePickerDialogProps) {
-	const [query, setQuery] = useState('');
+	const [query, setQuery] = useState("");
 
 	const handleSearch = () => {
 		if (query.trim()) {
@@ -328,26 +344,47 @@ function IssuePickerDialog({
 		}
 	};
 
+	const handleSourceChange = (newSource: 'github' | 'jira') => {
+		onSourceChange(newSource);
+		setQuery("");
+	};
+
+	const placeholder = source === 'jira'
+		? "Search by keyword..."
+		: "Search issues by number or title...";
+
 	return (
 		<DialogContent
 				className="sm:max-w-lg"
 				onKeyDown={(e) => e.stopPropagation()}
 			>
 				<DialogHeader>
-					<DialogTitle>Link GitHub Issue</DialogTitle>
+					<DialogTitle>Link Task</DialogTitle>
 				</DialogHeader>
 
 				<div className="space-y-4">
+					{/* Source select */}
+					<Select value={source} onValueChange={(v) => handleSourceChange(v as 'github' | 'jira')}>
+						<SelectTrigger className="w-32" aria-label="Issue source">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="github">GitHub</SelectItem>
+							<SelectItem value="jira">Jira</SelectItem>
+						</SelectContent>
+					</Select>
+
 					{/* Search Input */}
 					<div className="flex gap-2">
 						<div className="relative flex-1">
 							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 							<Input
-								placeholder="Search issues by number or title..."
+								placeholder={placeholder}
 								value={query}
 								onChange={(e) => setQuery(e.target.value)}
-								onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+								onKeyDown={(e) => e.key === "Enter" && handleSearch()}
 								className="pl-9"
+								autoFocus
 							/>
 						</div>
 						<Button onClick={handleSearch} disabled={isSearching}>

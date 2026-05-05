@@ -21,6 +21,9 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+    },
   },
   // Disable react-refresh rule for shadcn/ui components (they export variants by design)
   {

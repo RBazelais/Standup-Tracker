@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-check
 *.local
 .history
 
@@ -26,6 +27,7 @@ dist-ssr
 .env
 .vercel
 .env*.local
+scripts/
 
 # TypeScript build info
 *.tsbuildinfo
