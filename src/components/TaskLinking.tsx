@@ -14,6 +14,7 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
+	DialogTrigger,
 } from "@/components/ui/dialog";
 import {
 	Select,
@@ -81,16 +82,17 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 						</Badge>
 					)}
 				</h3>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					onClick={() => setPickerOpen(true)}
-					className="gap-1"
-				>
-					<Plus className="h-4 w-4" />
-					Link Task
-				</Button>
+				<DialogTrigger asChild>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="gap-1"
+					>
+						<Plus className="h-4 w-4" />
+						Link Task
+					</Button>
+				</DialogTrigger>
 			</div>
 
 			{/* Detection Loading State */}
@@ -382,6 +384,7 @@ function IssuePickerDialog({
 								onChange={(e) => setQuery(e.target.value)}
 								onKeyDown={(e) => e.key === "Enter" && handleSearch()}
 								className="pl-9"
+								autoFocus
 							/>
 						</div>
 						<Button onClick={handleSearch} disabled={isSearching}>

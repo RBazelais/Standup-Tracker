@@ -81,37 +81,37 @@ test.describe("Task Linking", () => {
 
 		// Wait until the task linking section is visible (confirms StandupForm rendered)
 		await expect(
-			page.getByRole("button", { name: /link issue/i })
+			page.getByRole("button", { name: /link task/i })
 		).toBeVisible();
 	});
 
-	test("shows Linked Issues heading", async ({ page }) => {
+	test("shows Linked Tasks heading", async ({ page }) => {
 		await expect(
-			page.locator("h3").filter({ hasText: "Linked Issues" })
+			page.locator("h3").filter({ hasText: "Linked Tasks" })
 		).toBeVisible();
 	});
 
 	test("shows empty state when no issues are linked", async ({ page }) => {
-		await expect(page.getByText("No linked issues yet")).toBeVisible();
+		await expect(page.getByText("No linked tasks yet")).toBeVisible();
 	});
 
-	test("shows Link Issue button", async ({ page }) => {
+	test("shows Link Task button", async ({ page }) => {
 		await expect(
-			page.getByRole("button", { name: /link issue/i })
+			page.getByRole("button", { name: /link task/i })
 		).toBeVisible();
 	});
 
-	test("opens issue picker dialog on Link Issue click", async ({ page }) => {
-		await page.getByRole("button", { name: /link issue/i }).click();
+	test("opens issue picker dialog on Link Task click", async ({ page }) => {
+		await page.getByRole("button", { name: /link task/i }).click();
 
 		await expect(page.getByRole("dialog")).toBeVisible();
 		await expect(
-			page.getByRole("heading", { name: /link github issue/i })
+			page.getByRole("heading", { name: /link task/i })
 		).toBeVisible();
 	});
 
 	test("issue picker has a search input and search button", async ({ page }) => {
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 
 		await expect(
 			page.getByPlaceholder(/search issues by number or title/i)
@@ -122,7 +122,7 @@ test.describe("Task Linking", () => {
 	});
 
 	test("issue picker shows empty prompt before any search", async ({ page }) => {
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 
 		await expect(
 			page.getByText(/search for issues to link/i)
@@ -130,7 +130,7 @@ test.describe("Task Linking", () => {
 	});
 
 	test("issue picker closes on Escape", async ({ page }) => {
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 		await expect(page.getByRole("dialog")).toBeVisible();
 
 		await page.keyboard.press("Escape");
@@ -140,7 +140,7 @@ test.describe("Task Linking", () => {
 	test("typing in search input and clicking Search keeps dialog open", async ({
 		page,
 	}) => {
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 
 		await page
 			.getByPlaceholder(/search issues by number or title/i)
@@ -179,7 +179,7 @@ test.describe("Task Linking", () => {
 		});
 
 		// Link the task first
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
 		await page.getByRole("button", { name: /^search$/i }).click();
 		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
@@ -194,7 +194,7 @@ test.describe("Task Linking", () => {
 
 		// Task should be gone, empty state should return
 		await expect(page.getByText("Fix authentication bug")).not.toBeVisible();
-		await expect(page.getByText("No linked issues yet")).toBeVisible();
+		await expect(page.getByText("No linked tasks yet")).toBeVisible();
 	});
 
 	test("pressing Enter in search input triggers search", async ({ page }) => {
@@ -219,7 +219,7 @@ test.describe("Task Linking", () => {
 			return route.fulfill({ json: [] });
 		});
 
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 		await page.getByPlaceholder(/search issues by number or title/i).fill("login");
 		await page.keyboard.press("Enter");
 
@@ -235,7 +235,7 @@ test.describe("Task Linking", () => {
 			return route.fulfill({ json: [] });
 		});
 
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 		await page.getByPlaceholder(/search issues by number or title/i).fill("anything");
 		await page.getByRole("button", { name: /^search$/i }).click();
 
@@ -288,7 +288,7 @@ test.describe("Task Linking", () => {
 		});
 
 		// Open picker and search
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
 		await page.getByRole("button", { name: /^search$/i }).click();
 
@@ -335,15 +335,15 @@ test.describe("Task Linking - Edit Flow", () => {
 
 		await page.goto(`/standup/${STANDUP_ID}/edit`);
 		await expect(
-			page.getByRole("button", { name: /link issue/i })
+			page.getByRole("button", { name: /link task/i })
 		).toBeVisible();
 	});
 
 	test("edit form shows task linking section", async ({ page }) => {
 		await expect(
-			page.locator("h3").filter({ hasText: "Linked Issues" })
+			page.locator("h3").filter({ hasText: "Linked Tasks" })
 		).toBeVisible();
-		await expect(page.getByText("No linked issues yet")).toBeVisible();
+		await expect(page.getByText("No linked tasks yet")).toBeVisible();
 	});
 
 	// Fresh navigation helper — page.goto() creates a new JS execution context, so React Query's in-memory cache starts empty and useState in StandupEditForm initializes from the freshly fetched mock, not stale data from beforeEach.
@@ -360,7 +360,7 @@ test.describe("Task Linking - Edit Flow", () => {
 		);
 
 		await freshNavigateToEdit(page);
-		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
+		await expect(page.getByRole("button", { name: /link task/i })).toBeVisible();
 
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 		await expect(page.getByText("#42")).toBeVisible();
@@ -386,7 +386,7 @@ test.describe("Task Linking - Edit Flow", () => {
 			return route.fulfill({ json: MOCK_STANDUP });
 		});
 
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
 		await page.getByRole("button", { name: /^search$/i }).click();
 		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
@@ -401,7 +401,7 @@ test.describe("Task Linking - Edit Flow", () => {
 	test("removing a pre-existing linked task and saving clears it from the detail view", async ({ page }) => {
 		// Track whether save has completed so the GET after navigation reflects
 		// the updated state — without this the detail view refetch would return
-		// the old linkedTasks and "Linked Issues" would still appear
+		// the old linkedTasks and "Linked Tasks" would still appear
 		let saved = false;
 		await page.route(`**/api/standups/${STANDUP_ID}`, async (route) => {
 			if (route.request().method() === "PUT") {
@@ -418,13 +418,13 @@ test.describe("Task Linking - Edit Flow", () => {
 		});
 
 		await freshNavigateToEdit(page);
-		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
+		await expect(page.getByRole("button", { name: /link task/i })).toBeVisible();
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 
 		await page.getByText("Fix authentication bug").hover();
 		await page.getByRole("button", { name: /remove linked issue/i }).click();
 		await expect(page.getByText("Fix authentication bug")).not.toBeVisible();
-		await expect(page.getByText("No linked issues yet")).toBeVisible();
+		await expect(page.getByText("No linked tasks yet")).toBeVisible();
 
 		await page.getByRole("button", { name: /save changes/i }).click();
 		await expect(page.locator('[data-title]', { hasText: /standup updated/i })).toBeVisible();
@@ -448,7 +448,7 @@ test.describe("Task Linking - Edit Flow", () => {
 		});
 
 		await freshNavigateToEdit(page);
-		await expect(page.getByRole("button", { name: /link issue/i })).toBeVisible();
+		await expect(page.getByRole("button", { name: /link task/i })).toBeVisible();
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 
 		await page.getByRole("button", { name: /save changes/i }).click();
@@ -470,7 +470,7 @@ test.describe("Task Linking - Edit Flow", () => {
 			return route.fulfill({ json: [] });
 		});
 
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
 		await page.getByRole("button", { name: /^search$/i }).click();
 		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();
@@ -523,7 +523,7 @@ test.describe("Task Linking - Edit Flow", () => {
 			});
 		});
 
-		await page.getByRole("button", { name: /link issue/i }).click();
+		await page.getByRole("button", { name: /link task/i }).click();
 		await page.getByPlaceholder(/search issues by number or title/i).fill("auth");
 		await page.getByRole("button", { name: /^search$/i }).click();
 		await page.locator("button").filter({ hasText: "Fix authentication bug" }).click();

@@ -47,7 +47,7 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	async function openPicker(page: Parameters<typeof test>[1]['page']) {
-		await page.getByRole('button', { name: /link issue/i }).click();
+		await page.getByRole('button', { name: /link task/i }).click();
 		await expect(page.getByRole('dialog')).toBeVisible();
 	}
 
@@ -114,16 +114,16 @@ test.describe('Task picker dialog – accessibility', () => {
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 	});
 
-	test('focus returns to the "Link issue" button after ESC', async ({ page }) => {
-		const trigger = page.getByRole('button', { name: /link issue/i });
+	test('focus returns to the "Link Task" button after ESC', async ({ page }) => {
+		const trigger = page.getByRole('button', { name: /link task/i });
 		await openPicker(page);
 		await page.keyboard.press('Escape');
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 		await expect(trigger).toBeFocused();
 	});
 
-	test('focus returns to the "Link issue" button after clicking close', async ({ page }) => {
-		const trigger = page.getByRole('button', { name: /link issue/i });
+	test('focus returns to the "Link Task" button after clicking close', async ({ page }) => {
+		const trigger = page.getByRole('button', { name: /link task/i });
 		await openPicker(page);
 
 		const closeButton = page.getByRole('button', { name: /close/i })
