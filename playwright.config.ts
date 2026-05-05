@@ -13,6 +13,7 @@ export default defineConfig({
 		baseURL,
 		trace: "on-first-retry",
 		screenshot: "only-on-failure",
+		permissions: ["clipboard-read", "clipboard-write"],
 		extraHTTPHeaders: process.env.VERCEL_BYPASS_SECRET
 			? { "x-vercel-protection-bypass": process.env.VERCEL_BYPASS_SECRET }
 			: undefined,

@@ -42,7 +42,6 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 		selected,
 		isDetecting,
 		showSuggestions,
-		showPicker,
 		searchResults,
 		isSearching,
 		searchError,
@@ -58,10 +57,10 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 		dismissAll,
 		removeSelected,
 		addFromSearch,
-		openPicker,
-		closePicker,
 		totalPoints,
 	} = useTaskLinking({ standup, initialSelected });
+
+	const [pickerOpen, setPickerOpen] = useState(false);
 
 	// Update parent when selected tasks change
 	useEffect(() => {
@@ -69,6 +68,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 	}, [selected, onTasksChange]);
 
 	return (
+		<Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
 		<div className="space-y-4">
 			{/* Section Header */}
 			<div className="flex items-center justify-between">
@@ -85,7 +85,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 					type="button"
 					variant="ghost"
 					size="sm"
-					onClick={openPicker}
+					onClick={() => setPickerOpen(true)}
 					className="gap-1"
 				>
 					<Plus className="h-4 w-4" />
@@ -131,8 +131,6 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 
 			{/* Issue Picker Modal */}
 			<IssuePickerDialog
-				open={showPicker}
-				onOpenChange={closePicker}
 				searchResults={searchResults}
 				isSearching={isSearching}
 				searchError={searchError}
@@ -140,12 +138,13 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 				resolveError={resolveError}
 				resolvingTaskId={resolvingTaskId}
 				onSearch={search}
-				onSelect={addFromSearch}
+				onSelect={(task) => addFromSearch(task, { onSuccess: () => setPickerOpen(false) })}
 				selectedIds={selected.map(t => t.id)}
 				source={source}
 				onSourceChange={setSource}
 			/>
 		</div>
+		</Dialog>
 	);
 }
 
@@ -309,8 +308,6 @@ function LinkedTaskCard({ task, onRemove }: LinkedTaskCardProps) {
 // ISSUE PICKER DIALOG
 
 interface IssuePickerDialogProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
 	searchResults: Task[];
 	isSearching: boolean;
 	searchError: string | null;
@@ -325,8 +322,6 @@ interface IssuePickerDialogProps {
 }
 
 function IssuePickerDialog({
-	open,
-	onOpenChange,
 	searchResults,
 	isSearching,
 	searchError,
@@ -357,8 +352,7 @@ function IssuePickerDialog({
 		: "Search issues by number or title...";
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent
+		<DialogContent
 				className="sm:max-w-lg"
 				onKeyDown={(e) => e.stopPropagation()}
 			>
@@ -453,8 +447,7 @@ function IssuePickerDialog({
 						})}
 					</div>
 				</div>
-			</DialogContent>
-		</Dialog>
+		</DialogContent>
 	);
 }
 

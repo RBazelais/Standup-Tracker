@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useStandups } from "../hooks/useStandups";
 import { Card } from "@/components/ui/card";
 import { Loader2, Calendar, GitCommit, AlertCircle } from "lucide-react";
@@ -7,7 +7,6 @@ import { CopyButtons } from "./CopyButtons";
 import { format, parseISO } from "date-fns";
 
 export function StandupHistory() {
-    const navigate = useNavigate();
     const { standups, isLoading, error } = useStandups();
 
     if (isLoading) {
@@ -114,18 +113,15 @@ export function StandupHistory() {
                     return (
                         <Card
                             key={standup.id}
-                            onClick={() => navigate(`/standup/${standup.id}`)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                    e.preventDefault();
-                                    navigate(`/standup/${standup.id}`);
-                                }
-                            }}
-                            tabIndex={0}
                             role="listitem"
-                            aria-label={ariaLabel}
-                            className="p-4 bg-surface-raised border-border hover:bg-surface-overlay cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background gap-1.5 my-5"
+                            className="relative p-4 bg-surface-raised border-border hover:bg-surface-overlay transition-colors gap-1.5 my-5"
                         >
+                            {/* Stretched link — primary navigation target for keyboard and screen reader users */}
+                            <Link
+                                to={`/standup/${standup.id}`}
+                                className="absolute inset-0 rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background z-0"
+                                aria-label={ariaLabel}
+                            />
                             <div className="flex items-start justify-between mb-3">
                                 <div>
                                     <h3
@@ -200,15 +196,13 @@ export function StandupHistory() {
                                 )}
 
                             <div
-                                className="mt-3 pt-3 border-t border-border flex items-center justify-between"
-                                onClick={(e) => e.stopPropagation()}
-                                onKeyDown={(e) => e.stopPropagation()}
+                                className="relative z-10 mt-3 pt-3 border-t border-border flex items-center justify-between"
                             >
                                 <p
                                     className="text-xs text-foreground-muted"
                                     aria-hidden="true"
                                 >
-                                    Click to view full details →
+                                    Press Enter to view full details
                                 </p>
                                 <CopyButtons standup={standup} />
                             </div>

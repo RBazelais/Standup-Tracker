@@ -93,7 +93,7 @@ test.describe("Standup CRUD", () => {
 
 		await page.getByRole("button", { name: /save standup note/i }).click();
 
-		await expect(page.getByText("Standup created!")).toBeVisible();
+		await expect(page.locator('[data-title]', { hasText: 'Standup created!' })).toBeVisible();
 
 		// After React Query invalidates and refetches, the new standup appears in history
 		await expect(
@@ -142,7 +142,7 @@ test.describe("Standup CRUD", () => {
 
 		await page.getByRole("button", { name: /save changes/i }).click();
 
-		await expect(page.getByText("Standup updated!")).toBeVisible();
+		await expect(page.locator('[data-title]', { hasText: 'Standup updated!' })).toBeVisible();
 		await page.waitForURL(`**/standup/${STANDUP_ID}`);
 
 		// Updated blockers should be visible in the detail view
@@ -183,7 +183,7 @@ test.describe("Standup CRUD", () => {
 			.getByRole("button", { name: /^delete$/i })
 			.click();
 
-		await expect(page.getByText("Standup deleted!")).toBeVisible();
+		await expect(page.locator('[data-title]', { hasText: 'Standup deleted!' })).toBeVisible();
 		await page.waitForURL("**/dashboard");
 	});
 });

@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "./lib/queryClient";
 import App from "./App";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { FocusOnRouteChange } from "./components/FocusOnRouteChange";
 import "./index.css";
 
 // Enable axe-core accessibility testing in development
@@ -20,6 +21,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 		<QueryClientProvider client={queryClient}>
 			<BrowserRouter>
 				<ScrollToTop />
+				<FocusOnRouteChange />
 				<App />
 			</BrowserRouter>
 			<ReactQueryDevtools initialIsOpen={false} />

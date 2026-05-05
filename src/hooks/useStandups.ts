@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { standupsApi } from "../services/api";
 import { useStore } from "../store";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { getErrorMessage } from "../lib/errors";
 import type { Standup, CreateStandupInput, UpdateStandupInput } from "@/types";
 

@@ -18,7 +18,7 @@ export function Dashboard() {
 
 	return (
 		<div className="min-h-screen bg-surface">
-			<main className="container mx-auto px-6 py-8 max-w-4xl">
+			<div className="container mx-auto px-6 py-8 max-w-4xl">
 				<header className="mb-8">
 					<h1 className="text-3xl font-bold text-foreground mb-2">
 						Welcome back, {user?.name?.split(" ")[0]}!
@@ -55,7 +55,7 @@ export function Dashboard() {
 						</>
 					)}
 				</div>
-			</main>
+			</div>
 		</div>
 	);
 }

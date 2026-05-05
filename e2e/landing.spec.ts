@@ -87,7 +87,8 @@ test.describe("Accessibility", () => {
 	test("sign in button is keyboard accessible", async ({ page }) => {
 		await page.goto("/");
 
-		// Tab to the sign in button
+		// Tab past the skip link, then to the sign in button
+		await page.keyboard.press("Tab");
 		await page.keyboard.press("Tab");
 
 		const signInButton = page.getByRole("button", {
