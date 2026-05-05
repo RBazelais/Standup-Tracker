@@ -18,13 +18,13 @@ I chose to build OAuth flows manually instead. Owning the implementation means u
 
 ## Key steps
 
-1. `GET /auth/jira` builds the Atlassian authorization URL with `client_id`, `scope`, `state`, `redirect_uri` and redirects the user
+1. `GET /api/auth/jira` builds the Atlassian authorization URL with `client_id`, `scope`, `state`, `redirect_uri` and redirects the user
 2. User approves on Atlassian's consent screen
-3. `GET /auth/jira/callback?code=ABC&state=...` validates state, exchanges code for tokens
+3. `GET /api/auth/jira/callback?code=ABC&state=...` validates state, exchanges code for tokens
 4. `POST https://auth.atlassian.com/oauth/token` returns `access_token`, `refresh_token`, `expires_in`
 5. `GET https://api.atlassian.com/oauth/token/accessible-resources` returns `cloudId` for the user's Jira site
 6. Upsert tokens and `cloudId` into the `integrations` table
-7. Redirect to `/settings?connected=jira`
+7. Redirect to `/settings?jira=connected`
 
 ## State parameter
 
@@ -82,6 +82,7 @@ The cookie is what carries `userId` across the gap between the two stateless fun
 
 - `read:jira-work` reads issues, sprints, boards
 - `read:jira-user` reads user profile
+- `write:jira-work` posts comments and updates to Jira issues
 - `offline_access` enables the refresh token (without this the token expires in 1 hour with no way to renew)
 
 ## New integrations table columns needed
@@ -94,17 +95,7 @@ The existing `integrations` table stores `access_token` and `account_name`. Jira
 
 ## Scripts
 
-All Jira seed and maintenance scripts live in `scripts/jira/`:
-
-| Script | Purpose |
-| --- | --- |
-| `seed-jira.mjs` | Creates project STUP, epic, 3 sprints, 18 stories |
-| `seed-jira-backlog.mjs` | Adds 20 unassigned backlog stories |
-| `update-jira-subtasks.mjs` | Adds subtasks and story points to all stories |
-| `update-jira-descriptions.mjs` | Adds descriptions to completed parent stories |
-| `update-jira-subtask-descriptions.mjs` | Adds descriptions with dates to completed subtasks |
-| `update-jira-upcoming-descriptions.mjs` | Adds descriptions to upcoming and backlog issues |
-| `close-jira-issues.mjs` | Transitions completed issues to Done status |
+Jira seed and maintenance scripts are kept out of version control (see `.gitignore`).
 
 ## What is OAuth 2.0 3LO?
 
