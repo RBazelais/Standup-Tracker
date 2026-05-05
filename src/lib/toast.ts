@@ -18,4 +18,8 @@ export const toast = {
 		sonnerToast.error(message, options);
 		announce("toast-announcer-assertive", message);
 	},
+	warning(message: string, options?: Parameters<typeof sonnerToast.warning>[1]) {
+		sonnerToast.warning(message, options);
+		announce("toast-announcer-polite", message);
+	},
 };
