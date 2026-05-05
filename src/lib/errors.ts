@@ -72,6 +72,11 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
 
 // Map specific error messages to user-friendly versions
 function getUserFriendlyMessage(status: number, message: string): string {
+	// Jira auth errors take priority over generic 401 handling
+	if ((status === 401 || status === 403) && message.toLowerCase().includes('jira')) {
+		return 'Your Jira connection has expired. Go to Settings to reconnect.';
+	}
+
 	// Network/auth errors
 	if (status === 401) return "Your session expired. Please sign in again.";
 	if (status === 403) return "You can only access your own data.";

@@ -141,9 +141,13 @@ async function handleSearch(req: VercelRequest, res: VercelResponse, userId: str
 		return res.status(200).json({ tasks: result });
 	} catch (error) {
 		console.error("Task search error:", error);
+		const msg = error instanceof Error ? error.message : String(error);
+		if (source === 'jira' && (msg.includes('401') || msg.includes('403'))) {
+			return res.status(401).json({ error: 'Jira connection expired. Go to Settings to reconnect.' });
+		}
 		return res.status(500).json({
 			error: "Failed to search tasks",
-			details: error instanceof Error ? error.message : String(error),
+			details: msg,
 		});
 	}
 }
