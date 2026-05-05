@@ -194,4 +194,121 @@ describe('JiraAdapter', () => {
 			expect(task.description).toBe('');
 		});
 	});
+
+	describe('addComment', () => {
+		it('POSTs to the correct endpoint with the ADF body', async () => {
+			const client = makeClient(() => Promise.resolve(new Response('{}', { status: 201 })));
+			adapter = new JiraAdapter(client, SITE_URL);
+			const adf = { version: 1, type: 'doc', content: [] };
+
+			await adapter.addComment('STUP-1', adf);
+
+			const [path, init] = (client.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+			expect(path).toBe('/issue/STUP-1/comment');
+			expect(init.method).toBe('POST');
+			expect(JSON.parse(init.body)).toEqual({ body: adf });
+		});
+
+		it('throws on error response', async () => {
+			const client = makeClient(() => Promise.resolve(new Response('Unauthorized', { status: 401 })));
+			adapter = new JiraAdapter(client, SITE_URL);
+
+			await expect(
+				adapter.addComment('STUP-1', { version: 1, type: 'doc', content: [] })
+			).rejects.toThrow('Jira addComment failed (401)');
+		});
+	});
+
+	describe('postStandupComment', () => {
+		it('posts a heading with the standup date and the work notes', async () => {
+			const client = makeClient(() => Promise.resolve(new Response('{}', { status: 201 })));
+			adapter = new JiraAdapter(client, SITE_URL);
+
+			await adapter.postStandupComment('STUP-1', {
+				date: '2026-05-05',
+				workCompleted: 'Fixed the login bug',
+				commits: [],
+			});
+
+			const [, init] = (client.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+			const { body } = JSON.parse(init.body);
+			expect(body.content[0].content[0].text).toBe('Standup - 2026-05-05');
+			expect(body.content[1].content[0].text).toBe('Fixed the login bug');
+		});
+
+		it('uses "(no notes)" when workCompleted is empty', async () => {
+			const client = makeClient(() => Promise.resolve(new Response('{}', { status: 201 })));
+			adapter = new JiraAdapter(client, SITE_URL);
+
+			await adapter.postStandupComment('STUP-1', {
+				date: '2026-05-05',
+				workCompleted: '',
+				commits: [],
+			});
+
+			const [, init] = (client.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+			const { body } = JSON.parse(init.body);
+			expect(body.content[1].content[0].text).toBe('(no notes)');
+		});
+
+		it('includes only commits that mention the issue key', async () => {
+			const client = makeClient(() => Promise.resolve(new Response('{}', { status: 201 })));
+			adapter = new JiraAdapter(client, SITE_URL);
+
+			await adapter.postStandupComment('STUP-1', {
+				date: '2026-05-05',
+				workCompleted: 'Some work',
+				commits: [
+					{ sha: 'abc1234def5', commit: { message: 'fix: resolve STUP-1 login issue', author: null } },
+					{ sha: 'xyz5678ghi9', commit: { message: 'chore: update dependencies', author: null } },
+				],
+			});
+
+			const [, init] = (client.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+			const { body } = JSON.parse(init.body);
+			const bulletList = body.content.find((n: { type: string }) => n.type === 'bulletList');
+			expect(bulletList).toBeDefined();
+			expect(bulletList.content).toHaveLength(1);
+			const commitText = bulletList.content[0].content[0].content[0].text as string;
+			expect(commitText).toContain('abc1234');
+			expect(commitText).toContain('STUP-1 login issue');
+		});
+
+		it('matches the issue key case-insensitively', async () => {
+			const client = makeClient(() => Promise.resolve(new Response('{}', { status: 201 })));
+			adapter = new JiraAdapter(client, SITE_URL);
+
+			await adapter.postStandupComment('STUP-1', {
+				date: '2026-05-05',
+				workCompleted: 'Some work',
+				commits: [
+					{ sha: 'abc1234def5', commit: { message: 'fix: resolve stup-1 login issue', author: null } },
+				],
+			});
+
+			const [, init] = (client.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+			const { body } = JSON.parse(init.body);
+			const bulletList = body.content.find((n: { type: string }) => n.type === 'bulletList');
+			expect(bulletList).toBeDefined();
+			expect(bulletList.content).toHaveLength(1);
+		});
+
+		it('omits the commits section when no commits mention the issue key', async () => {
+			const client = makeClient(() => Promise.resolve(new Response('{}', { status: 201 })));
+			adapter = new JiraAdapter(client, SITE_URL);
+
+			await adapter.postStandupComment('STUP-1', {
+				date: '2026-05-05',
+				workCompleted: 'Some work',
+				commits: [
+					{ sha: 'abc1234def5', commit: { message: 'chore: unrelated commit', author: null } },
+				],
+			});
+
+			const [, init] = (client.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+			const { body } = JSON.parse(init.body);
+			expect(body.content).toHaveLength(2);
+			expect(body.content.find((n: { type: string }) => n.type === 'bulletList')).toBeUndefined();
+		});
+	});
 });
