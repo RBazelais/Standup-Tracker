@@ -234,32 +234,28 @@ The cookie does double duty: the `state` field is the CSRF check, and `userId` t
 
 ---
 
-### 5. Three-state async data and the UI that silently lies
+### 5. How your types decide what bugs are possible
 
-The Jira connection check is typed `boolean | null` — `null` meaning the fetch has not resolved yet. The original render only handled `false` (show the connect prompt) and implicitly treated everything else as connected (show the search UI). That "everything else" included `null`.
+When the Jira connection check was built, the state was typed `boolean | null` — a common React convention where `null` means loading, `false` means not connected, and `true` means connected. The render only handled `false` and `true`. `null` silently fell through to the search UI, so a user who opened the dialog before the fetch returned would see a functional-looking search input that would fail silently on submit.
 
-During the window before the fetch returned, a user could switch to Jira, see a live search input, type a query, hit Search, and receive a silent failure. The UI looked functional but was not.
+The fix was straightforward: derive a `jiraCheckLoading` boolean from `null` and make it the first branch of a chained ternary. But the more useful question is why the bug was possible at all.
 
-The fix was to make the third state explicit:
+With `boolean | null`, TypeScript knows there are three possible values. It does not know they represent three meaningfully different states. Nothing in the type system stops you from writing a render that only handles two of them. The compiler is satisfied; the bug compiles cleanly.
 
-```tsx
-const showJiraPrompt = source === 'jira' && jiraConnected === false;
-const jiraCheckLoading = source === 'jira' && jiraConnected === null;
+A tagged object changes that contract:
 
-{jiraCheckLoading ? (
-  <Loader2 className="h-5 w-5 animate-spin" />
-) : showJiraPrompt ? (
-  <ConnectPrompt />
-) : (
-  <SearchUI />
-)}
+```typescript
+type JiraStatus =
+  | { status: 'loading' }
+  | { status: 'connected' }
+  | { status: 'disconnected' };
 ```
 
-A chained ternary where the first branch wins. `null` now has a home.
+Now an exhaustive switch or a correctly-typed ternary is not a discipline problem — it is a type error. The missing branch cannot compile. The tradeoff is verbosity: more ceremony to initialize, more ceremony to update. For a value this simple, `boolean | null` is reasonable. The decision is worth making consciously rather than by default.
 
-A second bug lived in the same area: the resolving task spinner matched using `task.externalId`, but Jira tasks store their key inside `task.externalLinks[0].externalId`. The match always failed silently, so the "Linking..." badge never appeared for Jira tasks. Fixing it also required moving the variable declaration above the line that depended on it — JavaScript `const` does not hoist.
+React Query was already in use for server state elsewhere in the app. It was deliberately not used here: the connection status is a one-time check scoped to the dialog's lifetime, not a cached resource that benefits from background sync, retries, or shared invalidation. Reaching for a 13KB state management layer for a single `fetch` call would have been the wrong abstraction.
 
-The pattern: when async data is typed as `T | null`, there are three render states, not two. The discipline is handling `null` explicitly rather than letting it fall through to whichever branch it most resembles.
+The rule that emerged: the shape of a type is an architectural decision. `boolean | null` is a convention that relies on discipline. A tagged object is a constraint that relies on the compiler. When a value has meaningfully different states, a tagged object pays for its verbosity by making the missing case impossible to ship.
 
 ---
 
