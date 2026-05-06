@@ -537,3 +537,125 @@ test.describe("Task Linking - Edit Flow", () => {
 		await expect(page.getByText("Fix authentication bug")).toBeVisible();
 	});
 });
+
+test.describe("Task Linking - Jira connection state", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.route("https://api.github.com/**", (route) =>
+			route.fulfill({ json: [] })
+		);
+		await page.route("**/api/standups**", (route) =>
+			route.fulfill({ json: [] })
+		);
+		await page.route("**/api/tasks**", (route) =>
+			route.fulfill({ json: [] })
+		);
+		await page.route("**/api/milestones**", (route) =>
+			route.fulfill({ json: [] })
+		);
+
+		await page.goto("/");
+		await page.evaluate((auth) => {
+			localStorage.setItem("standup-storage", JSON.stringify(auth));
+		}, MOCK_AUTH);
+	});
+
+	test("shows 'Connect to Jira' in source dropdown when Jira is not connected", async ({ page }) => {
+		await page.route("**/api/integrations**", (route) =>
+			route.fulfill({ json: { connected: false } })
+		);
+
+		await page.goto("/dashboard");
+		await expect(page.getByRole("button", { name: /link task/i })).toBeVisible();
+
+		await page.getByRole("button", { name: /link task/i }).click();
+		await expect(page.getByRole("dialog")).toBeVisible();
+
+		await page.getByRole("combobox", { name: /issue source/i }).click();
+		await expect(page.getByRole("option", { name: /connect to jira/i })).toBeVisible();
+	});
+
+	test("selecting 'Connect to Jira' shows the connect prompt", async ({ page }) => {
+		await page.route("**/api/integrations**", (route) =>
+			route.fulfill({ json: { connected: false } })
+		);
+
+		await page.goto("/dashboard");
+		await page.getByRole("button", { name: /link task/i }).click();
+		await page.getByRole("combobox", { name: /issue source/i }).click();
+		await page.getByRole("option", { name: /connect to jira/i }).click();
+
+		await expect(page.getByText(/connect your jira account/i)).toBeVisible();
+		await expect(page.getByRole("link", { name: /go to settings/i })).toBeVisible();
+	});
+
+	test("connect prompt hides the search input", async ({ page }) => {
+		await page.route("**/api/integrations**", (route) =>
+			route.fulfill({ json: { connected: false } })
+		);
+
+		await page.goto("/dashboard");
+		await page.getByRole("button", { name: /link task/i }).click();
+		await page.getByRole("combobox", { name: /issue source/i }).click();
+		await page.getByRole("option", { name: /connect to jira/i }).click();
+
+		await expect(page.getByPlaceholder(/search by keyword/i)).not.toBeVisible();
+	});
+
+	test("Settings link in the connect prompt navigates to /settings", async ({ page }) => {
+		await page.route("**/api/integrations**", (route) =>
+			route.fulfill({ json: { connected: false } })
+		);
+
+		await page.goto("/dashboard");
+		await page.getByRole("button", { name: /link task/i }).click();
+		await page.getByRole("combobox", { name: /issue source/i }).click();
+		await page.getByRole("option", { name: /connect to jira/i }).click();
+
+		await page.getByRole("link", { name: /go to settings/i }).click();
+		await expect(page).toHaveURL(/\/settings/);
+	});
+
+	test("Settings link in the connect prompt is keyboard focusable", async ({ page }) => {
+		await page.route("**/api/integrations**", (route) =>
+			route.fulfill({ json: { connected: false } })
+		);
+
+		await page.goto("/dashboard");
+		await page.getByRole("button", { name: /link task/i }).click();
+		await page.getByRole("combobox", { name: /issue source/i }).click();
+		await page.getByRole("option", { name: /connect to jira/i }).click();
+
+		const link = page.getByRole("link", { name: /go to settings/i });
+		await link.focus();
+		await expect(link).toBeFocused();
+	});
+
+	test("shows 'Jira' in source dropdown when Jira is connected", async ({ page }) => {
+		await page.route("**/api/integrations**", (route) =>
+			route.fulfill({ json: { connected: true, accountName: "My Jira Site" } })
+		);
+
+		await page.goto("/dashboard");
+		await expect(page.getByRole("button", { name: /link task/i })).toBeVisible();
+
+		await page.getByRole("button", { name: /link task/i }).click();
+		await page.getByRole("combobox", { name: /issue source/i }).click();
+
+		await expect(page.getByRole("option", { name: /^jira$/i })).toBeVisible();
+		await expect(page.getByRole("option", { name: /connect to jira/i })).not.toBeVisible();
+	});
+
+	test("shows Jira search UI when Jira is connected and Jira is selected", async ({ page }) => {
+		await page.route("**/api/integrations**", (route) =>
+			route.fulfill({ json: { connected: true, accountName: "My Jira Site" } })
+		);
+
+		await page.goto("/dashboard");
+		await page.getByRole("button", { name: /link task/i }).click();
+		await page.getByRole("combobox", { name: /issue source/i }).click();
+		await page.getByRole("option", { name: /^jira$/i }).click();
+
+		await expect(page.getByPlaceholder(/search by keyword/i)).toBeVisible();
+		await expect(page.getByRole("button", { name: /^search$/i })).toBeVisible();
+	});
+});
