@@ -369,6 +369,7 @@ function IssuePickerDialog({
 		: "Search issues by number or title...";
 
 	const showJiraPrompt = source === 'jira' && jiraConnected === false;
+	const jiraCheckLoading = source === 'jira' && jiraConnected === null;
 
 	return (
 		<DialogContent
@@ -391,7 +392,11 @@ function IssuePickerDialog({
 						</SelectContent>
 					</Select>
 
-					{showJiraPrompt ? (
+					{jiraCheckLoading ? (
+					<div className="py-8 flex justify-center">
+						<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+					</div>
+				) : showJiraPrompt ? (
 						<div className="py-8 text-center space-y-2">
 							<p className="text-sm text-muted-foreground">Connect your Jira account to search and link tickets.</p>
 							<Link
@@ -437,8 +442,8 @@ function IssuePickerDialog({
 
 								{searchResults.map(task => {
 									const isSelected = selectedIds.includes(task.id);
-									const isBeingResolved = isResolving && resolvingTaskId === task.externalId;
 									const externalLink = task.externalLinks?.[0];
+									const isBeingResolved = isResolving && resolvingTaskId === externalLink?.externalId;
 
 									return (
 										<button
