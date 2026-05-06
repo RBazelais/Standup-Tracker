@@ -206,7 +206,7 @@ useEffect(() => {
 }, [pathname]);
 ```
 
-Instead of "is this the first render?", it asks "did the route actually change?" — a question StrictMode cannot interfere with.
+Instead of "is this the first render?", it asks "did the route actually change?", a question StrictMode cannot interfere with.
 
 ---
 
@@ -236,7 +236,7 @@ The cookie does double duty: the `state` field is the CSRF check, and `userId` t
 
 ### 5. How your types decide what bugs are possible
 
-When the Jira connection check was built, the state was typed `boolean | null` — a common React convention where `null` means loading, `false` means not connected, and `true` means connected. The render only handled `false` and `true`. `null` silently fell through to the search UI, so a user who opened the dialog before the fetch returned would see a functional-looking search input that would fail silently on submit.
+When the Jira connection check was built, the state was typed `boolean | null`; a common React convention where `null` means loading, `false` means not connected, and `true` means connected. The render only handled `false` and `true`. `null` silently fell through to the search UI, so a user who opened the dialog before the fetch returned would see a functional-looking search input that would fail silently on submit.
 
 The fix was straightforward: derive a `jiraCheckLoading` boolean from `null` and make it the first branch of a chained ternary. But the more useful question is why the bug was possible at all.
 
@@ -251,7 +251,7 @@ type JiraStatus =
   | { status: 'disconnected' };
 ```
 
-Now an exhaustive switch or a correctly-typed ternary is not a discipline problem — it is a type error. The missing branch cannot compile. The tradeoff is verbosity: more ceremony to initialize, more ceremony to update. For a value this simple, `boolean | null` is reasonable. The decision is worth making consciously rather than by default.
+Now an exhaustive switch or a correctly typed ternary is not a discipline problem, it is a type error. The missing branch cannot compile. The tradeoff is verbosity: more ceremony to initialize, more ceremony to update. For a value this simple, `boolean | null` is reasonable. The decision is worth making consciously rather than by default.
 
 React Query was already in use for server state elsewhere in the app. It was deliberately not used here: the connection status is a one-time check scoped to the dialog's lifetime, not a cached resource that benefits from background sync, retries, or shared invalidation. Reaching for a 13KB state management layer for a single `fetch` call would have been the wrong abstraction.
 
