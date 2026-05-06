@@ -22,7 +22,7 @@ Built for async teams, remote developers, and people who respect each other's ti
 - [x] **Markdown support** - Format notes with markdown for readability
 - [x] **GitHub OAuth** - Secure authentication with token persistence
 - [x] **Jira OAuth** - Connect a Jira workspace and manage the integration from Settings
-- [x] **Task linking** - Link GitHub issues to standups with auto-detection and search
+- [x] **Task linking** - Link GitHub and Jira issues to standups with auto-detection and keyword search
 - [x] **Database persistence** - Neon Postgres with type-safe queries via Drizzle ORM
 - [x] **Keyboard accessible** - Skip links, focus management on route transitions, WCAG 2.4 compliant dialogs
 - [x] **E2E tested** - Playwright test suite running against real Vercel preview deployments on every PR
@@ -234,6 +234,35 @@ The cookie does double duty: the `state` field is the CSRF check, and `userId` t
 
 ---
 
+### 5. Three-state async data and the UI that silently lies
+
+The Jira connection check is typed `boolean | null` — `null` meaning the fetch has not resolved yet. The original render only handled `false` (show the connect prompt) and implicitly treated everything else as connected (show the search UI). That "everything else" included `null`.
+
+During the window before the fetch returned, a user could switch to Jira, see a live search input, type a query, hit Search, and receive a silent failure. The UI looked functional but was not.
+
+The fix was to make the third state explicit:
+
+```tsx
+const showJiraPrompt = source === 'jira' && jiraConnected === false;
+const jiraCheckLoading = source === 'jira' && jiraConnected === null;
+
+{jiraCheckLoading ? (
+  <Loader2 className="h-5 w-5 animate-spin" />
+) : showJiraPrompt ? (
+  <ConnectPrompt />
+) : (
+  <SearchUI />
+)}
+```
+
+A chained ternary where the first branch wins. `null` now has a home.
+
+A second bug lived in the same area: the resolving task spinner matched using `task.externalId`, but Jira tasks store their key inside `task.externalLinks[0].externalId`. The match always failed silently, so the "Linking..." badge never appeared for Jira tasks. Fixing it also required moving the variable declaration above the line that depended on it — JavaScript `const` does not hoist.
+
+The pattern: when async data is typed as `T | null`, there are three render states, not two. The discipline is handling `null` explicitly rather than letting it fall through to whichever branch it most resembles.
+
+---
+
 ## Installation
 
 ### Prerequisites
@@ -343,7 +372,7 @@ vercel dev             # Run with serverless functions
 - [x] Database schema with milestones, sprints, and tasks
 - [x] Link standups to GitHub issues with auto-detection and search
 - [x] Jira OAuth (connect, disconnect, token refresh)
-- [ ] Fetch and link Jira issues to standups
+- [x] Fetch and link Jira issues to standups
 - [ ] Story point tracking
 - [ ] Sprint velocity insights
 
