@@ -26,7 +26,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 import { useTaskLinking } from "@/hooks/useTaskLinking";
+import { useStore } from "@/store";
 import type { Task, Standup } from "@/types";
 
 // MAIN COMPONENT
@@ -62,6 +64,16 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 	} = useTaskLinking({ standup, initialSelected });
 
 	const [pickerOpen, setPickerOpen] = useState(false);
+	const [jiraConnected, setJiraConnected] = useState<boolean | null>(null);
+	const { user } = useStore();
+
+	useEffect(() => {
+		if (!user?.id) return;
+		fetch(`/api/integrations?userId=${user.id}&source=jira`)
+			.then(res => res.ok ? res.json() : null)
+			.then(data => setJiraConnected(data?.connected ?? false))
+			.catch(() => setJiraConnected(false));
+	}, [user?.id]);
 
 	// Update parent when selected tasks change
 	useEffect(() => {
@@ -144,6 +156,7 @@ export function TaskLinkingSection({ standup, onTasksChange, initialSelected }: 
 				selectedIds={selected.map(t => t.id)}
 				source={source}
 				onSourceChange={setSource}
+				jiraConnected={jiraConnected}
 			/>
 		</div>
 		</Dialog>
@@ -321,6 +334,7 @@ interface IssuePickerDialogProps {
 	selectedIds: string[];
 	source: 'github' | 'jira';
 	onSourceChange: (source: 'github' | 'jira') => void;
+	jiraConnected: boolean | null;
 }
 
 function IssuePickerDialog({
@@ -335,6 +349,7 @@ function IssuePickerDialog({
 	selectedIds,
 	source,
 	onSourceChange,
+	jiraConnected,
 }: IssuePickerDialogProps) {
 	const [query, setQuery] = useState("");
 
@@ -353,6 +368,9 @@ function IssuePickerDialog({
 		? "Search by keyword..."
 		: "Search issues by number or title...";
 
+	const showJiraPrompt = source === 'jira' && jiraConnected === false;
+	const jiraCheckLoading = source === 'jira' && jiraConnected === null;
+
 	return (
 		<DialogContent
 				className="sm:max-w-lg"
@@ -365,90 +383,108 @@ function IssuePickerDialog({
 				<div className="space-y-4">
 					{/* Source select */}
 					<Select value={source} onValueChange={(v) => handleSourceChange(v as 'github' | 'jira')}>
-						<SelectTrigger className="w-32" aria-label="Issue source">
+						<SelectTrigger className="w-40" aria-label="Issue source">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="github">GitHub</SelectItem>
-							<SelectItem value="jira">Jira</SelectItem>
+							<SelectItem value="jira">{jiraConnected === false ? 'Connect to Jira' : 'Jira'}</SelectItem>
 						</SelectContent>
 					</Select>
 
-					{/* Search Input */}
-					<div className="flex gap-2">
-						<div className="relative flex-1">
-							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-							<Input
-								placeholder={placeholder}
-								value={query}
-								onChange={(e) => setQuery(e.target.value)}
-								onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-								className="pl-9"
-								autoFocus
-							/>
+					{jiraCheckLoading ? (
+					<div className="py-8 flex justify-center">
+						<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+					</div>
+				) : showJiraPrompt ? (
+						<div className="py-8 text-center space-y-2">
+							<p className="text-sm text-muted-foreground">Connect your Jira account to search and link tickets.</p>
+							<Link
+								to="/settings"
+								className="text-sm font-medium text-foreground underline underline-offset-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none rounded-sm"
+							>
+								Go to Settings
+							</Link>
 						</div>
-						<Button onClick={handleSearch} disabled={isSearching}>
-							{isSearching ? (
-								<Loader2 className="h-4 w-4 animate-spin" />
-							) : (
-								'Search'
-							)}
-						</Button>
-					</div>
-
-					{/* Results */}
-					<div className="max-h-80 overflow-y-auto space-y-2">
-						{searchError && <ErrorMessage message={searchError} />}
-						{resolveError && <ErrorMessage message={resolveError} />}
-						{!searchError && searchResults.length === 0 && !isSearching && (
-							<div className="text-center py-8 text-muted-foreground">
-								Search for issues to link
+					) : (
+						<>
+							{/* Search Input */}
+							<div className="flex gap-2">
+								<div className="relative flex-1">
+									<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+									<Input
+										placeholder={placeholder}
+										value={query}
+										onChange={(e) => setQuery(e.target.value)}
+										onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+										className="pl-9"
+										autoFocus
+									/>
+								</div>
+								<Button onClick={handleSearch} disabled={isSearching}>
+									{isSearching ? (
+										<Loader2 className="h-4 w-4 animate-spin" />
+									) : (
+										'Search'
+									)}
+								</Button>
 							</div>
-						)}
 
-						{searchResults.map(task => {
-							const isSelected = selectedIds.includes(task.id);
-							const isBeingResolved = isResolving && resolvingTaskId === task.externalId;
-							const externalLink = task.externalLinks?.[0];
-
-							return (
-								<button
-									type="button"
-									key={task.id}
-									onClick={() => !isSelected && !isResolving && onSelect(task)}
-									disabled={isSelected || isResolving}
-									className={`
-										w-full text-left p-3 rounded-lg border transition-colors
-										${isSelected || isResolving
-											? 'bg-muted/50 opacity-50 cursor-not-allowed'
-											: 'hover:bg-muted/50 cursor-pointer'}
-									`}
-								>
-									<div className="flex items-center gap-2">
-										{isBeingResolved
-											? <Loader2 className="h-2 w-2 animate-spin" />
-											: <TaskStatusBadge status={task.status} />
-										}
-										<span className="font-mono text-sm">
-											{externalLink?.externalId}
-										</span>
-										{task.storyPoints && (
-											<Badge variant="outline">{task.storyPoints} pts</Badge>
-										)}
-										{isSelected && (
-											<Badge variant="secondary">Linked</Badge>
-										)}
-										{isBeingResolved && (
-											<Badge variant="secondary">Linking...</Badge>
-										)}
+							{/* Results */}
+							<div className="max-h-80 overflow-y-auto space-y-2">
+								{searchError && <ErrorMessage message={searchError} />}
+								{resolveError && <ErrorMessage message={resolveError} />}
+								{!searchError && searchResults.length === 0 && !isSearching && (
+									<div className="text-center py-8 text-muted-foreground">
+										Search for issues to link
 									</div>
-									<p className="text-sm text-muted-foreground mt-1 truncate">
-										{task.title}
-									</p>
-								</button>
-							);
-						})}
-					</div>
+								)}
+
+								{searchResults.map(task => {
+									const isSelected = selectedIds.includes(task.id);
+									const externalLink = task.externalLinks?.[0];
+									const isBeingResolved = isResolving && resolvingTaskId === externalLink?.externalId;
+
+									return (
+										<button
+											type="button"
+											key={task.id}
+											onClick={() => !isSelected && !isResolving && onSelect(task)}
+											disabled={isSelected || isResolving}
+											className={`
+												w-full text-left p-3 rounded-lg border transition-colors
+												${isSelected || isResolving
+													? 'bg-muted/50 opacity-50 cursor-not-allowed'
+													: 'hover:bg-muted/50 cursor-pointer'}
+											`}
+										>
+											<div className="flex items-center gap-2">
+												{isBeingResolved
+													? <Loader2 className="h-2 w-2 animate-spin" />
+													: <TaskStatusBadge status={task.status} />
+												}
+												<span className="font-mono text-sm">
+													{externalLink?.externalId}
+												</span>
+												{task.storyPoints && (
+													<Badge variant="outline">{task.storyPoints} pts</Badge>
+												)}
+												{isSelected && (
+													<Badge variant="secondary">Linked</Badge>
+												)}
+												{isBeingResolved && (
+													<Badge variant="secondary">Linking...</Badge>
+												)}
+											</div>
+											<p className="text-sm text-muted-foreground mt-1 truncate">
+												{task.title}
+											</p>
+										</button>
+									);
+								})}
+							</div>
+						</>
+					)}
 				</div>
 		</DialogContent>
 	);
