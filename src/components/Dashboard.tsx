@@ -9,7 +9,6 @@ export function Dashboard() {
 	const { user, selectedRepo, setRepos } = useStore();
 	const { repos } = useRepos();
 
-	// Sync repos from hook to store
 	useEffect(() => {
 		if (repos.length > 0) {
 			setRepos(repos);
