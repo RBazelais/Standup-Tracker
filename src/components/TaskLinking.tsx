@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 import { useTaskLinking } from "@/hooks/useTaskLinking";
 import { useStore } from "@/store";
 import type { Task, Standup } from "@/types";
@@ -393,12 +394,12 @@ function IssuePickerDialog({
 					{showJiraPrompt ? (
 						<div className="py-8 text-center space-y-2">
 							<p className="text-sm text-muted-foreground">Connect your Jira account to search and link tickets.</p>
-							<a
-								href="/settings"
+							<Link
+								to="/settings"
 								className="text-sm font-medium text-foreground underline underline-offset-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none rounded-sm"
 							>
 								Go to Settings
-							</a>
+							</Link>
 						</div>
 					) : (
 						<>
