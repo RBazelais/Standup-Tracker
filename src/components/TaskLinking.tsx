@@ -395,7 +395,7 @@ function IssuePickerDialog({
 							<p className="text-sm text-muted-foreground">Connect your Jira account to search and link tickets.</p>
 							<a
 								href="/settings"
-								className="text-sm font-medium text-foreground underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+								className="text-sm font-medium text-foreground underline underline-offset-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none rounded-sm"
 							>
 								Go to Settings
 							</a>
