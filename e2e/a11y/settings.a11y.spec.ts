@@ -70,8 +70,17 @@ test.describe('Settings – accessibility', () => {
 
 	test('GitHub connected status is conveyed without relying on color alone', async ({ page }) => {
 		await goToSettings(page);
-		// In the disconnected state, "Connected" only appears once — next to GitHub
-		await expect(page.getByText('Connected', { exact: true })).toBeVisible();
+		const statusText = page.getByText('Connected', { exact: true }).first();
+		await expect(statusText).toBeVisible();
+		const isAccessible = await statusText.evaluate(el => {
+			let node: Element | null = el;
+			while (node) {
+				if (node.getAttribute('aria-hidden') === 'true') return false;
+				node = node.parentElement;
+			}
+			return true;
+		});
+		expect(isAccessible).toBe(true);
 	});
 
 	test('Jira "Not connected" status is readable by assistive tech', async ({ page }) => {
