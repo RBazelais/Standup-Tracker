@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page, type Route } from '@playwright/test';
 import {
 	loginAs,
 	MOCK_AUTH,
@@ -8,9 +8,9 @@ import {
 	formatViolations,
 } from './_helpers';
 
-async function goToSettings(page: Parameters<typeof test>[1]['page']) {
+async function goToSettings(page: Page) {
 	await mockStandardRoutes(page);
-	await page.route('**/api/integrations**', (route) =>
+	await page.route('**/api/integrations**', (route: Route) =>
 		route.fulfill({ json: { connected: false } })
 	);
 	await loginAs(page, MOCK_AUTH);
@@ -18,9 +18,9 @@ async function goToSettings(page: Parameters<typeof test>[1]['page']) {
 	await page.waitForLoadState('networkidle');
 }
 
-async function goToSettingsConnected(page: Parameters<typeof test>[1]['page']) {
+async function goToSettingsConnected(page: Page) {
 	await mockStandardRoutes(page);
-	await page.route('**/api/integrations**', (route) =>
+	await page.route('**/api/integrations**', (route: Route) =>
 		route.fulfill({ json: { connected: true, accountName: 'My Jira Site' } })
 	);
 	await loginAs(page, MOCK_AUTH);
@@ -48,7 +48,7 @@ test.describe('Settings – accessibility', () => {
 		await expect(page.getByRole('region', { name: /integrations/i })).toBeVisible();
 	});
 
-	test('Connect button is reachable by Tab and activatable by Space', async ({ page }) => {
+	test('Connect button is keyboard reachable', async ({ page }) => {
 		await goToSettings(page);
 		const connectBtn = page.getByRole('button', { name: /^connect$/i });
 		await connectBtn.focus();
