@@ -100,6 +100,16 @@ test.describe('Settings – accessibility', () => {
 
 	test('Jira site name is visible when connected', async ({ page }) => {
 		await goToSettingsConnected(page);
-		await expect(page.getByText('My Jira Site')).toBeVisible();
+		const siteNameText = page.getByText('My Jira Site');
+		await expect(siteNameText).toBeVisible();
+		const isAccessible = await siteNameText.evaluate(el => {
+			let node: Element | null = el;
+			while (node) {
+				if (node.getAttribute('aria-hidden') === 'true') return false;
+				node = node.parentElement;
+			}
+			return true;
+		});
+		expect(isAccessible).toBe(true);
 	});
 });
