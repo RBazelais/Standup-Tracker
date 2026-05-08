@@ -85,7 +85,17 @@ test.describe('Settings – accessibility', () => {
 
 	test('Jira "Not connected" status is readable by assistive tech', async ({ page }) => {
 		await goToSettings(page);
-		await expect(page.getByText('Not connected')).toBeVisible();
+		const statusText = page.getByText('Not connected');
+		await expect(statusText).toBeVisible();
+		const isAccessible = await statusText.evaluate(el => {
+			let node: Element | null = el;
+			while (node) {
+				if (node.getAttribute('aria-hidden') === 'true') return false;
+				node = node.parentElement;
+			}
+			return true;
+		});
+		expect(isAccessible).toBe(true);
 	});
 
 	test('Jira site name is visible when connected', async ({ page }) => {
