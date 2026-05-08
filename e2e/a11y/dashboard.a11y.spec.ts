@@ -37,9 +37,15 @@ test.describe('Dashboard – accessibility', () => {
 		const historyItem = page.getByRole('listitem').first();
 		await expect(historyItem).toBeVisible();
 
-		// The list item itself or a focusable child should be reachable
+		// Activate the skip link to jump past nav into main content, then Tab to the history
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Enter');
+
 		const focusableChild = historyItem.locator('a, button').first();
-		await focusableChild.focus();
+		for (let i = 0; i < 30; i++) {
+			await page.keyboard.press('Tab');
+			if (await focusableChild.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(focusableChild).toBeFocused();
 	});
 
