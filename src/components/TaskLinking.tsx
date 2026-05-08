@@ -435,7 +435,7 @@ function IssuePickerDialog({
 								{searchError && <ErrorMessage message={searchError} />}
 								{resolveError && <ErrorMessage message={resolveError} />}
 								{!searchError && searchResults.length === 0 && !isSearching && (
-									<div className="text-center py-8 text-muted-foreground">
+									<div className="text-center py-8 text-foreground">
 										Search for issues to link
 									</div>
 								)}
