@@ -114,15 +114,9 @@ test.describe('Task picker dialog – accessibility', () => {
 
 	test('focus returns to the "Link Task" button after clicking close', async ({ page }) => {
 		const trigger = page.getByRole('button', { name: /link task/i });
-
-		const closeButton = page.getByRole('button', { name: /close/i })
-			.or(page.locator('[data-radix-dialog-close]'));
-		if (await closeButton.count() > 0) {
-			await closeButton.first().click();
-		} else {
-			await page.keyboard.press('Escape'); // Fallback
-		}
-
+		const closeButton = page.getByRole('button', { name: /close/i });
+		await expect(closeButton).toBeVisible();
+		await closeButton.click();
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 		await expect(trigger).toBeFocused();
 	});
