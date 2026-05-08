@@ -45,22 +45,34 @@ test.describe('Standup detail – accessibility', () => {
 	test('back button is reachable by Tab and activatable', async ({ page }) => {
 		const backBtn = page.getByRole('link', { name: /back/i })
 			.or(page.getByRole('button', { name: /back/i })).first();
-		await backBtn.focus();
+		for (let i = 0; i < 15; i++) {
+			await page.keyboard.press('Tab');
+			if (await backBtn.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(backBtn).toBeFocused();
+		await page.keyboard.press('Enter');
+		await expect(page).not.toHaveURL(DETAIL_URL, { timeout: 3000 });
 	});
 
 	test('edit button is reachable by Tab and activatable', async ({ page }) => {
 		const editBtn = page.getByRole('link', { name: /edit/i })
 			.or(page.getByRole('button', { name: /edit/i })).first();
-		await editBtn.focus();
+		for (let i = 0; i < 15; i++) {
+			await page.keyboard.press('Tab');
+			if (await editBtn.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(editBtn).toBeFocused();
+		await page.keyboard.press('Enter');
+		await expect(page).not.toHaveURL(DETAIL_URL, { timeout: 3000 });
 	});
 
 	test('linked issue external link is keyboard reachable', async ({ page }) => {
-		// Aria-label is "View {task.title} on GitHub" — the icon-only link gets its name from aria-label
 		const issueLink = page.getByRole('link', { name: /view fix authentication bug on github/i });
 		await expect(issueLink).toBeVisible();
-		await issueLink.focus();
+		for (let i = 0; i < 15; i++) {
+			await page.keyboard.press('Tab');
+			if (await issueLink.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(issueLink).toBeFocused();
 	});
 
