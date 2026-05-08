@@ -178,7 +178,10 @@ test.describe('Task picker dialog – Jira disconnected state', () => {
 
 	test('Connect to Jira option is reachable by keyboard', async ({ page }) => {
 		const trigger = page.getByRole('combobox', { name: /issue source/i });
-		await trigger.focus();
+		for (let i = 0; i < 10; i++) {
+			await page.keyboard.press('Tab');
+			if (await trigger.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(trigger).toBeFocused();
 		await page.keyboard.press('Space');
 		await expect(page.getByRole('option', { name: /connect to jira/i })).toBeVisible();
