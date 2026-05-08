@@ -183,6 +183,7 @@ test.describe('Task picker dialog – Jira disconnected state', () => {
 	test('has no critical or serious axe violations with connect prompt visible', async ({ page }) => {
 		await page.getByRole('combobox', { name: /issue source/i }).click();
 		await page.getByRole('option', { name: /connect to jira/i }).click();
+		await expect(page.getByRole('link', { name: /go to settings/i })).toBeVisible();
 
 		const { violations } = await runAxe(page);
 		const critical = criticalViolations(violations);
@@ -193,7 +194,7 @@ test.describe('Task picker dialog – Jira disconnected state', () => {
 		const trigger = page.getByRole('combobox', { name: /issue source/i });
 		await trigger.focus();
 		await expect(trigger).toBeFocused();
-		await trigger.click();
+		await page.keyboard.press('Space');
 		await expect(page.getByRole('option', { name: /connect to jira/i })).toBeVisible();
 	});
 
