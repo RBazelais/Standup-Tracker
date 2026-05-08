@@ -201,9 +201,14 @@ test.describe('Task picker dialog – Jira disconnected state', () => {
 	test('Settings link in connect prompt is reachable by Tab', async ({ page }) => {
 		await page.getByRole('combobox', { name: /issue source/i }).click();
 		await page.getByRole('option', { name: /connect to jira/i }).click();
+		await expect(page.getByRole('link', { name: /go to settings/i })).toBeVisible();
 
 		const link = page.getByRole('link', { name: /go to settings/i });
-		await link.focus();
+		await page.getByRole('combobox', { name: /issue source/i }).focus();
+		for (let i = 0; i < 5; i++) {
+			await page.keyboard.press('Tab');
+			if (await link.evaluate((el) => document.activeElement === el)) break;
+		}
 		await expect(link).toBeFocused();
 	});
 
