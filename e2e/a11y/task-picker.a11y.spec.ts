@@ -162,3 +162,80 @@ test.describe('Task picker dialog – accessibility', () => {
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 	});
 });
+
+test.describe('Task picker dialog – Jira disconnected state', () => {
+	test.beforeEach(async ({ page }) => {
+		await mockStandardRoutes(page);
+		await page.route('**/api/standups**', (route) => route.fulfill({ json: [] }));
+		await page.route('**/api/tasks**', (route) =>
+			route.fulfill({ json: { tasks: [], resolved: [], autoLinked: [] } })
+		);
+		await page.route('**/api/integrations**', (route) =>
+			route.fulfill({ json: { connected: false } })
+		);
+		await loginAs(page, MOCK_AUTH_WITH_REPO);
+		await page.goto('/dashboard');
+		await page.waitForLoadState('networkidle');
+		await page.getByRole('button', { name: /link task/i }).click();
+		await expect(page.getByRole('dialog')).toBeVisible();
+	});
+
+	test('has no critical or serious axe violations with connect prompt visible', async ({ page }) => {
+		await page.getByRole('combobox', { name: /issue source/i }).click();
+		await page.getByRole('option', { name: /connect to jira/i }).click();
+
+		const { violations } = await runAxe(page);
+		const critical = criticalViolations(violations);
+		expect(critical, formatViolations(critical)).toEqual([]);
+	});
+
+	test('Connect to Jira option is reachable by keyboard', async ({ page }) => {
+		const trigger = page.getByRole('combobox', { name: /issue source/i });
+		await trigger.focus();
+		await expect(trigger).toBeFocused();
+		await trigger.click();
+		await expect(page.getByRole('option', { name: /connect to jira/i })).toBeVisible();
+	});
+
+	test('Settings link in connect prompt is reachable by Tab', async ({ page }) => {
+		await page.getByRole('combobox', { name: /issue source/i }).click();
+		await page.getByRole('option', { name: /connect to jira/i }).click();
+
+		const link = page.getByRole('link', { name: /go to settings/i });
+		await link.focus();
+		await expect(link).toBeFocused();
+	});
+
+	test('Settings link has a visible focus indicator', async ({ page }) => {
+		await page.getByRole('combobox', { name: /issue source/i }).click();
+		await page.getByRole('option', { name: /connect to jira/i }).click();
+
+		// Tab to the link so :focus-visible activates (programmatic focus() does not trigger it)
+		const link = page.getByRole('link', { name: /go to settings/i });
+		await link.focus();
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Shift+Tab');
+
+		const hasRing = await link.evaluate((el) => {
+			const styles = window.getComputedStyle(el);
+			return styles.boxShadow !== 'none';
+		});
+		expect(hasRing).toBe(true);
+	});
+
+	test('focus stays within the dialog when connect prompt is shown', async ({ page }) => {
+		await page.getByRole('combobox', { name: /issue source/i }).click();
+		await page.getByRole('option', { name: /connect to jira/i }).click();
+
+		for (let i = 0; i < 8; i++) {
+			await page.keyboard.press('Tab');
+			const escaped = await page.evaluate(() => {
+				const dialog = document.querySelector('[role="dialog"]');
+				const focused = document.activeElement;
+				if (!focused || focused === document.body) return true;
+				return dialog ? !dialog.contains(focused) : true;
+			});
+			expect(escaped).toBe(false);
+		}
+	});
+});
