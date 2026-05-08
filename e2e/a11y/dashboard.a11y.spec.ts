@@ -51,7 +51,15 @@ test.describe('Dashboard – accessibility', () => {
 
 	test('standup history items can be activated by Enter', async ({ page }) => {
 		const firstLink = page.getByRole('listitem').first().locator('a, button').first();
-		await firstLink.focus();
+
+		// Use skip link to jump past nav, then Tab to the first history card
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Enter');
+		for (let i = 0; i < 30; i++) {
+			await page.keyboard.press('Tab');
+			if (await firstLink.evaluate(el => document.activeElement === el)) break;
+		}
+		await expect(firstLink).toBeFocused();
 		await page.keyboard.press('Enter');
 
 		// Should navigate somewhere (URL changes or a modal opens)
