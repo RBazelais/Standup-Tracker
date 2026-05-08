@@ -44,22 +44,17 @@ test.describe('Task picker dialog – accessibility', () => {
 		await loginAs(page, MOCK_AUTH_WITH_REPO);
 		await page.goto('/dashboard');
 		await page.waitForLoadState('networkidle');
-	});
-
-	async function openPicker(page: Parameters<typeof test>[1]['page']) {
 		await page.getByRole('button', { name: /link task/i }).click();
 		await expect(page.getByRole('dialog')).toBeVisible();
-	}
+	});
 
 	test('has no critical or serious axe violations when open', async ({ page }) => {
-		await openPicker(page);
 		const { violations } = await runAxe(page);
 		const critical = criticalViolations(violations);
 		expect(critical, formatViolations(critical)).toEqual([]);
 	});
 
 	test('focus moves into the dialog when it opens', async ({ page }) => {
-		await openPicker(page);
 
 		const focusIsInsideDialog = await page.evaluate(() => {
 			const dialog = document.querySelector('[role="dialog"]');
@@ -71,13 +66,11 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('search input receives focus on open', async ({ page }) => {
-		await openPicker(page);
 		const searchInput = page.getByPlaceholder(/search issues/i);
 		await expect(searchInput).toBeFocused();
 	});
 
 	test('Tab key stays within the dialog', async ({ page }) => {
-		await openPicker(page);
 
 		// Tab through all focusable elements multiple times — none should escape
 		for (let i = 0; i < 10; i++) {
@@ -94,7 +87,6 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('Shift+Tab stays within the dialog', async ({ page }) => {
-		await openPicker(page);
 
 		for (let i = 0; i < 6; i++) {
 			await page.keyboard.press('Shift+Tab');
@@ -109,14 +101,12 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('ESC closes the dialog', async ({ page }) => {
-		await openPicker(page);
 		await page.keyboard.press('Escape');
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 	});
 
 	test('focus returns to the "Link Task" button after ESC', async ({ page }) => {
 		const trigger = page.getByRole('button', { name: /link task/i });
-		await openPicker(page);
 		await page.keyboard.press('Escape');
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 		await expect(trigger).toBeFocused();
@@ -124,7 +114,6 @@ test.describe('Task picker dialog – accessibility', () => {
 
 	test('focus returns to the "Link Task" button after clicking close', async ({ page }) => {
 		const trigger = page.getByRole('button', { name: /link task/i });
-		await openPicker(page);
 
 		const closeButton = page.getByRole('button', { name: /close/i })
 			.or(page.locator('[data-radix-dialog-close]'));
@@ -139,7 +128,6 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('search can be triggered by keyboard', async ({ page }) => {
-		await openPicker(page);
 
 		await page.getByPlaceholder(/search issues/i).fill('auth');
 		await page.keyboard.press('Enter');
@@ -148,7 +136,6 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('search results are selectable by keyboard', async ({ page }) => {
-		await openPicker(page);
 		await page.getByPlaceholder(/search issues/i).fill('auth');
 		await page.keyboard.press('Enter');
 		await expect(page.getByText('Fix authentication bug')).toBeVisible({ timeout: 3000 });
