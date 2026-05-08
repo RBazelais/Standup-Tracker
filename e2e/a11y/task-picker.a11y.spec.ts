@@ -134,13 +134,18 @@ test.describe('Task picker dialog – accessibility', () => {
 		await page.keyboard.press('Enter');
 		await expect(page.getByText('Fix authentication bug')).toBeVisible({ timeout: 3000 });
 
-		// Tab to first result and activate with Enter
+		// Tab from the search input to the first result — no programmatic focus
 		const firstResult = page.locator('button').filter({ hasText: 'Fix authentication bug' });
-		await firstResult.focus();
+		for (let i = 0; i < 5; i++) {
+			await page.keyboard.press('Tab');
+			if (await firstResult.evaluate(el => document.activeElement === el)) break;
+		}
+		await expect(firstResult).toBeFocused();
 		await page.keyboard.press('Enter');
 
-		// Dialog should close and task should be linked
+		// Dialog closes and the linked task card appears in the task list
 		await expect(page.getByRole('dialog')).not.toBeAttached();
+		await expect(page.getByText('Fix authentication bug')).toBeVisible();
 	});
 });
 
