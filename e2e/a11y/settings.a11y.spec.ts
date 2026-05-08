@@ -51,14 +51,20 @@ test.describe('Settings – accessibility', () => {
 	test('Connect button is keyboard reachable', async ({ page }) => {
 		await goToSettings(page);
 		const connectBtn = page.getByRole('button', { name: /^connect$/i });
-		await connectBtn.focus();
+		for (let i = 0; i < 15; i++) {
+			await page.keyboard.press('Tab');
+			if (await connectBtn.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(connectBtn).toBeFocused();
 	});
 
 	test('Disconnect button is reachable by Tab when Jira is connected', async ({ page }) => {
 		await goToSettingsConnected(page);
 		const disconnectBtn = page.getByRole('button', { name: /disconnect/i });
-		await disconnectBtn.focus();
+		for (let i = 0; i < 15; i++) {
+			await page.keyboard.press('Tab');
+			if (await disconnectBtn.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(disconnectBtn).toBeFocused();
 	});
 
