@@ -107,17 +107,29 @@ test.describe('Standup history – accessibility', () => {
 	test('first history card is reachable by Tab', async ({ page }) => {
 		const firstCard = page.getByRole('listitem').first();
 		const focusableChild = firstCard.locator('a, button').first();
-		await focusableChild.focus();
+
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Enter');
+		for (let i = 0; i < 30; i++) {
+			await page.keyboard.press('Tab');
+			if (await focusableChild.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(focusableChild).toBeFocused();
 	});
 
 	test('Enter on a history card navigates to the standup detail', async ({ page }) => {
 		const firstCard = page.getByRole('listitem').first();
 		const focusableChild = firstCard.locator('a, button').first();
-		await focusableChild.focus();
+
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Enter');
+		for (let i = 0; i < 30; i++) {
+			await page.keyboard.press('Tab');
+			if (await focusableChild.evaluate(el => document.activeElement === el)) break;
+		}
+		await expect(focusableChild).toBeFocused();
 		await page.keyboard.press('Enter');
 
-		// Should leave the dashboard (either URL change or modal open)
 		await expect(page).not.toHaveURL('/dashboard', { timeout: 3000 });
 	});
 
@@ -144,7 +156,15 @@ test.describe('Standup history – accessibility', () => {
 	test('focused card has a visible focus indicator', async ({ page }) => {
 		const firstCard = page.getByRole('listitem').first();
 		const focusableChild = firstCard.locator('a, button').first();
-		await focusableChild.focus();
+
+		// Tab to the card — programmatic focus() does not trigger :focus-visible styles
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Enter');
+		for (let i = 0; i < 30; i++) {
+			await page.keyboard.press('Tab');
+			if (await focusableChild.evaluate(el => document.activeElement === el)) break;
+		}
+		await expect(focusableChild).toBeFocused();
 
 		const hasOutline = await focusableChild.evaluate((el) => {
 			const style = getComputedStyle(el);
