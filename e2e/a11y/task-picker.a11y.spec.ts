@@ -44,22 +44,17 @@ test.describe('Task picker dialog – accessibility', () => {
 		await loginAs(page, MOCK_AUTH_WITH_REPO);
 		await page.goto('/dashboard');
 		await page.waitForLoadState('networkidle');
-	});
-
-	async function openPicker(page: Parameters<typeof test>[1]['page']) {
 		await page.getByRole('button', { name: /link task/i }).click();
 		await expect(page.getByRole('dialog')).toBeVisible();
-	}
+	});
 
 	test('has no critical or serious axe violations when open', async ({ page }) => {
-		await openPicker(page);
 		const { violations } = await runAxe(page);
 		const critical = criticalViolations(violations);
 		expect(critical, formatViolations(critical)).toEqual([]);
 	});
 
 	test('focus moves into the dialog when it opens', async ({ page }) => {
-		await openPicker(page);
 
 		const focusIsInsideDialog = await page.evaluate(() => {
 			const dialog = document.querySelector('[role="dialog"]');
@@ -71,13 +66,11 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('search input receives focus on open', async ({ page }) => {
-		await openPicker(page);
 		const searchInput = page.getByPlaceholder(/search issues/i);
 		await expect(searchInput).toBeFocused();
 	});
 
 	test('Tab key stays within the dialog', async ({ page }) => {
-		await openPicker(page);
 
 		// Tab through all focusable elements multiple times — none should escape
 		for (let i = 0; i < 10; i++) {
@@ -94,7 +87,6 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('Shift+Tab stays within the dialog', async ({ page }) => {
-		await openPicker(page);
 
 		for (let i = 0; i < 6; i++) {
 			await page.keyboard.press('Shift+Tab');
@@ -109,14 +101,12 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('ESC closes the dialog', async ({ page }) => {
-		await openPicker(page);
 		await page.keyboard.press('Escape');
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 	});
 
 	test('focus returns to the "Link Task" button after ESC', async ({ page }) => {
 		const trigger = page.getByRole('button', { name: /link task/i });
-		await openPicker(page);
 		await page.keyboard.press('Escape');
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 		await expect(trigger).toBeFocused();
@@ -124,22 +114,14 @@ test.describe('Task picker dialog – accessibility', () => {
 
 	test('focus returns to the "Link Task" button after clicking close', async ({ page }) => {
 		const trigger = page.getByRole('button', { name: /link task/i });
-		await openPicker(page);
-
-		const closeButton = page.getByRole('button', { name: /close/i })
-			.or(page.locator('[data-radix-dialog-close]'));
-		if (await closeButton.count() > 0) {
-			await closeButton.first().click();
-		} else {
-			await page.keyboard.press('Escape'); // Fallback
-		}
-
+		const closeButton = page.getByRole('button', { name: /close/i });
+		await expect(closeButton).toBeVisible();
+		await closeButton.click();
 		await expect(page.getByRole('dialog')).not.toBeAttached();
 		await expect(trigger).toBeFocused();
 	});
 
 	test('search can be triggered by keyboard', async ({ page }) => {
-		await openPicker(page);
 
 		await page.getByPlaceholder(/search issues/i).fill('auth');
 		await page.keyboard.press('Enter');
@@ -148,17 +130,109 @@ test.describe('Task picker dialog – accessibility', () => {
 	});
 
 	test('search results are selectable by keyboard', async ({ page }) => {
-		await openPicker(page);
 		await page.getByPlaceholder(/search issues/i).fill('auth');
 		await page.keyboard.press('Enter');
 		await expect(page.getByText('Fix authentication bug')).toBeVisible({ timeout: 3000 });
 
-		// Tab to first result and activate with Enter
+		// Tab from the search input to the first result — no programmatic focus
 		const firstResult = page.locator('button').filter({ hasText: 'Fix authentication bug' });
-		await firstResult.focus();
+		for (let i = 0; i < 5; i++) {
+			await page.keyboard.press('Tab');
+			if (await firstResult.evaluate(el => document.activeElement === el)) break;
+		}
+		await expect(firstResult).toBeFocused();
 		await page.keyboard.press('Enter');
 
-		// Dialog should close and task should be linked
+		// Dialog closes and the linked task card appears in the task list
 		await expect(page.getByRole('dialog')).not.toBeAttached();
+		await expect(page.getByText('Fix authentication bug')).toBeVisible();
+	});
+});
+
+test.describe('Task picker dialog – Jira disconnected state', () => {
+	test.beforeEach(async ({ page }) => {
+		await mockStandardRoutes(page);
+		await page.route('**/api/standups**', (route) => route.fulfill({ json: [] }));
+		await page.route('**/api/tasks**', (route) =>
+			route.fulfill({ json: { tasks: [], resolved: [], autoLinked: [] } })
+		);
+		await page.route('**/api/integrations**', (route) =>
+			route.fulfill({ json: { connected: false } })
+		);
+		await loginAs(page, MOCK_AUTH_WITH_REPO);
+		await page.goto('/dashboard');
+		await page.waitForLoadState('networkidle');
+		await page.getByRole('button', { name: /link task/i }).click();
+		await expect(page.getByRole('dialog')).toBeVisible();
+	});
+
+	test('has no critical or serious axe violations with connect prompt visible', async ({ page }) => {
+		await page.getByRole('combobox', { name: /issue source/i }).click();
+		await page.getByRole('option', { name: /connect to jira/i }).click();
+		await expect(page.getByRole('link', { name: /go to settings/i })).toBeVisible();
+
+		const { violations } = await runAxe(page);
+		const critical = criticalViolations(violations);
+		expect(critical, formatViolations(critical)).toEqual([]);
+	});
+
+	test('Connect to Jira option is reachable by keyboard', async ({ page }) => {
+		const trigger = page.getByRole('combobox', { name: /issue source/i });
+		for (let i = 0; i < 10; i++) {
+			await page.keyboard.press('Tab');
+			if (await trigger.evaluate(el => document.activeElement === el)) break;
+		}
+		await expect(trigger).toBeFocused();
+		await page.keyboard.press('Space');
+		await expect(page.getByRole('option', { name: /connect to jira/i })).toBeVisible();
+	});
+
+	test('Settings link in connect prompt is reachable by Tab', async ({ page }) => {
+		await page.getByRole('combobox', { name: /issue source/i }).click();
+		await page.getByRole('option', { name: /connect to jira/i }).click();
+		await expect(page.getByRole('link', { name: /go to settings/i })).toBeVisible();
+
+		const link = page.getByRole('link', { name: /go to settings/i });
+		await page.getByRole('combobox', { name: /issue source/i }).focus();
+		for (let i = 0; i < 5; i++) {
+			await page.keyboard.press('Tab');
+			if (await link.evaluate((el) => document.activeElement === el)) break;
+		}
+		await expect(link).toBeFocused();
+	});
+
+	test('Settings link has a visible focus indicator', async ({ page }) => {
+		await page.getByRole('combobox', { name: /issue source/i }).click();
+		await page.getByRole('option', { name: /connect to jira/i }).click();
+		await expect(page.getByRole('link', { name: /go to settings/i })).toBeVisible();
+
+		const link = page.getByRole('link', { name: /go to settings/i });
+		await page.getByRole('combobox', { name: /issue source/i }).focus();
+		for (let i = 0; i < 5; i++) {
+			await page.keyboard.press('Tab');
+			if (await link.evaluate((el) => document.activeElement === el)) break;
+		}
+		await expect(link).toBeFocused();
+
+		const hasRing = await link.evaluate((el) => {
+			return window.getComputedStyle(el).boxShadow !== 'none';
+		});
+		expect(hasRing).toBe(true);
+	});
+
+	test('focus stays within the dialog when connect prompt is shown', async ({ page }) => {
+		await page.getByRole('combobox', { name: /issue source/i }).click();
+		await page.getByRole('option', { name: /connect to jira/i }).click();
+
+		for (let i = 0; i < 8; i++) {
+			await page.keyboard.press('Tab');
+			const escaped = await page.evaluate(() => {
+				const dialog = document.querySelector('[role="dialog"]');
+				const focused = document.activeElement;
+				if (!focused || focused === document.body) return true;
+				return dialog ? !dialog.contains(focused) : true;
+			});
+			expect(escaped).toBe(false);
+		}
 	});
 });

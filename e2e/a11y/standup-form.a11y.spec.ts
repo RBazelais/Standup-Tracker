@@ -78,19 +78,18 @@ test.describe('Standup form – accessibility', () => {
 	});
 
 	test('submit button is the only keyboard path to form submission', async ({ page }) => {
-		const submit = page.getByRole('button', { name: /save standup/i });
-		await submit.focus();
-		await expect(submit).toBeFocused();
-
-		// Fill required fields first
+		// Fill required fields first, then Tab to the submit button — no programmatic focus
 		await page.getByLabel('Completed').fill('Did some work');
 		await page.getByLabel('Planned').fill('Will do more');
 
-		// Activate with Space (standard key for buttons per ARIA spec)
-		await submit.focus();
+		const submit = page.getByRole('button', { name: /save standup/i });
+		for (let i = 0; i < 15; i++) {
+			await page.keyboard.press('Tab');
+			if (await submit.evaluate(el => document.activeElement === el)) break;
+		}
+		await expect(submit).toBeFocused();
 		await page.keyboard.press('Space');
 
-		// Should show saving/saved state
 		await expect(page.getByRole('button', { name: /saving|saved/i })).toBeVisible({
 			timeout: 3000,
 		});
@@ -175,7 +174,11 @@ test.describe('Standup form – accessibility', () => {
 		}
 
 		const wasChecked = await checkbox.isChecked();
-		await checkbox.focus();
+		for (let i = 0; i < 35; i++) {
+			await page.keyboard.press('Tab');
+			if (await checkbox.evaluate(el => document.activeElement === el)) break;
+		}
+		await expect(checkbox).toBeFocused();
 		await page.keyboard.press('Space');
 		// Radix Checkbox is a <button role="checkbox"> — checked state lives in aria-checked
 		await expect(checkbox).toHaveAttribute('aria-checked', String(!wasChecked));

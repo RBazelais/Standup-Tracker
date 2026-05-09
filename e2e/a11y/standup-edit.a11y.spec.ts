@@ -89,7 +89,10 @@ test.describe('Standup edit – accessibility', () => {
 
 	test('save button is keyboard operable via Space', async ({ page }) => {
 		const save = page.getByRole('button', { name: /save|update/i });
-		await save.focus();
+		for (let i = 0; i < 20; i++) {
+			await page.keyboard.press('Tab');
+			if (await save.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(save).toBeFocused();
 		await page.keyboard.press('Space');
 
@@ -113,7 +116,10 @@ test.describe('Standup edit – accessibility', () => {
 	test('cancel or back button is keyboard reachable', async ({ page }) => {
 		const cancel = page.getByRole('link', { name: /cancel|back/i })
 			.or(page.getByRole('button', { name: /cancel|back/i })).first();
-		await cancel.focus();
+		for (let i = 0; i < 20; i++) {
+			await page.keyboard.press('Tab');
+			if (await cancel.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(cancel).toBeFocused();
 	});
 

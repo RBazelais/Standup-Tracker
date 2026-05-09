@@ -30,8 +30,15 @@ test.describe('Landing page – accessibility', () => {
 		const button = page.getByRole('link', { name: /sign in with github/i })
 			.or(page.getByRole('button', { name: /sign in with github/i }));
 
-		await button.focus();
+		for (let i = 0; i < 10; i++) {
+			await page.keyboard.press('Tab');
+			if (await button.evaluate(el => document.activeElement === el)) break;
+		}
 		await expect(button).toBeFocused();
+
+		// Enter should activate it — the URL will leave '/' toward the auth flow
+		await page.keyboard.press('Enter');
+		await expect(page).not.toHaveURL('/', { timeout: 3000 });
 	});
 
 	test('content is visible with prefers-reduced-motion: reduce', async ({ page }) => {
