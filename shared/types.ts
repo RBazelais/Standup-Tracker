@@ -48,6 +48,20 @@ export type TaskPriority = 'none' | 'low' | 'medium' | 'high' | 'urgent';
 
 export type ExternalSource = 'github' | 'jira' | 'linear' | 'asana';
 
+// A task that was linked to a standup. If the task has since been deleted,
+// taskId goes null in the DB and we fall back to the frozen snapshot for display.
+export type LinkedTask =
+    | (Task & { deleted?: false })
+    | {
+        id: string;             // synthetic: "deleted:<standupTaskRowId>"
+        title: string;
+        externalId?: string | null;
+        externalSource?: string | null;
+        externalUrl?: string | null;
+        externalLinks?: { externalId: string; externalUrl: string | null; source: string }[];
+        deleted: true;
+      };
+
 // Standup - daily standup notes with GitHub commits
 export interface Standup {
     id: string;
@@ -59,7 +73,7 @@ export interface Standup {
     snapshotSprintId?: string;
     snapshotMilestoneId?: string;
     repoFullName?: string;
-    linkedTasks?: Task[]; // Populated by API via standup_tasks junction table
+    linkedTasks?: LinkedTask[]; // Populated by API via standup_tasks junction table
     createdAt: Date;
     updatedAt?: Date;
 }
