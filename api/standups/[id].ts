@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { standups, standupTasks, tasks, taskExternalLinks as taskLinks } from "../../drizzle/schema.js";
 import { updateStandupSchema, validateBody } from "../../drizzle/validation.js";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and, isNotNull } from "drizzle-orm";
 import { buildTaskSnapshot, fetchLinkedTasks } from "../../shared/standups-helpers.js";
 
 const db = drizzle(sql);
@@ -65,7 +65,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 			// Replace linked tasks if taskIds was explicitly provided
 			if (taskIds !== undefined) {
-				await db.delete(standupTasks).where(eq(standupTasks.standupId, id));
+				await db.delete(standupTasks).where(
+						and(
+							eq(standupTasks.standupId, id),
+							isNotNull(standupTasks.taskId)
+						)
+					);
 
 				const validTaskIds = taskIds.filter(tid => UUID_RE.test(tid));
 				if (validTaskIds.length > 0) {
