@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
+import { standups, standupTasks, tasks, taskExternalLinks as taskLinks } from "../../drizzle/schema.js";
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, desc, inArray, getTableColumns } from "drizzle-orm";
-import { fetchLinkedTasks } from "../../shared/standups-helpers.js";
+import { buildTaskSnapshot, fetchLinkedTasks } from "../../shared/standups-helpers.js";
 import { db as sharedDb } from "../../shared/db.js";
 import { createJiraClient } from "../../shared/integrations/jira-client.js";
 import { createJiraAdapter } from "../../shared/integrations/jira-adapter.js";
@@ -90,21 +90,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				})
 				.returning();
 
-			// Link tasks via junction table — verify tasks exist before inserting
-			// to avoid foreign key violations from stale or invalid IDs
+			// Link tasks via junction table — fetch full rows + external links so we
+			// can write a snapshot at link time. If the task is later deleted,
+			// the snapshot preserves its display data for historical standups.
 			const validTaskIds = taskIds.filter(id => UUID_RE.test(id));
 			if (validTaskIds.length > 0) {
 				const existingTasks = await db
-					.select({ id: tasks.id })
+					.select()
 					.from(tasks)
 					.where(inArray(tasks.id, validTaskIds));
 
-				const existingIds = existingTasks.map(t => t.id);
-				if (existingIds.length > 0) {
+				if (existingTasks.length > 0) {
+					const linkRows = await db
+						.select()
+						.from(taskLinks)
+						.where(inArray(taskLinks.taskId, existingTasks.map(t => t.id)));
+
+					const linksByTaskId = linkRows.reduce<Record<string, typeof linkRows>>((acc, l) => {
+						(acc[l.taskId] ??= []).push(l);
+						return acc;
+					}, {});
+
 					await db.insert(standupTasks).values(
-						existingIds.map(taskId => ({
+						existingTasks.map(task => ({
 							standupId: newStandup.id,
-							taskId,
+							taskId: task.id,
+							taskSnapshot: buildTaskSnapshot(
+								task,
+								(linksByTaskId[task.id] ?? []).map(l => ({
+									externalId: l.externalId,
+									externalUrl: l.externalUrl,
+									source: l.source,
+								}))
+							),
 						}))
 					);
 				}
@@ -114,7 +132,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 			// Post standup comment to Jira for any linked Jira tasks (best-effort)
 			const jiraLinks = linkedTasks.flatMap(task =>
-				task.externalLinks
+				(task.externalLinks ?? [])
 					.filter(link => link.source === 'jira')
 					.map(link => link.externalId)
 			);

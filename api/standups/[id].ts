@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
-import { standups, standupTasks, tasks } from "../../drizzle/schema.js";
+import { standups, standupTasks, tasks, taskExternalLinks as taskLinks } from "../../drizzle/schema.js";
 import { updateStandupSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, inArray } from "drizzle-orm";
-import { fetchLinkedTasks } from "../../shared/standups-helpers.js";
+import { buildTaskSnapshot, fetchLinkedTasks } from "../../shared/standups-helpers.js";
 
 const db = drizzle(sql);
 
@@ -70,16 +70,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				const validTaskIds = taskIds.filter(tid => UUID_RE.test(tid));
 				if (validTaskIds.length > 0) {
 					const existingTasks = await db
-						.select({ id: tasks.id })
+						.select()
 						.from(tasks)
 						.where(inArray(tasks.id, validTaskIds));
 
-					const existingIds = existingTasks.map(t => t.id);
-					if (existingIds.length > 0) {
+					if (existingTasks.length > 0) {
+						const linkRows = await db
+							.select()
+							.from(taskLinks)
+							.where(inArray(taskLinks.taskId, existingTasks.map(t => t.id)));
+
+						const linksByTaskId = linkRows.reduce<Record<string, typeof linkRows>>((acc, l) => {
+							(acc[l.taskId] ??= []).push(l);
+							return acc;
+						}, {});
+
 						await db.insert(standupTasks).values(
-							existingIds.map(taskId => ({
+							existingTasks.map(task => ({
 								standupId: id,
-								taskId,
+								taskId: task.id,
+								taskSnapshot: buildTaskSnapshot(
+									task,
+									(linksByTaskId[task.id] ?? []).map(l => ({
+										externalId: l.externalId,
+										externalUrl: l.externalUrl,
+										source: l.source,
+									}))
+								),
 							}))
 						);
 					}
