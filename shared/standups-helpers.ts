@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/vercel-postgres";
 import { sql } from "@vercel/postgres";
 import { standupTasks, tasks, taskExternalLinks } from "../drizzle/schema.js";
 import { eq, inArray, getTableColumns } from "drizzle-orm";
-import type { LinkedTask } from "./types.js";
+import type { LinkedTask, TaskExternalLink } from "./types.js";
 
 const db = drizzle(sql);
 
@@ -62,7 +62,8 @@ export async function fetchLinkedTasks(standupId: string): Promise<LinkedTask[]>
 	return linkedRows.map((row) => {
 		const { standupRowId, taskId, taskSnapshot, linkedAt, ...taskFields } = row;
 
-		// Task still exists — return the full live task
+		// Task still exists then return the full live task.
+		// Cast needed: Drizzle uses null for nullable columns, Task interface uses undefined. They're semantically equivalent; this bridges the gap without a full interface rewrite.
 		if (taskId !== null && taskFields.id !== null) {
 			const task = taskFields as TaskRow;
 			return {
@@ -70,10 +71,11 @@ export async function fetchLinkedTasks(standupId: string): Promise<LinkedTask[]>
 				deleted: false as const,
 				externalLinks: (linksByTaskId[task.id] ?? []).map(l => ({
 					externalId: l.externalId,
-					externalUrl: l.externalUrl,
-					source: l.source,
+					externalUrl: l.externalUrl ?? undefined,
+					source: l.source as TaskExternalLink['source'],
+					confidence: l.confidence as TaskExternalLink['confidence'],
 				})),
-			};
+			} as unknown as LinkedTask;
 		}
 
 		// Task was deleted — synthesize a display record from the frozen snapshot
