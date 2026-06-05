@@ -5,10 +5,11 @@ import { standups, standupTasks, tasks, taskExternalLinks as taskLinks } from ".
 import { createStandupSchema, validateBody } from "../../drizzle/validation.js";
 import { eq, desc, inArray, getTableColumns } from "drizzle-orm";
 import { buildTaskSnapshot, fetchLinkedTasks } from "../../shared/standups-helpers.js";
+import type { TaskSnapshot } from "../../shared/standups-helpers.js";
 import { db as sharedDb } from "../../shared/db.js";
 import { createJiraClient } from "../../shared/integrations/jira-client.js";
 import { createJiraAdapter } from "../../shared/integrations/jira-adapter.js";
-import type { GitHubCommit } from "../../shared/types.js";
+import type { GitHubCommit, LinkedTask } from "../../shared/types.js";
 
 const db = drizzle(sql);
 
@@ -30,8 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				.where(eq(standups.userId, userId))
 				.orderBy(desc(standups.createdAt));
 
-			type TaskRow = typeof tasks.$inferSelect;
-			const linkedTasksMap: Record<string, TaskRow[]> = {};
+			const linkedTasksMap: Record<string, LinkedTask[]> = {};
 
 			if (userStandups.length > 0) {
 				const standupIds = userStandups.map(s => s.id);
@@ -39,16 +39,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 				const linkedRows = await db
 					.select({
 						standupId: standupTasks.standupId,
+						standupRowId: standupTasks.id,
+						taskId: standupTasks.taskId,
+						taskSnapshot: standupTasks.taskSnapshot,
 						...getTableColumns(tasks),
 					})
 					.from(standupTasks)
-					.innerJoin(tasks, eq(standupTasks.taskId, tasks.id))
+					.leftJoin(tasks, eq(standupTasks.taskId, tasks.id))
 					.where(inArray(standupTasks.standupId, standupIds));
 
 				for (const row of linkedRows) {
-					const { standupId, ...task } = row;
+					const { standupId, standupRowId, taskId, taskSnapshot, ...taskFields } = row;
 					if (!linkedTasksMap[standupId]) linkedTasksMap[standupId] = [];
-					linkedTasksMap[standupId].push(task as TaskRow);
+
+					if (taskId !== null && taskFields.id !== null) {
+						linkedTasksMap[standupId].push(taskFields as unknown as LinkedTask);
+					} else {
+						const snap = taskSnapshot as TaskSnapshot | null;
+						linkedTasksMap[standupId].push({
+							id: `deleted:${standupRowId}`,
+							title: snap?.title ?? '(deleted)',
+							externalId: snap?.externalId ?? null,
+							externalUrl: snap?.externalUrl ?? null,
+							externalSource: snap?.externalSource ?? null,
+							externalLinks: snap?.externalId
+								? [{ externalId: snap.externalId, externalUrl: snap.externalUrl ?? null, source: snap.externalSource ?? 'github' }]
+								: [],
+							deleted: true as const,
+						});
+					}
 				}
 			}
 
