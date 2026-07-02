@@ -43,10 +43,10 @@ function makeTask(overrides: Record<string, unknown> = {}) {
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		...overrides,
-	} as ReturnType<typeof import('../drizzle/schema.js').tasks.$inferSelect>;
+	} as Parameters<typeof buildTaskSnapshot>[0];
 }
 
-// ── buildTaskSnapshot ────────────────────────────────────────────────────────
+// buildTaskSnapshot 
 
 describe('buildTaskSnapshot', () => {
 	it('uses task fields when present', () => {
@@ -111,8 +111,7 @@ describe('fetchLinkedTasks', () => {
 	});
 
 	it('returns deleted: true and uses the snapshot when task_id is null', async () => {
-		// Simulates a row where ON DELETE SET NULL fired: task_id is null,
-		// all task columns from the LEFT JOIN are null, snapshot is preserved.
+		// Simulates a row where ON DELETE SET NULL fired: task_id is null, all task columns from the LEFT JOIN are null, snapshot is preserved.
 		const deletedRow = {
 			standupRowId: 'row-abc',
 			taskId: null,
