@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft, Save, X } from "lucide-react";
 import { TaskLinkingSection } from "@/components/TaskLinking";
-import type { Standup, UpdateStandupInput } from "@/types";
+import type { Standup, UpdateStandupInput, Task } from "@/types";
 
 export function StandupEdit() {
 	const { id } = useParams<{ id: string }>();
@@ -95,7 +95,7 @@ function StandupEditForm({
 	const [workPlanned, setWorkPlanned] = useState(initialData.workPlanned || "");
 	const [blockers, setBlockers] = useState(initialData.blockers || "");
 	const [linkedTaskIds, setLinkedTaskIds] = useState<string[]>(
-		() => initialData.linkedTasks?.map((t) => t.id) ?? []
+		() => initialData.linkedTasks?.filter(t => !('deleted' in t && t.deleted)).map(t => t.id) ?? []
 	);
 	const [errors, setErrors] = useState<{ workCompleted?: boolean; workPlanned?: boolean }>({});
 
@@ -232,7 +232,7 @@ function StandupEditForm({
 								commits: initialData.commits,
 								repoFullName: initialData.repoFullName,
 							}}
-							initialSelected={initialData.linkedTasks ?? []}
+							initialSelected={(initialData.linkedTasks ?? []).filter(t => !('deleted' in t && t.deleted)) as Task[]}
 							onTasksChange={setLinkedTaskIds}
 						/>
 

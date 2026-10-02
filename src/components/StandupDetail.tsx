@@ -230,21 +230,25 @@ export function StandupDetail() {
 									</h3>
 									<div className="space-y-2">
 										{standup.linkedTasks.map((task) => {
+											const isDeleted = 'deleted' in task && task.deleted;
 											const link = task.externalLinks?.[0];
 											return (
 												<div
 													key={task.id}
-													className="flex items-center justify-between p-3 bg-surface-overlay rounded-md border border-border"
+													className={`flex items-center justify-between p-3 bg-surface-overlay rounded-md border border-border${isDeleted ? ' opacity-60' : ''}`}
 												>
 													<div className="flex items-center gap-2 min-w-0">
 														<span className="text-xs text-accent-text font-mono shrink-0">
 															{link?.externalId ?? task.externalId}
 														</span>
-														<span className="text-sm text-foreground truncate">
+														<span className={`text-sm text-foreground truncate${isDeleted ? ' italic' : ''}`}>
 															{task.title}
 														</span>
+														{isDeleted && (
+															<span className="text-xs text-foreground-muted shrink-0">(deleted)</span>
+														)}
 													</div>
-													{link?.externalUrl && (
+													{!isDeleted && link?.externalUrl && (
 														<a
 															href={link.externalUrl}
 															target="_blank"
