@@ -222,7 +222,7 @@ function StandupEditForm({
 								value={blockers}
 								onChange={(e) => setBlockers(e.target.value)}
 								placeholder="Any blockers?"
-							className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[100px]"
+								className="bg-surface-overlay border-border text-foreground placeholder:text-foreground-muted min-h-[100px]"
 							/>
 						</div>
 
