@@ -130,8 +130,9 @@ export const taskExternalLinks = pgTable("task_external_links", {
 export const standupTasks = pgTable("standup_tasks", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	standupId: uuid("standup_id").notNull().references(() => standups.id, { onDelete: "cascade" }),
-	taskId: uuid("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+	taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
 	snapshotSprintId: uuid("snapshot_sprint_id"),
 	snapshotStatus: text("snapshot_status"),
+	taskSnapshot: jsonb("task_snapshot"),
 	linkedAt: timestamp("linked_at").defaultNow().notNull(),
 });
