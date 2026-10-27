@@ -36,7 +36,6 @@ export async function fetchLinkedTasks(standupId: string): Promise<LinkedTask[]>
 			standupRowId: standupTasks.id,
 			taskId: standupTasks.taskId,
 			taskSnapshot: standupTasks.taskSnapshot,
-			linkedAt: standupTasks.linkedAt,
 			...getTableColumns(tasks),
 		})
 		.from(standupTasks)
@@ -60,7 +59,7 @@ export async function fetchLinkedTasks(standupId: string): Promise<LinkedTask[]>
 	}, {});
 
 	return linkedRows.map((row) => {
-		const { standupRowId, taskId, taskSnapshot, linkedAt, ...taskFields } = row;
+		const { standupRowId, taskId, taskSnapshot, ...taskFields } = row;
 
 		// Task still exists then return the full live task.
 		// Cast needed: Drizzle uses null for nullable columns, Task interface uses undefined. They're semantically equivalent; this bridges the gap without a full interface rewrite.
