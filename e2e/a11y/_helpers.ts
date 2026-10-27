@@ -155,6 +155,8 @@ export async function waitForLandingAnimations(page: Page) {
 // Axe helpers
 
 export async function runAxe(page: Page) {
+	// Axe reads computed colors, so scanning mid-animation measures a half-faded blend instead of the settled UI.
+	await page.evaluate(() => Promise.all(document.getAnimations().map((animation) => animation.finished)));
 	return new AxeBuilder({ page }).analyze();
 }
 
