@@ -8,13 +8,13 @@ const db = drizzle(sql);
 
 type TaskRow = typeof tasks.$inferSelect;
 
-export type TaskSnapshot = {
+export interface TaskSnapshot {
 	title: string;
 	externalId: string | null;
 	externalUrl: string | null;
 	externalSource: string | null;
 	status: string | null;
-};
+}
 
 export function buildTaskSnapshot(
 	task: TaskRow,
