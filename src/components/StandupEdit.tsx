@@ -232,7 +232,7 @@ function StandupEditForm({
 								commits: initialData.commits,
 								repoFullName: initialData.repoFullName,
 							}}
-							initialSelected={(initialData.linkedTasks ?? []).filter(t => !('deleted' in t && t.deleted)) as Task[]}
+							initialSelected={(initialData.linkedTasks ?? []).filter((linkedTask): linkedTask is Task => !linkedTask.deleted)}
 							onTasksChange={setLinkedTaskIds}
 						/>
 
